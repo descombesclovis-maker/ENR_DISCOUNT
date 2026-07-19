@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, .font-display {
+    font-family: 'Outfit', sans-serif;
+}
+
+@layer base {
+    :root {
+        --background: 60 20% 99%;
+        --foreground: 140 17% 8%;
+        --card: 0 0% 100%;
+        --card-foreground: 140 17% 8%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 140 17% 8%;
+        --primary: 147 50% 20%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 150 9% 92%;
+        --secondary-foreground: 147 50% 20%;
+        --muted: 120 5% 96%;
+        --muted-foreground: 140 8% 40%;
+        --accent: 95 37% 83%;
+        --accent-foreground: 147 50% 18%;
+        --destructive: 0 72% 45%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 146 13% 90%;
+        --input: 146 13% 90%;
+        --ring: 147 50% 20%;
+        --radius: 0.75rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+::selection {
+    background: hsl(147 50% 20%);
+    color: #fff;
+}
+
+.overline {
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    font-weight: 600;
+}
+
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+    animation: fade-up 0.6s ease both;
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
