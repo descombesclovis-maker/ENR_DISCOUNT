@@ -15,8 +15,14 @@ import {
 import { supabase } from "../lib/supabase";
 import { priceLabel } from "../lib/api";
 
-function getPrimaryImage(images, productName) {
-  if (!Array.isArray(images) || images.length === 0) {
+function getPrimaryImage(
+  images,
+  productName
+) {
+  if (
+    !Array.isArray(images) ||
+    images.length === 0
+  ) {
     return {
       url: "/images/product-placeholder.png",
       alt: productName,
@@ -24,7 +30,10 @@ function getPrimaryImage(images, productName) {
   }
 
   const sortedImages = [...images].sort(
-    (firstImage, secondImage) => {
+    (
+      firstImage,
+      secondImage
+    ) => {
       if (
         firstImage.is_primary &&
         !secondImage.is_primary
@@ -40,13 +49,18 @@ function getPrimaryImage(images, productName) {
       }
 
       return (
-        (firstImage.display_order || 0) -
-        (secondImage.display_order || 0)
+        Number(
+          firstImage.display_order || 0
+        ) -
+        Number(
+          secondImage.display_order || 0
+        )
       );
     }
   );
 
-  const primaryImage = sortedImages[0];
+  const primaryImage =
+    sortedImages[0];
 
   return {
     url:
@@ -59,112 +73,185 @@ function getPrimaryImage(images, productName) {
   };
 }
 
+function getAvailability(
+  stock,
+  onDemand
+) {
+  const numericStock =
+    Number(stock || 0);
+
+  if (numericStock > 0) {
+    return {
+      label: "Disponible",
+      className: "text-primary",
+    };
+  }
+
+  if (onDemand) {
+    return {
+      label:
+        "Disponible sur demande",
+      className:
+        "text-amber-600",
+    };
+  }
+
+  return {
+    label: "Indisponible",
+    className:
+      "text-destructive",
+  };
+}
+
 export default function Home() {
   const [
     featuredProducts,
     setFeaturedProducts,
   ] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState("");
 
   useEffect(() => {
     let componentIsMounted = true;
 
-    const loadFeaturedProducts = async () => {
-      setLoading(true);
-      setErrorMessage("");
+    const loadFeaturedProducts =
+      async () => {
+        setLoading(true);
+        setErrorMessage("");
 
-      try {
-        const { data, error } = await supabase
-          .from("products")
-          .select(`
-            id,
-            name,
-            slug,
-            brand,
-            price,
-            stock,
-            on_demand,
-            is_featured,
-            created_at,
-            categories (
+        try {
+          const {
+            data,
+            error,
+          } = await supabase
+            .from("products")
+            .select(`
               id,
               name,
-              slug
-            ),
-            product_images (
-              id,
-              image_url,
-              alt_text,
-              is_primary,
-              display_order
+              slug,
+              brand,
+              price,
+              stock,
+              on_demand,
+              is_featured,
+              created_at,
+              categories (
+                id,
+                name,
+                slug
+              ),
+              product_images (
+                id,
+                image_url,
+                alt_text,
+                is_primary,
+                display_order
+              )
+            `)
+            .eq(
+              "is_active",
+              true
             )
-          `)
-          .eq("is_active", true)
-          .eq("is_featured", true)
-          .order("created_at", {
-            ascending: false,
-          })
-          .limit(3);
+            .eq(
+              "is_featured",
+              true
+            )
+            .order(
+              "created_at",
+              {
+                ascending: false,
+              }
+            )
+            .limit(3);
 
-        if (error) {
-          throw error;
-        }
+          if (error) {
+            throw error;
+          }
 
-        const normalizedProducts = (data || []).map(
-          (product) => {
-            const primaryImage = getPrimaryImage(
-              product.product_images,
-              product.name
+          const normalizedProducts =
+            (data || []).map(
+              (product) => {
+                const primaryImage =
+                  getPrimaryImage(
+                    product.product_images,
+                    product.name
+                  );
+
+                const availability =
+                  getAvailability(
+                    product.stock,
+                    product.on_demand
+                  );
+
+                return {
+                  ...product,
+
+                  category:
+                    product.categories
+                      ?.name || "",
+
+                  image:
+                    primaryImage.url,
+
+                  imageAlt:
+                    primaryImage.alt,
+
+                  availabilityLabel:
+                    availability.label,
+
+                  availabilityClassName:
+                    availability.className,
+                };
+              }
             );
 
-            return {
-              ...product,
-
-              category:
-                product.categories?.name || "",
-
-              image: primaryImage.url,
-              imageAlt: primaryImage.alt,
-            };
+          if (
+            !componentIsMounted
+          ) {
+            return;
           }
-        );
 
-        if (!componentIsMounted) {
-          return;
+          setFeaturedProducts(
+            normalizedProducts
+          );
+        } catch (error) {
+          console.error(
+            "Erreur lors du chargement des produits vedettes :",
+            error
+          );
+
+          if (
+            !componentIsMounted
+          ) {
+            return;
+          }
+
+          setErrorMessage(
+            error?.message ||
+              "Impossible de charger les produits."
+          );
+        } finally {
+          if (
+            componentIsMounted
+          ) {
+            setLoading(false);
+          }
         }
-
-        setFeaturedProducts(
-          normalizedProducts
-        );
-      } catch (error) {
-        console.error(
-          "Erreur lors du chargement des produits vedettes :",
-          error
-        );
-
-        if (!componentIsMounted) {
-          return;
-        }
-
-        setErrorMessage(
-          error?.message ||
-            "Impossible de charger les produits."
-        );
-      } finally {
-        if (componentIsMounted) {
-          setLoading(false);
-        }
-      }
-    };
+      };
 
     loadFeaturedProducts();
 
     return () => {
-      componentIsMounted = false;
+      componentIsMounted =
+        false;
     };
   }, []);
 
@@ -180,8 +267,9 @@ export default function Home() {
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-md leading-relaxed">
-              Panneaux solaires, climatiseurs,
-              chauffe-eau, pompes à chaleur et
+              Panneaux solaires,
+              climatiseurs, chauffe-eau,
+              pompes à chaleur et
               solutions de stockage.
             </p>
 
@@ -191,6 +279,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
               >
                 Voir les produits
+
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
@@ -222,6 +311,7 @@ export default function Home() {
             className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold hover:text-primary"
           >
             Tout voir
+
             <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>
@@ -236,56 +326,70 @@ export default function Home() {
           </div>
         )}
 
-        {!loading && errorMessage && (
-          <div className="rounded-3xl border border-destructive/30 bg-card px-6 py-14 text-center">
-            <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-4" />
-
-            <h3 className="font-display font-bold text-xl">
-              Impossible de charger les produits
-            </h3>
-
-            <p className="text-muted-foreground mt-2">
-              {errorMessage}
-            </p>
-          </div>
-        )}
-
         {!loading &&
-          !errorMessage &&
-          featuredProducts.length === 0 && (
-            <div className="rounded-3xl border border-border bg-card px-6 py-14 text-center">
+          errorMessage && (
+            <div className="rounded-3xl border border-destructive/30 bg-card px-6 py-14 text-center">
+              <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-4" />
+
               <h3 className="font-display font-bold text-xl">
-                Aucun produit vedette
+                Impossible de charger les produits
               </h3>
 
               <p className="text-muted-foreground mt-2">
-                Active l’option « Produit vedette »
-                dans l’administration.
+                {errorMessage}
               </p>
             </div>
           )}
 
         {!loading &&
           !errorMessage &&
-          featuredProducts.length > 0 && (
+          featuredProducts.length ===
+            0 && (
+            <div className="rounded-3xl border border-border bg-card px-6 py-14 text-center">
+              <h3 className="font-display font-bold text-xl">
+                Aucun produit vedette
+              </h3>
+
+              <p className="text-muted-foreground mt-2">
+                Active l’option « Produit
+                vedette » dans
+                l’administration.
+              </p>
+            </div>
+          )}
+
+        {!loading &&
+          !errorMessage &&
+          featuredProducts.length >
+            0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredProducts.map(
-                (product, index) => (
+                (
+                  product,
+                  index
+                ) => (
                   <Link
                     key={product.id}
                     to={`/produits/${product.slug}`}
                     className="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:-translate-y-1 transition-transform duration-200 hover:shadow-lg"
                     style={{
-                      animationDelay: `${index * 60}ms`,
+                      animationDelay:
+                        `${index * 60}ms`,
                     }}
                   >
                     <div className="aspect-square overflow-hidden bg-white grid place-items-center p-6">
                       <img
-                        src={product.image}
-                        alt={product.imageAlt}
+                        src={
+                          product.image
+                        }
+                        alt={
+                          product.imageAlt
+                        }
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
-                        onError={(event) => {
+                        onError={(
+                          event
+                        ) => {
                           event.currentTarget.onerror =
                             null;
 
@@ -298,7 +402,9 @@ export default function Home() {
                     <div className="flex flex-col flex-1 p-5 border-t border-border">
                       {product.category && (
                         <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
-                          {product.category}
+                          {
+                            product.category
+                          }
                         </p>
                       )}
 
@@ -308,27 +414,25 @@ export default function Home() {
 
                       {product.brand && (
                         <p className="text-sm text-muted-foreground mt-1">
-                          {product.brand}
+                          {
+                            product.brand
+                          }
                         </p>
                       )}
 
                       <div className="mt-auto pt-4">
                         <p className="font-display font-bold text-lg">
-                          {priceLabel(product)}
+                          {priceLabel(
+                            product
+                          )}
                         </p>
 
                         <p
-                          className={`text-xs font-semibold mt-1 ${
-                            product.stock > 0
-                              ? "text-primary"
-                              : "text-amber-600"
-                          }`}
+                          className={`text-xs font-semibold mt-1 ${product.availabilityClassName}`}
                         >
-                          {product.stock > 0
-                            ? `${product.stock} en stock`
-                            : product.on_demand
-                              ? "Disponible sur demande"
-                              : "Indisponible"}
+                          {
+                            product.availabilityLabel
+                          }
                         </p>
                       </div>
                     </div>

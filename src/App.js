@@ -18,6 +18,10 @@ import {
   AuthProvider,
 } from "./context/AuthContext";
 
+import {
+  WishlistProvider,
+} from "./context/WishlistContext";
+
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 
@@ -30,6 +34,8 @@ import Cart from "./pages/Cart";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Contact from "./pages/Contact";
 import SupabaseTest from "./pages/SupabaseTest";
+import Wishlist from "./pages/Wishlist";
+import Tracking from "./pages/Tracking";
 
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -58,88 +64,100 @@ function App() {
     <div className="App">
       <AuthProvider>
         <CartProvider>
-          <BrowserRouter>
-            <Toaster
-              position="top-center"
-              richColors
-            />
-
-            <Routes>
-              <Route element={<StoreLayout />}>
-                <Route
-                  path="/"
-                  element={<Home />}
-                />
-
-                <Route
-                  path="/produits"
-                  element={<Products />}
-                />
-
-                <Route
-                  path="/produits/:slug"
-                  element={<ProductDetail />}
-                />
-
-                <Route
-                  path="/panier"
-                  element={<Cart />}
-                />
-
-                <Route
-                  path="/commande/succes"
-                  element={<CheckoutSuccess />}
-                />
-
-                <Route
-                  path="/contact"
-                  element={<Contact />}
-                />
-
-                <Route
-                  path="/test-supabase"
-                  element={<SupabaseTest />}
-                />
-              </Route>
-
-              <Route
-                path="/admin/login"
-                element={<AdminLogin />}
+          <WishlistProvider>
+            <BrowserRouter>
+              <Toaster
+                position="top-center"
+                richColors
               />
 
-              <Route element={<ProtectedRoute />}>
-                <Route
-                  path="/admin"
-                  element={<AdminDashboard />}
-                />
+              <Routes>
+                <Route element={<StoreLayout />}>
+                  <Route
+                    path="/"
+                    element={<Home />}
+                  />
+
+                  <Route
+                    path="/produits"
+                    element={<Products />}
+                  />
+
+                  <Route
+                    path="/produits/:slug"
+                    element={<ProductDetail />}
+                  />
+
+                  <Route
+                    path="/favoris"
+                    element={<Wishlist />}
+                  />
+
+                  <Route
+                    path="/suivi-commande"
+                    element={<Tracking />}
+                  />
+
+                  <Route
+                    path="/panier"
+                    element={<Cart />}
+                  />
+
+                  <Route
+                    path="/commande/succes"
+                    element={<CheckoutSuccess />}
+                  />
+
+                  <Route
+                    path="/contact"
+                    element={<Contact />}
+                  />
+
+                  <Route
+                    path="/test-supabase"
+                    element={<SupabaseTest />}
+                  />
+                </Route>
 
                 <Route
-                  path="/admin/produits"
-                  element={<AdminProducts />}
+                  path="/admin/login"
+                  element={<AdminLogin />}
                 />
 
-                <Route
-                  path="/admin/produits/nouveau"
-                  element={<AdminProductNew />}
-                />
+                <Route element={<ProtectedRoute />}>
+                  <Route
+                    path="/admin"
+                    element={<AdminDashboard />}
+                  />
 
-                <Route
-                  path="/admin/produits/:productId/modifier"
-                  element={<AdminProductEdit />}
-                />
+                  <Route
+                    path="/admin/produits"
+                    element={<AdminProducts />}
+                  />
 
-                <Route
-                  path="/admin/categories"
-                  element={<AdminCategories />}
-                />
+                  <Route
+                    path="/admin/produits/nouveau"
+                    element={<AdminProductNew />}
+                  />
 
-                <Route
-                  path="/admin/commandes"
-                  element={<AdminOrders />}
-                />
-              </Route>
-            </Routes>
-          </BrowserRouter>
+                  <Route
+                    path="/admin/produits/:productId/modifier"
+                    element={<AdminProductEdit />}
+                  />
+
+                  <Route
+                    path="/admin/categories"
+                    element={<AdminCategories />}
+                  />
+
+                  <Route
+                    path="/admin/commandes"
+                    element={<AdminOrders />}
+                  />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </div>

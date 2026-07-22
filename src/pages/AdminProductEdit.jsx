@@ -8,10 +8,12 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  ImagePlus,
   LoaderCircle,
   Plus,
   Save,
   Trash2,
+  X,
 } from "lucide-react";
 
 import {
@@ -41,8 +43,21 @@ const initialForm = {
   is_featured: false,
 };
 
+function createLocalId() {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
+}
+
 function createSlug(value) {
-  return value
+  return String(value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -51,9 +66,124 @@ function createSlug(value) {
     .replace(/^-+|-+$/g, "");
 }
 
-function createVariant() {
+function sanitizeFileName(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9.]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function validateImageFile(file) {
+  if (!file) {
+    return "Aucun fichier sélectionné.";
+  }
+
+  if (!file.type.startsWith("image/")) {
+    return "Le fichier sélectionné doit être une image.";
+  }
+
+  const maximumSize =
+    5 * 1024 * 1024;
+
+  if (file.size > maximumSize) {
+    return "Chaque image doit peser 5 Mo maximum.";
+  }
+
+  return "";
+}
+
+function getStoragePathFromPublicUrl(
+  publicUrl
+) {
+  if (!publicUrl) {
+    return "";
+  }
+
+  const marker =
+    "/storage/v1/object/public/produits/";
+
+  const markerIndex =
+    publicUrl.indexOf(marker);
+
+  if (markerIndex === -1) {
+    return "";
+  }
+
+  const encodedPath = publicUrl
+    .slice(
+      markerIndex + marker.length
+    )
+    .split("?")[0];
+
+  try {
+    return decodeURIComponent(
+      encodedPath
+    );
+  } catch {
+    return encodedPath;
+  }
+}
+
+async function uploadImage({
+  file,
+  folder,
+}) {
+  const safeFileName =
+    sanitizeFileName(file.name) ||
+    `image-${Date.now()}.jpg`;
+
+  const uniqueFileName =
+    `${Date.now()}-${createLocalId()}-${safeFileName}`;
+
+  const storagePath =
+    `${folder}/${uniqueFileName}`;
+
+  const {
+    error: uploadError,
+  } = await supabase.storage
+    .from("produits")
+    .upload(
+      storagePath,
+      file,
+      {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+      }
+    );
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const {
+    data: publicUrlData,
+  } = supabase.storage
+    .from("produits")
+    .getPublicUrl(storagePath);
+
+  const publicUrl =
+    publicUrlData?.publicUrl;
+
+  if (!publicUrl) {
+    throw new Error(
+      "Impossible de générer l’URL publique de l’image."
+    );
+  }
+
   return {
-    local_id: crypto.randomUUID(),
+    storagePath,
+    publicUrl,
+  };
+}
+
+function createVariant(
+  displayOrder = 0
+) {
+  return {
+    local_id: createLocalId(),
     id: null,
     name: "",
     price: "",
@@ -61,14 +191,23 @@ function createVariant() {
     reference: "",
     sku: "",
     is_active: true,
-    display_order: 0,
+    display_order: displayOrder,
+
+    image_url: "",
+    image_file: null,
+    image_preview: "",
+    remove_image: false,
   };
 }
 
-function normalizeVariant(variant, index) {
+function normalizeVariant(
+  variant,
+  index
+) {
   return {
     local_id:
-      variant.id || crypto.randomUUID(),
+      variant.id ||
+      createLocalId(),
 
     id:
       variant.id || null,
@@ -98,61 +237,134 @@ function normalizeVariant(variant, index) {
       variant.is_active !== false,
 
     display_order:
-      variant.display_order ?? index,
+      variant.display_order ??
+      index,
+
+    image_url:
+      variant.image_url || "",
+
+    image_file:
+      null,
+
+    image_preview:
+      "",
+
+    remove_image:
+      false,
+  };
+}
+
+function normalizeProductImage(
+  image,
+  index
+) {
+  return {
+    local_id:
+      image.id ||
+      createLocalId(),
+
+    id:
+      image.id || null,
+
+    file:
+      null,
+
+    preview:
+      image.image_url || "",
+
+    image_url:
+      image.image_url || "",
+
+    alt_text:
+      image.alt_text || "",
+
+    is_primary:
+      Boolean(image.is_primary),
+
+    display_order:
+      image.display_order ??
+      index,
   };
 }
 
 export default function AdminProductEdit() {
-  const { productId } = useParams();
-  const navigate = useNavigate();
+  const { productId } =
+    useParams();
 
-  const [form, setForm] =
-    useState(initialForm);
-
-  const [categories, setCategories] =
-    useState([]);
-
-  const [currentImage, setCurrentImage] =
-    useState(null);
-
-  const [variants, setVariants] =
-    useState([]);
+  const navigate =
+    useNavigate();
 
   const [
-    deletedVariantIds,
-    setDeletedVariantIds,
+    form,
+    setForm,
+  ] = useState(initialForm);
+
+  const [
+    categories,
+    setCategories,
   ] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [
+    productImages,
+    setProductImages,
+  ] = useState([]);
 
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [
+    deletedProductImages,
+    setDeletedProductImages,
+  ] = useState([]);
 
-  const variantsStock = useMemo(
-    () =>
-      variants.reduce(
-        (total, variant) =>
-          total +
-          Math.max(
-            0,
-            Number.parseInt(
-              variant.stock || "0",
-              10
-            ) || 0
-          ),
-        0
-      ),
-    [variants]
-  );
+  const [
+    variants,
+    setVariants,
+  ] = useState([]);
 
-  const activeVariantsCount = useMemo(
-    () =>
-      variants.filter(
-        (variant) => variant.is_active
-      ).length,
-    [variants]
-  );
+  const [
+    deletedVariants,
+    setDeletedVariants,
+  ] = useState([]);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
+
+  const variantsStock =
+    useMemo(
+      () =>
+        variants.reduce(
+          (
+            total,
+            variant
+          ) =>
+            total +
+            Math.max(
+              0,
+              Number.parseInt(
+                variant.stock ||
+                  "0",
+                10
+              ) || 0
+            ),
+          0
+        ),
+      [variants]
+    );
+
+  const activeVariantsCount =
+    useMemo(
+      () =>
+        variants.filter(
+          (variant) =>
+            variant.is_active
+        ).length,
+      [variants]
+    );
 
   useEffect(() => {
     document.title =
@@ -160,240 +372,313 @@ export default function AdminProductEdit() {
 
     let componentIsMounted = true;
 
-    const loadPageData = async () => {
-      setLoading(true);
+    const loadPageData =
+      async () => {
+        setLoading(true);
 
-      try {
-        const [
-          categoriesResult,
-          productResult,
-          variantsResult,
-        ] = await Promise.all([
-          supabase
-            .from("categories")
-            .select(`
-              id,
-              name,
-              slug,
-              is_active,
-              display_order
-            `)
-            .eq("is_active", true)
-            .order("display_order", {
-              ascending: true,
-            })
-            .order("name", {
-              ascending: true,
-            }),
-
-          supabase
-            .from("products")
-            .select(`
-              id,
-              category_id,
-              name,
-              slug,
-              brand,
-              manufacturer,
-              reference,
-              sku,
-              short_description,
-              description,
-              price,
-              stock,
-              on_demand,
-              is_active,
-              is_featured,
-              product_images (
+        try {
+          const [
+            categoriesResult,
+            productResult,
+            variantsResult,
+          ] = await Promise.all([
+            supabase
+              .from("categories")
+              .select(`
                 id,
-                image_url,
-                alt_text,
-                is_primary,
+                name,
+                slug,
+                is_active,
                 display_order
+              `)
+              .eq(
+                "is_active",
+                true
               )
-            `)
-            .eq("id", productId)
-            .maybeSingle(),
-
-          supabase
-            .from("product_variants")
-            .select(`
-              id,
-              product_id,
-              name,
-              price,
-              stock,
-              reference,
-              sku,
-              is_active,
-              display_order
-            `)
-            .eq("product_id", productId)
-            .order("display_order", {
-              ascending: true,
-            })
-            .order("created_at", {
-              ascending: true,
-            }),
-        ]);
-
-        if (categoriesResult.error) {
-          throw categoriesResult.error;
-        }
-
-        if (productResult.error) {
-          throw productResult.error;
-        }
-
-        if (variantsResult.error) {
-          throw variantsResult.error;
-        }
-
-        if (!productResult.data) {
-          throw new Error(
-            "Le produit demandé est introuvable."
-          );
-        }
-
-        const product =
-          productResult.data;
-
-        const sortedImages =
-          Array.isArray(
-            product.product_images
-          )
-            ? [...product.product_images].sort(
-                (
-                  firstImage,
-                  secondImage
-                ) => {
-                  if (
-                    firstImage.is_primary &&
-                    !secondImage.is_primary
-                  ) {
-                    return -1;
-                  }
-
-                  if (
-                    !firstImage.is_primary &&
-                    secondImage.is_primary
-                  ) {
-                    return 1;
-                  }
-
-                  return (
-                    Number(
-                      firstImage.display_order ||
-                        0
-                    ) -
-                    Number(
-                      secondImage.display_order ||
-                        0
-                    )
-                  );
+              .order(
+                "display_order",
+                {
+                  ascending:
+                    true,
                 }
               )
-            : [];
+              .order("name", {
+                ascending:
+                  true,
+              }),
 
-        if (!componentIsMounted) {
-          return;
-        }
+            supabase
+              .from("products")
+              .select(`
+                id,
+                category_id,
+                name,
+                slug,
+                brand,
+                manufacturer,
+                reference,
+                sku,
+                short_description,
+                description,
+                price,
+                stock,
+                on_demand,
+                is_active,
+                is_featured,
+                product_images (
+                  id,
+                  image_url,
+                  alt_text,
+                  is_primary,
+                  display_order
+                )
+              `)
+              .eq(
+                "id",
+                productId
+              )
+              .maybeSingle(),
 
-        setCategories(
-          categoriesResult.data || []
-        );
+            supabase
+              .from(
+                "product_variants"
+              )
+              .select(`
+                id,
+                product_id,
+                name,
+                price,
+                stock,
+                reference,
+                sku,
+                is_active,
+                display_order,
+                image_url
+              `)
+              .eq(
+                "product_id",
+                productId
+              )
+              .order(
+                "display_order",
+                {
+                  ascending:
+                    true,
+                }
+              )
+              .order(
+                "created_at",
+                {
+                  ascending:
+                    true,
+                }
+              ),
+          ]);
 
-        setCurrentImage(
-          sortedImages[0] || null
-        );
-
-        setVariants(
-          (variantsResult.data || []).map(
-            normalizeVariant
-          )
-        );
-
-        setDeletedVariantIds([]);
-
-        setForm({
-          name:
-            product.name || "",
-
-          slug:
-            product.slug || "",
-
-          category_id:
-            product.category_id || "",
-
-          brand:
-            product.brand || "",
-
-          manufacturer:
-            product.manufacturer || "",
-
-          reference:
-            product.reference || "",
-
-          sku:
-            product.sku || "",
-
-          short_description:
-            product.short_description || "",
-
-          description:
-            product.description || "",
-
-          price:
-            product.price === null ||
-            product.price === undefined
-              ? ""
-              : String(product.price),
-
-          stock:
-            product.stock === null ||
-            product.stock === undefined
-              ? "0"
-              : String(product.stock),
-
-          on_demand:
-            Boolean(product.on_demand),
-
-          is_active:
-            Boolean(product.is_active),
-
-          is_featured:
-            Boolean(product.is_featured),
-        });
-      } catch (error) {
-        console.error(
-          "Erreur lors du chargement du produit :",
-          error
-        );
-
-        toast.error(
-          error?.message ||
-            "Impossible de charger le produit."
-        );
-
-        navigate(
-          "/admin/produits",
-          {
-            replace: true,
+          if (
+            categoriesResult.error
+          ) {
+            throw categoriesResult.error;
           }
-        );
-      } finally {
-        if (componentIsMounted) {
-          setLoading(false);
+
+          if (
+            productResult.error
+          ) {
+            throw productResult.error;
+          }
+
+          if (
+            variantsResult.error
+          ) {
+            throw variantsResult.error;
+          }
+
+          if (
+            !productResult.data
+          ) {
+            throw new Error(
+              "Le produit demandé est introuvable."
+            );
+          }
+
+          const product =
+            productResult.data;
+
+          const sortedImages =
+            Array.isArray(
+              product.product_images
+            )
+              ? [
+                  ...product.product_images,
+                ].sort(
+                  (
+                    firstImage,
+                    secondImage
+                  ) => {
+                    if (
+                      firstImage.is_primary &&
+                      !secondImage.is_primary
+                    ) {
+                      return -1;
+                    }
+
+                    if (
+                      !firstImage.is_primary &&
+                      secondImage.is_primary
+                    ) {
+                      return 1;
+                    }
+
+                    return (
+                      Number(
+                        firstImage.display_order ||
+                          0
+                      ) -
+                      Number(
+                        secondImage.display_order ||
+                          0
+                      )
+                    );
+                  }
+                )
+              : [];
+
+          if (
+            !componentIsMounted
+          ) {
+            return;
+          }
+
+          setCategories(
+            categoriesResult.data ||
+              []
+          );
+
+          setProductImages(
+            sortedImages.map(
+              normalizeProductImage
+            )
+          );
+
+          setDeletedProductImages(
+            []
+          );
+
+          setVariants(
+            (
+              variantsResult.data ||
+              []
+            ).map(
+              normalizeVariant
+            )
+          );
+
+          setDeletedVariants([]);
+
+          setForm({
+            name:
+              product.name || "",
+
+            slug:
+              product.slug || "",
+
+            category_id:
+              product.category_id ||
+              "",
+
+            brand:
+              product.brand || "",
+
+            manufacturer:
+              product.manufacturer ||
+              "",
+
+            reference:
+              product.reference ||
+              "",
+
+            sku:
+              product.sku || "",
+
+            short_description:
+              product.short_description ||
+              "",
+
+            description:
+              product.description ||
+              "",
+
+            price:
+              product.price ===
+                null ||
+              product.price ===
+                undefined
+                ? ""
+                : String(
+                    product.price
+                  ),
+
+            stock:
+              product.stock ===
+                null ||
+              product.stock ===
+                undefined
+                ? "0"
+                : String(
+                    product.stock
+                  ),
+
+            on_demand:
+              Boolean(
+                product.on_demand
+              ),
+
+            is_active:
+              Boolean(
+                product.is_active
+              ),
+
+            is_featured:
+              Boolean(
+                product.is_featured
+              ),
+          });
+        } catch (error) {
+          console.error(
+            "Erreur lors du chargement du produit :",
+            error
+          );
+
+          toast.error(
+            error?.message ||
+              "Impossible de charger le produit."
+          );
+
+          navigate(
+            "/admin/produits",
+            {
+              replace: true,
+            }
+          );
+        } finally {
+          if (
+            componentIsMounted
+          ) {
+            setLoading(false);
+          }
         }
-      }
-    };
+      };
 
     loadPageData();
 
     return () => {
-      componentIsMounted = false;
+      componentIsMounted =
+        false;
     };
-  }, [navigate, productId]);
+  }, [
+    navigate,
+    productId,
+  ]);
 
   const handleFieldChange = (
     event
@@ -405,26 +690,259 @@ export default function AdminProductEdit() {
       type,
     } = event.target;
 
-    setForm((currentForm) => ({
-      ...currentForm,
+    setForm(
+      (currentForm) => ({
+        ...currentForm,
 
-      [name]:
-        type === "checkbox"
-          ? checked
-          : value,
-    }));
+        [name]:
+          type === "checkbox"
+            ? checked
+            : value,
+      })
+    );
   };
 
   const handleSlugChange = (
     event
   ) => {
-    setForm((currentForm) => ({
-      ...currentForm,
+    setForm(
+      (currentForm) => ({
+        ...currentForm,
 
-      slug: createSlug(
-        event.target.value
-      ),
-    }));
+        slug: createSlug(
+          event.target.value
+        ),
+      })
+    );
+  };
+
+  const handleProductImagesChange = (
+    event
+  ) => {
+    const selectedFiles =
+      Array.from(
+        event.target.files || []
+      );
+
+    if (
+      selectedFiles.length === 0
+    ) {
+      return;
+    }
+
+    for (
+      const file of selectedFiles
+    ) {
+      const validationError =
+        validateImageFile(file);
+
+      if (validationError) {
+        toast.error(
+          validationError
+        );
+
+        event.target.value =
+          "";
+
+        return;
+      }
+    }
+
+    setProductImages(
+      (currentImages) => {
+        const newImages =
+          selectedFiles.map(
+            (
+              file,
+              index
+            ) => ({
+              local_id:
+                createLocalId(),
+
+              id:
+                null,
+
+              file,
+
+              preview:
+                URL.createObjectURL(
+                  file
+                ),
+
+              image_url:
+                "",
+
+              alt_text:
+                form.name.trim(),
+
+              is_primary:
+                currentImages.length ===
+                  0 &&
+                index === 0,
+
+              display_order:
+                currentImages.length +
+                index,
+            })
+          );
+
+        return [
+          ...currentImages,
+          ...newImages,
+        ];
+      }
+    );
+
+    event.target.value = "";
+  };
+
+  const setPrimaryProductImage = (
+    localId
+  ) => {
+    setProductImages(
+      (currentImages) =>
+        currentImages.map(
+          (image) => ({
+            ...image,
+
+            is_primary:
+              image.local_id ===
+              localId,
+          })
+        )
+    );
+  };
+
+  const removeProductImage = (
+    imageToRemove
+  ) => {
+    if (
+      imageToRemove.file &&
+      imageToRemove.preview
+    ) {
+      URL.revokeObjectURL(
+        imageToRemove.preview
+      );
+    }
+
+    if (
+      imageToRemove.id
+    ) {
+      setDeletedProductImages(
+        (currentImages) => [
+          ...currentImages,
+
+          {
+            id:
+              imageToRemove.id,
+
+            image_url:
+              imageToRemove.image_url,
+          },
+        ]
+      );
+    }
+
+    setProductImages(
+      (currentImages) => {
+        const remainingImages =
+          currentImages
+            .filter(
+              (image) =>
+                image.local_id !==
+                imageToRemove.local_id
+            )
+            .map(
+              (
+                image,
+                index
+              ) => ({
+                ...image,
+
+                display_order:
+                  index,
+              })
+            );
+
+        const primaryImageStillExists =
+          remainingImages.some(
+            (image) =>
+              image.is_primary
+          );
+
+        if (
+          remainingImages.length >
+            0 &&
+          !primaryImageStillExists
+        ) {
+          return remainingImages.map(
+            (
+              image,
+              index
+            ) => ({
+              ...image,
+
+              is_primary:
+                index === 0,
+            })
+          );
+        }
+
+        return remainingImages;
+      }
+    );
+  };
+
+  const moveProductImage = (
+    index,
+    direction
+  ) => {
+    setProductImages(
+      (currentImages) => {
+        const newIndex =
+          direction === "up"
+            ? index - 1
+            : index + 1;
+
+        if (
+          newIndex < 0 ||
+          newIndex >=
+            currentImages.length
+        ) {
+          return currentImages;
+        }
+
+        const reorderedImages = [
+          ...currentImages,
+        ];
+
+        const [
+          movedImage,
+        ] =
+          reorderedImages.splice(
+            index,
+            1
+          );
+
+        reorderedImages.splice(
+          newIndex,
+          0,
+          movedImage
+        );
+
+        return reorderedImages.map(
+          (
+            image,
+            imageIndex
+          ) => ({
+            ...image,
+
+            display_order:
+              imageIndex,
+          })
+        );
+      }
+    );
   };
 
   const addVariant = () => {
@@ -432,12 +950,9 @@ export default function AdminProductEdit() {
       (currentVariants) => [
         ...currentVariants,
 
-        {
-          ...createVariant(),
-
-          display_order:
-            currentVariants.length,
-        },
+        createVariant(
+          currentVariants.length
+        ),
       ]
     );
   };
@@ -451,7 +966,8 @@ export default function AdminProductEdit() {
       (currentVariants) =>
         currentVariants.map(
           (variant) =>
-            variant.local_id === localId
+            variant.local_id ===
+            localId
               ? {
                   ...variant,
                   [field]: value,
@@ -464,13 +980,29 @@ export default function AdminProductEdit() {
   const removeVariant = (
     variantToRemove
   ) => {
-    if (variantToRemove.id) {
-      setDeletedVariantIds(
-        (currentIds) => [
-          ...new Set([
-            ...currentIds,
-            variantToRemove.id,
-          ]),
+    if (
+      variantToRemove.image_preview
+    ) {
+      URL.revokeObjectURL(
+        variantToRemove.image_preview
+      );
+    }
+
+    if (
+      variantToRemove.id
+    ) {
+      setDeletedVariants(
+        (currentVariants) => [
+          ...currentVariants,
+
+          {
+            id:
+              variantToRemove.id,
+
+            image_url:
+              variantToRemove.image_url ||
+              "",
+          },
         ]
       );
     }
@@ -483,10 +1015,17 @@ export default function AdminProductEdit() {
               variant.local_id !==
               variantToRemove.local_id
           )
-          .map((variant, index) => ({
-            ...variant,
-            display_order: index,
-          }))
+          .map(
+            (
+              variant,
+              index
+            ) => ({
+              ...variant,
+
+              display_order:
+                index,
+            })
+          )
     );
   };
 
@@ -513,7 +1052,9 @@ export default function AdminProductEdit() {
           ...currentVariants,
         ];
 
-        const [movedVariant] =
+        const [
+          movedVariant,
+        ] =
           reorderedVariants.splice(
             index,
             1
@@ -526,7 +1067,10 @@ export default function AdminProductEdit() {
         );
 
         return reorderedVariants.map(
-          (variant, variantIndex) => ({
+          (
+            variant,
+            variantIndex
+          ) => ({
             ...variant,
 
             display_order:
@@ -534,6 +1078,110 @@ export default function AdminProductEdit() {
           })
         );
       }
+    );
+  };
+
+  const handleVariantImageChange = (
+    localId,
+    event
+  ) => {
+    const selectedFile =
+      event.target.files?.[0];
+
+    if (!selectedFile) {
+      return;
+    }
+
+    const validationError =
+      validateImageFile(
+        selectedFile
+      );
+
+    if (validationError) {
+      toast.error(
+        validationError
+      );
+
+      event.target.value = "";
+      return;
+    }
+
+    setVariants(
+      (currentVariants) =>
+        currentVariants.map(
+          (variant) => {
+            if (
+              variant.local_id !==
+              localId
+            ) {
+              return variant;
+            }
+
+            if (
+              variant.image_preview
+            ) {
+              URL.revokeObjectURL(
+                variant.image_preview
+              );
+            }
+
+            return {
+              ...variant,
+
+              image_file:
+                selectedFile,
+
+              image_preview:
+                URL.createObjectURL(
+                  selectedFile
+                ),
+
+              remove_image:
+                false,
+            };
+          }
+        )
+    );
+
+    event.target.value = "";
+  };
+
+  const removeVariantImage = (
+    localId
+  ) => {
+    setVariants(
+      (currentVariants) =>
+        currentVariants.map(
+          (variant) => {
+            if (
+              variant.local_id !==
+              localId
+            ) {
+              return variant;
+            }
+
+            if (
+              variant.image_preview
+            ) {
+              URL.revokeObjectURL(
+                variant.image_preview
+              );
+            }
+
+            return {
+              ...variant,
+
+              image_file:
+                null,
+
+              image_preview:
+                "",
+
+              remove_image:
+                true,
+            };
+          }
+        )
     );
   };
 
@@ -573,6 +1221,21 @@ export default function AdminProductEdit() {
       return "Le stock général doit être un nombre entier supérieur ou égal à zéro.";
     }
 
+    if (
+      productImages.length === 0
+    ) {
+      return "Le produit doit conserver au moins une photo.";
+    }
+
+    if (
+      !productImages.some(
+        (image) =>
+          image.is_primary
+      )
+    ) {
+      return "Choisis une photo principale.";
+    }
+
     for (
       let index = 0;
       index < variants.length;
@@ -584,16 +1247,22 @@ export default function AdminProductEdit() {
       const variantNumber =
         index + 1;
 
-      if (!variant.name.trim()) {
+      if (
+        !variant.name.trim()
+      ) {
         return `Le nom de la variante ${variantNumber} est obligatoire.`;
       }
 
       if (
         variant.price === "" ||
         Number.isNaN(
-          Number(variant.price)
+          Number(
+            variant.price
+          )
         ) ||
-        Number(variant.price) < 0
+        Number(
+          variant.price
+        ) < 0
       ) {
         return `Le prix de la variante « ${variant.name} » doit être supérieur ou égal à zéro.`;
       }
@@ -601,11 +1270,17 @@ export default function AdminProductEdit() {
       if (
         variant.stock === "" ||
         Number.isNaN(
-          Number(variant.stock)
+          Number(
+            variant.stock
+          )
         ) ||
-        Number(variant.stock) < 0 ||
+        Number(
+          variant.stock
+        ) < 0 ||
         !Number.isInteger(
-          Number(variant.stock)
+          Number(
+            variant.stock
+          )
         )
       ) {
         return `Le stock de la variante « ${variant.name} » doit être un nombre entier supérieur ou égal à zéro.`;
@@ -614,10 +1289,11 @@ export default function AdminProductEdit() {
 
     const normalizedReferences =
       variants
-        .map((variant) =>
-          variant.reference
-            .trim()
-            .toLowerCase()
+        .map(
+          (variant) =>
+            variant.reference
+              .trim()
+              .toLowerCase()
         )
         .filter(Boolean);
 
@@ -632,15 +1308,18 @@ export default function AdminProductEdit() {
 
     const normalizedSkus =
       variants
-        .map((variant) =>
-          variant.sku
-            .trim()
-            .toLowerCase()
+        .map(
+          (variant) =>
+            variant.sku
+              .trim()
+              .toLowerCase()
         )
         .filter(Boolean);
 
     if (
-      new Set(normalizedSkus).size !==
+      new Set(
+        normalizedSkus
+      ).size !==
       normalizedSkus.length
     ) {
       return "Deux variantes possèdent le même SKU.";
@@ -658,18 +1337,22 @@ export default function AdminProductEdit() {
       validateForm();
 
     if (validationError) {
-      toast.error(validationError);
+      toast.error(
+        validationError
+      );
+
       return;
     }
 
     setSubmitting(true);
 
+    const pendingStoragePaths =
+      new Set();
+
+    const storagePathsToDelete =
+      new Set();
+
     try {
-      /*
-       * Lorsqu’il existe des variantes,
-       * le stock général devient la somme
-       * de leurs stocks.
-       */
       const calculatedProductStock =
         variants.length > 0
           ? variantsStock
@@ -677,6 +1360,9 @@ export default function AdminProductEdit() {
               form.stock,
               10
             );
+
+      const cleanSlug =
+        createSlug(form.slug);
 
       const {
         error: productError,
@@ -690,10 +1376,11 @@ export default function AdminProductEdit() {
             form.name.trim(),
 
           slug:
-            createSlug(form.slug),
+            cleanSlug,
 
           brand:
-            form.brand.trim() || null,
+            form.brand.trim() ||
+            null,
 
           manufacturer:
             form.manufacturer.trim() ||
@@ -704,7 +1391,8 @@ export default function AdminProductEdit() {
             null,
 
           sku:
-            form.sku.trim() || null,
+            form.sku.trim() ||
+            null,
 
           short_description:
             form.short_description.trim() ||
@@ -735,139 +1423,378 @@ export default function AdminProductEdit() {
         throw productError;
       }
 
-      /*
-       * Supprime les variantes retirées
-       * depuis l’interface.
-       */
-      if (
-        deletedVariantIds.length > 0
-      ) {
-        const {
-          error: deleteError,
-        } = await supabase
-          .from("product_variants")
-          .delete()
-          .in(
-            "id",
-            deletedVariantIds
-          );
-
-        if (deleteError) {
-          throw deleteError;
-        }
-      }
-
-      /*
-       * Met à jour les variantes
-       * déjà existantes.
-       */
-      const existingVariants =
-        variants.filter(
-          (variant) => variant.id
+      const existingImages =
+        productImages.filter(
+          (image) => image.id
         );
 
       for (
-        const variant
-        of existingVariants
+        const image of existingImages
       ) {
         const {
-          error: variantUpdateError,
+          error: imageUpdateError,
         } = await supabase
-          .from("product_variants")
+          .from("product_images")
           .update({
-            name:
-              variant.name.trim(),
+            alt_text:
+              image.alt_text ||
+              form.name.trim(),
 
-            price:
-              Number(variant.price),
-
-            stock:
-              Number.parseInt(
-                variant.stock,
-                10
-              ),
-
-            reference:
-              variant.reference.trim() ||
-              null,
-
-            sku:
-              variant.sku.trim() || null,
-
-            is_active:
-              variant.is_active,
+            is_primary:
+              image.is_primary,
 
             display_order:
-              variant.display_order,
+              image.display_order,
           })
-          .eq("id", variant.id)
+          .eq("id", image.id)
           .eq(
             "product_id",
             productId
           );
 
-        if (variantUpdateError) {
-          throw variantUpdateError;
+        if (
+          imageUpdateError
+        ) {
+          throw imageUpdateError;
         }
       }
 
-      /*
-       * Insère les nouvelles variantes.
-       */
-      const newVariants =
-        variants.filter(
-          (variant) => !variant.id
+      const newImages =
+        productImages.filter(
+          (image) =>
+            !image.id &&
+            image.file
         );
 
-      if (newVariants.length > 0) {
+      const newImageRows = [];
+      const newImagePaths = [];
+
+      for (
+        const image of newImages
+      ) {
+        const uploadedImage =
+          await uploadImage({
+            file:
+              image.file,
+
+            folder:
+              cleanSlug,
+          });
+
+        pendingStoragePaths.add(
+          uploadedImage.storagePath
+        );
+
+        newImagePaths.push(
+          uploadedImage.storagePath
+        );
+
+        newImageRows.push({
+          product_id:
+            productId,
+
+          image_url:
+            uploadedImage.publicUrl,
+
+          alt_text:
+            image.alt_text ||
+            form.name.trim(),
+
+          is_primary:
+            image.is_primary,
+
+          display_order:
+            image.display_order,
+        });
+      }
+
+      if (
+        newImageRows.length > 0
+      ) {
         const {
-          error: insertError,
+          error: imagesInsertError,
         } = await supabase
-          .from("product_variants")
+          .from("product_images")
           .insert(
-            newVariants.map(
-              (variant) => ({
-                product_id:
-                  productId,
+            newImageRows
+          );
 
-                name:
-                  variant.name.trim(),
+        if (
+          imagesInsertError
+        ) {
+          throw imagesInsertError;
+        }
 
-                price:
-                  Number(
-                    variant.price
-                  ),
+        newImagePaths.forEach(
+          (storagePath) => {
+            pendingStoragePaths.delete(
+              storagePath
+            );
+          }
+        );
+      }
 
-                stock:
-                  Number.parseInt(
-                    variant.stock,
-                    10
-                  ),
+      if (
+        deletedProductImages.length >
+        0
+      ) {
+        const imageIds =
+          deletedProductImages.map(
+            (image) => image.id
+          );
 
-                reference:
-                  variant.reference.trim() ||
-                  null,
+        const {
+          error: imagesDeleteError,
+        } = await supabase
+          .from("product_images")
+          .delete()
+          .in(
+            "id",
+            imageIds
+          );
 
-                sku:
-                  variant.sku.trim() ||
-                  null,
+        if (
+          imagesDeleteError
+        ) {
+          throw imagesDeleteError;
+        }
 
-                is_active:
-                  variant.is_active,
+        deletedProductImages.forEach(
+          (image) => {
+            const storagePath =
+              getStoragePathFromPublicUrl(
+                image.image_url
+              );
 
-                display_order:
-                  variant.display_order,
-              })
+            if (storagePath) {
+              storagePathsToDelete.add(
+                storagePath
+              );
+            }
+          }
+        );
+      }
+
+      if (
+        deletedVariants.length >
+        0
+      ) {
+        const variantIds =
+          deletedVariants.map(
+            (variant) =>
+              variant.id
+          );
+
+        const {
+          error: variantsDeleteError,
+        } = await supabase
+          .from(
+            "product_variants"
+          )
+          .delete()
+          .in(
+            "id",
+            variantIds
+          );
+
+        if (
+          variantsDeleteError
+        ) {
+          throw variantsDeleteError;
+        }
+
+        deletedVariants.forEach(
+          (variant) => {
+            const storagePath =
+              getStoragePathFromPublicUrl(
+                variant.image_url
+              );
+
+            if (storagePath) {
+              storagePathsToDelete.add(
+                storagePath
+              );
+            }
+          }
+        );
+      }
+
+      for (
+        const variant of variants
+      ) {
+        let variantImageUrl =
+          variant.remove_image
+            ? null
+            : variant.image_url ||
+              null;
+
+        let uploadedVariantPath =
+          "";
+
+        if (
+          variant.image_file
+        ) {
+          const uploadedVariantImage =
+            await uploadImage({
+              file:
+                variant.image_file,
+
+              folder:
+                `${cleanSlug}/variantes`,
+            });
+
+          uploadedVariantPath =
+            uploadedVariantImage.storagePath;
+
+          pendingStoragePaths.add(
+            uploadedVariantPath
+          );
+
+          variantImageUrl =
+            uploadedVariantImage.publicUrl;
+        }
+
+        const variantPayload = {
+          product_id:
+            productId,
+
+          name:
+            variant.name.trim(),
+
+          price:
+            Number(
+              variant.price
+            ),
+
+          stock:
+            Number.parseInt(
+              variant.stock,
+              10
+            ),
+
+          reference:
+            variant.reference.trim() ||
+            null,
+
+          sku:
+            variant.sku.trim() ||
+            null,
+
+          is_active:
+            variant.is_active,
+
+          display_order:
+            variant.display_order,
+
+          image_url:
+            variantImageUrl,
+        };
+
+        if (variant.id) {
+          const {
+            error:
+              variantUpdateError,
+          } = await supabase
+            .from(
+              "product_variants"
+            )
+            .update(
+              variantPayload
+            )
+            .eq(
+              "id",
+              variant.id
+            )
+            .eq(
+              "product_id",
+              productId
+            );
+
+          if (
+            variantUpdateError
+          ) {
+            throw variantUpdateError;
+          }
+        } else {
+          const {
+            error:
+              variantInsertError,
+          } = await supabase
+            .from(
+              "product_variants"
+            )
+            .insert(
+              variantPayload
+            );
+
+          if (
+            variantInsertError
+          ) {
+            throw variantInsertError;
+          }
+        }
+
+        if (
+          uploadedVariantPath
+        ) {
+          pendingStoragePaths.delete(
+            uploadedVariantPath
+          );
+        }
+
+        if (
+          variant.image_url &&
+          (
+            variant.remove_image ||
+            variant.image_file
+          )
+        ) {
+          const oldStoragePath =
+            getStoragePathFromPublicUrl(
+              variant.image_url
+            );
+
+          if (
+            oldStoragePath
+          ) {
+            storagePathsToDelete.add(
+              oldStoragePath
+            );
+          }
+        }
+      }
+
+      if (
+        storagePathsToDelete.size >
+        0
+      ) {
+        const {
+          error:
+            storageDeleteError,
+        } = await supabase.storage
+          .from("produits")
+          .remove(
+            Array.from(
+              storagePathsToDelete
             )
           );
 
-        if (insertError) {
-          throw insertError;
+        if (
+          storageDeleteError
+        ) {
+          console.warn(
+            "Certaines anciennes images n’ont pas pu être supprimées du stockage :",
+            storageDeleteError
+          );
         }
       }
 
       toast.success(
-        "Produit et variantes modifiés avec succès."
+        "Produit modifié avec succès.",
+        {
+          description:
+            "Les informations, photos et variantes ont été enregistrées.",
+        }
       );
 
       navigate(
@@ -878,6 +1805,31 @@ export default function AdminProductEdit() {
         "Erreur lors de la modification :",
         error
       );
+
+      if (
+        pendingStoragePaths.size >
+        0
+      ) {
+        const {
+          error:
+            storageCleanupError,
+        } = await supabase.storage
+          .from("produits")
+          .remove(
+            Array.from(
+              pendingStoragePaths
+            )
+          );
+
+        if (
+          storageCleanupError
+        ) {
+          console.error(
+            "Impossible de supprimer certaines nouvelles images après l’échec :",
+            storageCleanupError
+          );
+        }
+      }
 
       let errorMessage =
         error?.message ||
@@ -898,7 +1850,9 @@ export default function AdminProductEdit() {
           "Ce slug, cette référence ou ce SKU est déjà utilisé.";
       }
 
-      toast.error(errorMessage);
+      toast.error(
+        errorMessage
+      );
     } finally {
       setSubmitting(false);
     }
@@ -953,12 +1907,14 @@ export default function AdminProductEdit() {
           </h1>
 
           <p className="text-muted-foreground mt-3">
-            Modifie le produit et gère ses différentes variantes.
+            Modifie les informations, les photos et les variantes du produit.
           </p>
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={
+            handleSubmit
+          }
           className="space-y-7"
         >
           <section className="rounded-3xl border border-border bg-card p-6 sm:p-8">
@@ -978,7 +1934,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 />
               </div>
@@ -994,7 +1952,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleSlugChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 />
               </div>
@@ -1012,7 +1972,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 >
                   <option value="">
@@ -1022,10 +1984,16 @@ export default function AdminProductEdit() {
                   {categories.map(
                     (category) => (
                       <option
-                        key={category.id}
-                        value={category.id}
+                        key={
+                          category.id
+                        }
+                        value={
+                          category.id
+                        }
                       >
-                        {category.name}
+                        {
+                          category.name
+                        }
                       </option>
                     )
                   )}
@@ -1043,7 +2011,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 />
               </div>
@@ -1061,7 +2031,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 />
               </div>
@@ -1079,7 +2051,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 />
               </div>
@@ -1095,7 +2069,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 />
               </div>
@@ -1113,7 +2089,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   rows={3}
                   className="w-full rounded-xl border border-border bg-background px-4 py-3"
                 />
@@ -1132,10 +2110,16 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
-                  rows={7}
+                  disabled={
+                    submitting
+                  }
+                  rows={9}
                   className="w-full rounded-xl border border-border bg-background px-4 py-3"
                 />
+
+                <p className="text-xs text-muted-foreground mt-2">
+                  Les lignes écrites sous la forme « Caractéristique : Valeur » seront affichées dans le tableau technique.
+                </p>
               </div>
             </div>
           </section>
@@ -1164,7 +2148,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 />
               </div>
@@ -1180,7 +2166,8 @@ export default function AdminProductEdit() {
                   min="0"
                   step="1"
                   value={
-                    variants.length > 0
+                    variants.length >
+                    0
                       ? String(
                           variantsStock
                         )
@@ -1191,12 +2178,14 @@ export default function AdminProductEdit() {
                   }
                   disabled={
                     submitting ||
-                    variants.length > 0
+                    variants.length >
+                      0
                   }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4 disabled:opacity-60"
                 />
 
-                {variants.length > 0 && (
+                {variants.length >
+                  0 && (
                   <p className="text-xs text-muted-foreground mt-2">
                     Calculé automatiquement avec la somme des stocks des variantes.
                   </p>
@@ -1215,7 +2204,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="mt-1"
                 />
 
@@ -1234,7 +2225,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="mt-1"
                 />
 
@@ -1253,7 +2246,9 @@ export default function AdminProductEdit() {
                   onChange={
                     handleFieldChange
                   }
-                  disabled={submitting}
+                  disabled={
+                    submitting
+                  }
                   className="mt-1"
                 />
 
@@ -1268,18 +2263,196 @@ export default function AdminProductEdit() {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5 mb-7">
               <div>
                 <h2 className="font-display font-bold text-xl">
+                  Photos du produit
+                </h2>
+
+                <p className="text-sm text-muted-foreground mt-2">
+                  Ajoute plusieurs photos, modifie leur ordre et choisis la photo principale.
+                </p>
+              </div>
+
+              <label className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-primary text-primary-foreground font-semibold cursor-pointer">
+                <ImagePlus className="w-4 h-4" />
+                Ajouter des photos
+
+                <input
+                  type="file"
+                  multiple
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={
+                    handleProductImagesChange
+                  }
+                  disabled={
+                    submitting
+                  }
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {productImages.length ===
+            0 ? (
+              <label className="min-h-56 rounded-2xl border-2 border-dashed border-border bg-secondary/20 flex flex-col items-center justify-center text-center px-6 cursor-pointer hover:border-primary/60">
+                <ImagePlus className="w-10 h-10 text-primary mb-4" />
+
+                <span className="font-semibold">
+                  Ajouter des photos
+                </span>
+
+                <span className="text-sm text-muted-foreground mt-1">
+                  Le produit doit conserver au moins une photo.
+                </span>
+
+                <input
+                  type="file"
+                  multiple
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={
+                    handleProductImagesChange
+                  }
+                  className="hidden"
+                />
+              </label>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {productImages.map(
+                  (
+                    image,
+                    index
+                  ) => (
+                    <article
+                      key={
+                        image.local_id
+                      }
+                      className={`rounded-2xl border p-4 ${
+                        image.is_primary
+                          ? "border-primary bg-primary/5"
+                          : "border-border"
+                      }`}
+                    >
+                      <div className="relative rounded-xl bg-white overflow-hidden">
+                        <img
+                          src={
+                            image.preview
+                          }
+                          alt={
+                            image.alt_text ||
+                            form.name
+                          }
+                          className="w-full h-48 object-contain"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeProductImage(
+                              image
+                            )
+                          }
+                          disabled={
+                            submitting
+                          }
+                          title="Supprimer la photo"
+                          className="absolute top-2 right-2 w-9 h-9 rounded-full border border-border bg-white text-destructive grid place-items-center"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Photo{" "}
+                        {index + 1}
+                        {!image.id &&
+                          " — nouvelle"}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPrimaryProductImage(
+                            image.local_id
+                          )
+                        }
+                        disabled={
+                          submitting
+                        }
+                        className={`w-full min-h-10 px-3 rounded-full mt-3 text-sm font-semibold ${
+                          image.is_primary
+                            ? "bg-primary text-primary-foreground"
+                            : "border border-border hover:bg-secondary"
+                        }`}
+                      >
+                        {image.is_primary
+                          ? "Photo principale"
+                          : "Définir comme principale"}
+                      </button>
+
+                      <div className="flex items-center justify-center gap-2 mt-3">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            moveProductImage(
+                              index,
+                              "up"
+                            )
+                          }
+                          disabled={
+                            submitting ||
+                            index === 0
+                          }
+                          title="Déplacer avant"
+                          className="w-10 h-10 rounded-full border border-border grid place-items-center disabled:opacity-40"
+                        >
+                          <ArrowUp className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            moveProductImage(
+                              index,
+                              "down"
+                            )
+                          }
+                          disabled={
+                            submitting ||
+                            index ===
+                              productImages.length -
+                                1
+                          }
+                          title="Déplacer après"
+                          className="w-10 h-10 rounded-full border border-border grid place-items-center disabled:opacity-40"
+                        >
+                          <ArrowDown className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </article>
+                  )
+                )}
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-3xl border border-border bg-card p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5 mb-7">
+              <div>
+                <h2 className="font-display font-bold text-xl">
                   Variantes du produit
                 </h2>
 
                 <p className="text-sm text-muted-foreground mt-2">
-                  Chaque variante possède son propre prix, stock, nom, SKU et référence.
+                  Chaque variante possède son prix, son stock, sa référence, son SKU et éventuellement sa photo.
                 </p>
               </div>
 
               <button
                 type="button"
-                onClick={addVariant}
-                disabled={submitting}
+                onClick={
+                  addVariant
+                }
+                disabled={
+                  submitting
+                }
                 className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-primary text-primary-foreground font-semibold disabled:opacity-60"
               >
                 <Plus className="w-4 h-4" />
@@ -1287,7 +2460,8 @@ export default function AdminProductEdit() {
               </button>
             </div>
 
-            {variants.length === 0 ? (
+            {variants.length ===
+            0 ? (
               <div className="rounded-2xl border border-dashed border-border p-8 text-center">
                 <p className="font-semibold">
                   Aucune variante
@@ -1299,8 +2473,12 @@ export default function AdminProductEdit() {
 
                 <button
                   type="button"
-                  onClick={addVariant}
-                  disabled={submitting}
+                  onClick={
+                    addVariant
+                  }
+                  disabled={
+                    submitting
+                  }
                   className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-border mt-5 font-semibold hover:bg-secondary"
                 >
                   <Plus className="w-4 h-4" />
@@ -1310,255 +2488,353 @@ export default function AdminProductEdit() {
             ) : (
               <div className="space-y-5">
                 {variants.map(
-                  (variant, index) => (
-                    <article
-                      key={
-                        variant.local_id
-                      }
-                      className="rounded-2xl border border-border bg-secondary/20 p-5 sm:p-6"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-                        <div>
-                          <p className="font-display font-bold text-lg">
-                            Variante{" "}
-                            {index + 1}
-                          </p>
+                  (
+                    variant,
+                    index
+                  ) => {
+                    const displayedVariantImage =
+                      variant.image_preview ||
+                      (
+                        !variant.remove_image
+                          ? variant.image_url
+                          : ""
+                      );
 
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {variant.name ||
-                              "Nouvelle variante"}
-                          </p>
+                    return (
+                      <article
+                        key={
+                          variant.local_id
+                        }
+                        className="rounded-2xl border border-border bg-secondary/20 p-5 sm:p-6"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+                          <div>
+                            <p className="font-display font-bold text-lg">
+                              Variante{" "}
+                              {index + 1}
+                            </p>
+
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {variant.name ||
+                                "Nouvelle variante"}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              title="Monter la variante"
+                              onClick={() =>
+                                moveVariant(
+                                  index,
+                                  "up"
+                                )
+                              }
+                              disabled={
+                                submitting ||
+                                index === 0
+                              }
+                              className="w-10 h-10 rounded-full border border-border bg-card grid place-items-center disabled:opacity-40"
+                            >
+                              <ArrowUp className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              type="button"
+                              title="Descendre la variante"
+                              onClick={() =>
+                                moveVariant(
+                                  index,
+                                  "down"
+                                )
+                              }
+                              disabled={
+                                submitting ||
+                                index ===
+                                  variants.length -
+                                    1
+                              }
+                              className="w-10 h-10 rounded-full border border-border bg-card grid place-items-center disabled:opacity-40"
+                            >
+                              <ArrowDown className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              type="button"
+                              title="Supprimer la variante"
+                              onClick={() =>
+                                removeVariant(
+                                  variant
+                                )
+                              }
+                              disabled={
+                                submitting
+                              }
+                              className="w-10 h-10 rounded-full border border-destructive/30 bg-destructive/10 text-destructive grid place-items-center"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            title="Monter la variante"
-                            onClick={() =>
-                              moveVariant(
-                                index,
-                                "up"
-                              )
-                            }
-                            disabled={
-                              submitting ||
-                              index === 0
-                            }
-                            className="w-10 h-10 rounded-full border border-border bg-card grid place-items-center hover:bg-secondary disabled:opacity-40"
-                          >
-                            <ArrowUp className="w-4 h-4" />
-                          </button>
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                          <div>
+                            <label className="block text-sm font-semibold mb-2">
+                              Nom de la variante *
+                            </label>
 
-                          <button
-                            type="button"
-                            title="Descendre la variante"
-                            onClick={() =>
-                              moveVariant(
-                                index,
-                                "down"
-                              )
-                            }
-                            disabled={
-                              submitting ||
-                              index ===
-                                variants.length -
-                                  1
-                            }
-                            className="w-10 h-10 rounded-full border border-border bg-card grid place-items-center hover:bg-secondary disabled:opacity-40"
-                          >
-                            <ArrowDown className="w-4 h-4" />
-                          </button>
-
-                          <button
-                            type="button"
-                            title="Supprimer la variante"
-                            onClick={() =>
-                              removeVariant(
-                                variant
-                              )
-                            }
-                            disabled={submitting}
-                            className="w-10 h-10 rounded-full border border-destructive/30 bg-destructive/10 text-destructive grid place-items-center hover:bg-destructive/20 disabled:opacity-40"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        <div className="sm:col-span-2 lg:col-span-1">
-                          <label className="block text-sm font-semibold mb-2">
-                            Nom de la variante *
-                          </label>
-
-                          <input
-                            value={
-                              variant.name
-                            }
-                            onChange={(
-                              event
-                            ) =>
-                              updateVariant(
-                                variant.local_id,
-                                "name",
-                                event.target
-                                  .value
-                              )
-                            }
-                            disabled={
-                              submitting
-                            }
-                            placeholder="Ex. 3 kW"
-                            className="w-full h-12 rounded-xl border border-border bg-background px-4"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">
-                            Prix en euros *
-                          </label>
-
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={
-                              variant.price
-                            }
-                            onChange={(
-                              event
-                            ) =>
-                              updateVariant(
-                                variant.local_id,
-                                "price",
-                                event.target
-                                  .value
-                              )
-                            }
-                            disabled={
-                              submitting
-                            }
-                            placeholder="0.00"
-                            className="w-full h-12 rounded-xl border border-border bg-background px-4"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">
-                            Stock *
-                          </label>
-
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={
-                              variant.stock
-                            }
-                            onChange={(
-                              event
-                            ) =>
-                              updateVariant(
-                                variant.local_id,
-                                "stock",
-                                event.target
-                                  .value
-                              )
-                            }
-                            disabled={
-                              submitting
-                            }
-                            className="w-full h-12 rounded-xl border border-border bg-background px-4"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">
-                            Référence
-                          </label>
-
-                          <input
-                            value={
-                              variant.reference
-                            }
-                            onChange={(
-                              event
-                            ) =>
-                              updateVariant(
-                                variant.local_id,
-                                "reference",
-                                event.target
-                                  .value
-                              )
-                            }
-                            disabled={
-                              submitting
-                            }
-                            placeholder="Ex. 3000TLM-V3"
-                            className="w-full h-12 rounded-xl border border-border bg-background px-4"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">
-                            SKU
-                          </label>
-
-                          <input
-                            value={
-                              variant.sku
-                            }
-                            onChange={(
-                              event
-                            ) =>
-                              updateVariant(
-                                variant.local_id,
-                                "sku",
-                                event.target
-                                  .value
-                              )
-                            }
-                            disabled={
-                              submitting
-                            }
-                            placeholder="Ex. ZCS-3KW"
-                            className="w-full h-12 rounded-xl border border-border bg-background px-4"
-                          />
-                        </div>
-
-                        <div className="flex items-end">
-                          <label className="w-full h-12 flex items-center gap-3 rounded-xl border border-border bg-background px-4">
                             <input
-                              type="checkbox"
-                              checked={
-                                variant.is_active
+                              value={
+                                variant.name
                               }
                               onChange={(
                                 event
                               ) =>
                                 updateVariant(
                                   variant.local_id,
-                                  "is_active",
-                                  event.target
-                                    .checked
+                                  "name",
+                                  event
+                                    .target
+                                    .value
                                 )
                               }
                               disabled={
                                 submitting
                               }
+                              placeholder="Ex. 3 kW"
+                              className="w-full h-12 rounded-xl border border-border bg-background px-4"
                             />
+                          </div>
 
-                            <span className="text-sm font-semibold">
-                              Variante active
-                            </span>
-                          </label>
+                          <div>
+                            <label className="block text-sm font-semibold mb-2">
+                              Prix en euros *
+                            </label>
+
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={
+                                variant.price
+                              }
+                              onChange={(
+                                event
+                              ) =>
+                                updateVariant(
+                                  variant.local_id,
+                                  "price",
+                                  event
+                                    .target
+                                    .value
+                                )
+                              }
+                              disabled={
+                                submitting
+                              }
+                              className="w-full h-12 rounded-xl border border-border bg-background px-4"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold mb-2">
+                              Stock *
+                            </label>
+
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={
+                                variant.stock
+                              }
+                              onChange={(
+                                event
+                              ) =>
+                                updateVariant(
+                                  variant.local_id,
+                                  "stock",
+                                  event
+                                    .target
+                                    .value
+                                )
+                              }
+                              disabled={
+                                submitting
+                              }
+                              className="w-full h-12 rounded-xl border border-border bg-background px-4"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold mb-2">
+                              Référence
+                            </label>
+
+                            <input
+                              value={
+                                variant.reference
+                              }
+                              onChange={(
+                                event
+                              ) =>
+                                updateVariant(
+                                  variant.local_id,
+                                  "reference",
+                                  event
+                                    .target
+                                    .value
+                                )
+                              }
+                              disabled={
+                                submitting
+                              }
+                              className="w-full h-12 rounded-xl border border-border bg-background px-4"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold mb-2">
+                              SKU
+                            </label>
+
+                            <input
+                              value={
+                                variant.sku
+                              }
+                              onChange={(
+                                event
+                              ) =>
+                                updateVariant(
+                                  variant.local_id,
+                                  "sku",
+                                  event
+                                    .target
+                                    .value
+                                )
+                              }
+                              disabled={
+                                submitting
+                              }
+                              className="w-full h-12 rounded-xl border border-border bg-background px-4"
+                            />
+                          </div>
+
+                          <div className="flex items-end">
+                            <label className="w-full h-12 flex items-center gap-3 rounded-xl border border-border bg-background px-4">
+                              <input
+                                type="checkbox"
+                                checked={
+                                  variant.is_active
+                                }
+                                onChange={(
+                                  event
+                                ) =>
+                                  updateVariant(
+                                    variant.local_id,
+                                    "is_active",
+                                    event
+                                      .target
+                                      .checked
+                                  )
+                                }
+                                disabled={
+                                  submitting
+                                }
+                              />
+
+                              <span className="text-sm font-semibold">
+                                Variante active
+                              </span>
+                            </label>
+                          </div>
                         </div>
-                      </div>
-                    </article>
-                  )
+
+                        <div className="mt-6">
+                          <p className="text-sm font-semibold mb-3">
+                            Photo de la variante
+                          </p>
+
+                          {displayedVariantImage ? (
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-5 rounded-2xl border border-border bg-white p-4">
+                              <img
+                                src={
+                                  displayedVariantImage
+                                }
+                                alt={`Variante ${variant.name}`}
+                                className="w-full sm:w-40 h-40 object-contain"
+                              />
+
+                              <div className="flex flex-wrap gap-3">
+                                <label className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-full border border-border cursor-pointer hover:bg-secondary">
+                                  <ImagePlus className="w-4 h-4" />
+                                  Remplacer
+
+                                  <input
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp"
+                                    onChange={(
+                                      event
+                                    ) =>
+                                      handleVariantImageChange(
+                                        variant.local_id,
+                                        event
+                                      )
+                                    }
+                                    disabled={
+                                      submitting
+                                    }
+                                    className="hidden"
+                                  />
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    removeVariantImage(
+                                      variant.local_id
+                                    )
+                                  }
+                                  disabled={
+                                    submitting
+                                  }
+                                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-full border border-destructive/30 text-destructive"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Supprimer la photo
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-border bg-card cursor-pointer hover:bg-secondary">
+                              <ImagePlus className="w-4 h-4" />
+                              Choisir une photo
+
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                onChange={(
+                                  event
+                                ) =>
+                                  handleVariantImageChange(
+                                    variant.local_id,
+                                    event
+                                  )
+                                }
+                                disabled={
+                                  submitting
+                                }
+                                className="hidden"
+                              />
+                            </label>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  }
                 )}
 
-                <div className="rounded-2xl border border-border bg-card p-5 flex flex-wrap justify-between gap-4">
+                <div className="rounded-2xl border border-border bg-card p-5 flex flex-wrap justify-between gap-6">
                   <div>
                     <p className="text-sm text-muted-foreground">
                       Nombre de variantes
@@ -1575,7 +2851,9 @@ export default function AdminProductEdit() {
                     </p>
 
                     <p className="font-display font-bold text-xl mt-1">
-                      {activeVariantsCount}
+                      {
+                        activeVariantsCount
+                      }
                     </p>
                   </div>
 
@@ -1593,27 +2871,6 @@ export default function AdminProductEdit() {
             )}
           </section>
 
-          {currentImage?.image_url && (
-            <section className="rounded-3xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="font-display font-bold text-xl mb-5">
-                Image actuelle
-              </h2>
-
-              <div className="rounded-2xl border border-border bg-white p-5">
-                <img
-                  src={
-                    currentImage.image_url
-                  }
-                  alt={
-                    currentImage.alt_text ||
-                    form.name
-                  }
-                  className="w-full h-72 object-contain"
-                />
-              </div>
-            </section>
-          )}
-
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
             <Link
               to="/admin/produits"
@@ -1624,7 +2881,9 @@ export default function AdminProductEdit() {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={
+                submitting
+              }
               className="inline-flex items-center justify-center gap-2 h-12 px-8 rounded-full bg-primary text-primary-foreground font-semibold disabled:opacity-60"
             >
               {submitting ? (
