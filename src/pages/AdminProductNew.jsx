@@ -1,6 +1,7 @@
 import React, {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -75,7 +76,9 @@ function createLocalId() {
     .slice(2)}`;
 }
 
-function createVariant(displayOrder = 0) {
+function createVariant(
+  displayOrder = 0
+) {
   return {
     local_id: createLocalId(),
     name: "",
@@ -95,7 +98,9 @@ function validateImageFile(file) {
     return "Aucun fichier sélectionné.";
   }
 
-  if (!file.type.startsWith("image/")) {
+  if (
+    !file.type.startsWith("image/")
+  ) {
     return "Le fichier sélectionné doit être une image.";
   }
 
@@ -200,90 +205,149 @@ export default function AdminProductNew() {
     setSlugManuallyChanged,
   ] = useState(false);
 
+  /*
+   * Cette référence conserve toutes
+   * les URL temporaires créées avec
+   * URL.createObjectURL().
+   *
+   * Elle permet de nettoyer les aperçus
+   * lors de la fermeture de la page sans
+   * dépendre de productImages ou variants.
+   */
+  const previewUrlsRef =
+    useRef(new Set());
+
+  const createPreviewUrl = (
+    file
+  ) => {
+    const previewUrl =
+      URL.createObjectURL(file);
+
+    previewUrlsRef.current.add(
+      previewUrl
+    );
+
+    return previewUrl;
+  };
+
+  const revokePreviewUrl = (
+    previewUrl
+  ) => {
+    if (!previewUrl) {
+      return;
+    }
+
+    URL.revokeObjectURL(
+      previewUrl
+    );
+
+    previewUrlsRef.current.delete(
+      previewUrl
+    );
+  };
+
   useEffect(() => {
     document.title =
       "Ajouter un produit | ENR Discount";
 
-    let componentIsMounted = true;
+    let componentIsMounted =
+      true;
 
-    const loadCategories = async () => {
-      setLoadingCategories(true);
-
-      try {
-        const {
-          data,
-          error,
-        } = await supabase
-          .from("categories")
-          .select(`
-            id,
-            name,
-            slug,
-            is_active,
-            display_order
-          `)
-          .eq("is_active", true)
-          .order("display_order", {
-            ascending: true,
-          })
-          .order("name", {
-            ascending: true,
-          });
-
-        if (error) {
-          throw error;
-        }
-
-        if (componentIsMounted) {
-          setCategories(data || []);
-        }
-      } catch (error) {
-        console.error(
-          "Erreur lors du chargement des catégories :",
-          error
+    const loadCategories =
+      async () => {
+        setLoadingCategories(
+          true
         );
 
-        toast.error(
-          error?.message ||
-            "Impossible de charger les catégories."
-        );
-      } finally {
-        if (componentIsMounted) {
-          setLoadingCategories(false);
+        try {
+          const {
+            data,
+            error,
+          } = await supabase
+            .from("categories")
+            .select(`
+              id,
+              name,
+              slug,
+              is_active,
+              display_order
+            `)
+            .eq(
+              "is_active",
+              true
+            )
+            .order(
+              "display_order",
+              {
+                ascending: true,
+              }
+            )
+            .order("name", {
+              ascending: true,
+            });
+
+          if (error) {
+            throw error;
+          }
+
+          if (
+            componentIsMounted
+          ) {
+            setCategories(
+              data || []
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Erreur lors du chargement des catégories :",
+            error
+          );
+
+          toast.error(
+            error?.message ||
+              "Impossible de charger les catégories."
+          );
+        } finally {
+          if (
+            componentIsMounted
+          ) {
+            setLoadingCategories(
+              false
+            );
+          }
         }
-      }
-    };
+      };
 
     loadCategories();
 
     return () => {
-      componentIsMounted = false;
+      componentIsMounted =
+        false;
     };
   }, []);
 
+  /*
+   * Nettoyage de toutes les URL temporaires
+   * uniquement lorsque la page est quittée.
+   *
+   * Cette version ne dépend pas des états
+   * productImages et variants, donc elle
+   * supprime l’avertissement ESLint de Vercel.
+   */
   useEffect(() => {
+    const previewUrls =
+      previewUrlsRef.current;
+
     return () => {
-      productImages.forEach(
-        (image) => {
-          if (image.preview) {
-            URL.revokeObjectURL(
-              image.preview
-            );
-          }
+      previewUrls.forEach(
+        (previewUrl) => {
+          URL.revokeObjectURL(
+            previewUrl
+          );
         }
       );
 
-      variants.forEach(
-        (variant) => {
-          if (
-            variant.image_preview
-          ) {
-            URL.revokeObjectURL(
-              variant.image_preview
-            );
-          }
-        }
-      );
+      previewUrls.clear();
     };
   }, []);
 
@@ -371,11 +435,14 @@ export default function AdminProductNew() {
   const handleSlugChange = (
     event
   ) => {
-    setSlugManuallyChanged(true);
+    setSlugManuallyChanged(
+      true
+    );
 
     setForm(
       (currentForm) => ({
         ...currentForm,
+
         slug: createSlug(
           event.target.value
         ),
@@ -383,82 +450,83 @@ export default function AdminProductNew() {
     );
   };
 
-  const handleProductImagesChange = (
-    event
-  ) => {
-    const selectedFiles =
-      Array.from(
-        event.target.files || []
-      );
+  const handleProductImagesChange =
+    (event) => {
+      const selectedFiles =
+        Array.from(
+          event.target.files ||
+            []
+        );
 
-    if (
-      selectedFiles.length === 0
-    ) {
-      return;
-    }
+      if (
+        selectedFiles.length ===
+        0
+      ) {
+        return;
+      }
 
-    const invalidFile =
-      selectedFiles.find(
-        (file) =>
-          validateImageFile(file)
-      );
+      const invalidFile =
+        selectedFiles.find(
+          (file) =>
+            validateImageFile(
+              file
+            )
+        );
 
-    if (invalidFile) {
-      toast.error(
-        validateImageFile(
-          invalidFile
-        )
+      if (invalidFile) {
+        toast.error(
+          validateImageFile(
+            invalidFile
+          )
+        );
+
+        event.target.value =
+          "";
+
+        return;
+      }
+
+      setProductImages(
+        (currentImages) => {
+          const newImages =
+            selectedFiles.map(
+              (
+                file,
+                index
+              ) => ({
+                local_id:
+                  createLocalId(),
+
+                file,
+
+                preview:
+                  createPreviewUrl(
+                    file
+                  ),
+
+                is_primary:
+                  currentImages.length ===
+                    0 &&
+                  index === 0,
+              })
+            );
+
+          return [
+            ...currentImages,
+            ...newImages,
+          ];
+        }
       );
 
       event.target.value = "";
-      return;
-    }
-
-    setProductImages(
-      (currentImages) => {
-        const newImages =
-          selectedFiles.map(
-            (
-              file,
-              index
-            ) => ({
-              local_id:
-                createLocalId(),
-
-              file,
-
-              preview:
-                URL.createObjectURL(
-                  file
-                ),
-
-              is_primary:
-                currentImages.length ===
-                  0 &&
-                index === 0,
-            })
-          );
-
-        return [
-          ...currentImages,
-          ...newImages,
-        ];
-      }
-    );
-
-    event.target.value = "";
-  };
+    };
 
   const removeProductImage = (
     imageToRemove
   ) => {
-    if (
+    revokePreviewUrl(
       imageToRemove.preview
-    ) {
-      URL.revokeObjectURL(
-        imageToRemove.preview
-      );
-    }
+    );
 
     setProductImages(
       (currentImages) => {
@@ -486,6 +554,7 @@ export default function AdminProductNew() {
               index
             ) => ({
               ...image,
+
               is_primary:
                 index === 0,
             })
@@ -549,13 +618,9 @@ export default function AdminProductNew() {
   const removeVariant = (
     variantToRemove
   ) => {
-    if (
+    revokePreviewUrl(
       variantToRemove.image_preview
-    ) {
-      URL.revokeObjectURL(
-        variantToRemove.image_preview
-      );
-    }
+    );
 
     setVariants(
       (currentVariants) =>
@@ -631,67 +696,66 @@ export default function AdminProductNew() {
     );
   };
 
-  const handleVariantImageChange = (
-    localId,
-    event
-  ) => {
-    const selectedFile =
-      event.target.files?.[0];
+  const handleVariantImageChange =
+    (
+      localId,
+      event
+    ) => {
+      const selectedFile =
+        event.target.files?.[0];
 
-    if (!selectedFile) {
-      return;
-    }
+      if (!selectedFile) {
+        return;
+      }
 
-    const validationError =
-      validateImageFile(
-        selectedFile
-      );
+      const validationError =
+        validateImageFile(
+          selectedFile
+        );
 
-    if (validationError) {
-      toast.error(
-        validationError
+      if (validationError) {
+        toast.error(
+          validationError
+        );
+
+        event.target.value =
+          "";
+
+        return;
+      }
+
+      setVariants(
+        (currentVariants) =>
+          currentVariants.map(
+            (variant) => {
+              if (
+                variant.local_id !==
+                localId
+              ) {
+                return variant;
+              }
+
+              revokePreviewUrl(
+                variant.image_preview
+              );
+
+              return {
+                ...variant,
+
+                image_file:
+                  selectedFile,
+
+                image_preview:
+                  createPreviewUrl(
+                    selectedFile
+                  ),
+              };
+            }
+          )
       );
 
       event.target.value = "";
-      return;
-    }
-
-    setVariants(
-      (currentVariants) =>
-        currentVariants.map(
-          (variant) => {
-            if (
-              variant.local_id !==
-              localId
-            ) {
-              return variant;
-            }
-
-            if (
-              variant.image_preview
-            ) {
-              URL.revokeObjectURL(
-                variant.image_preview
-              );
-            }
-
-            return {
-              ...variant,
-
-              image_file:
-                selectedFile,
-
-              image_preview:
-                URL.createObjectURL(
-                  selectedFile
-                ),
-            };
-          }
-        )
-    );
-
-    event.target.value = "";
-  };
+    };
 
   const removeVariantImage = (
     localId
@@ -707,13 +771,9 @@ export default function AdminProductNew() {
               return variant;
             }
 
-            if (
+            revokePreviewUrl(
               variant.image_preview
-            ) {
-              URL.revokeObjectURL(
-                variant.image_preview
-              );
-            }
+            );
 
             return {
               ...variant,
@@ -766,7 +826,8 @@ export default function AdminProductNew() {
     }
 
     if (
-      productImages.length === 0
+      productImages.length ===
+      0
     ) {
       return "Ajoute au moins une photo au produit.";
     }
@@ -1025,7 +1086,8 @@ export default function AdminProductNew() {
       }
 
       const {
-        error: imagesDatabaseError,
+        error:
+          imagesDatabaseError,
       } = await supabase
         .from("product_images")
         .insert(
@@ -1165,9 +1227,7 @@ export default function AdminProductNew() {
         }
       }
 
-      if (
-        createdProductId
-      ) {
+      if (createdProductId) {
         const {
           error:
             productCleanupError,
@@ -1655,6 +1715,7 @@ export default function AdminProductNew() {
 
               <label className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-primary text-primary-foreground font-semibold cursor-pointer">
                 <ImagePlus className="w-4 h-4" />
+
                 Ajouter des photos
 
                 <input
@@ -1742,8 +1803,7 @@ export default function AdminProductNew() {
 
                       <p className="text-xs text-muted-foreground truncate mt-3">
                         {
-                          image.file
-                            .name
+                          image.file.name
                         }
                       </p>
 
@@ -1919,8 +1979,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "name",
-                                event
-                                  .target
+                                event.target
                                   .value
                               )
                             }
@@ -1949,8 +2008,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "price",
-                                event
-                                  .target
+                                event.target
                                   .value
                               )
                             }
@@ -1979,8 +2037,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "stock",
-                                event
-                                  .target
+                                event.target
                                   .value
                               )
                             }
@@ -2006,8 +2063,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "reference",
-                                event
-                                  .target
+                                event.target
                                   .value
                               )
                             }
@@ -2033,8 +2089,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "sku",
-                                event
-                                  .target
+                                event.target
                                   .value
                               )
                             }
@@ -2058,8 +2113,7 @@ export default function AdminProductNew() {
                                 updateVariant(
                                   variant.local_id,
                                   "is_active",
-                                  event
-                                    .target
+                                  event.target
                                     .checked
                                 )
                               }
@@ -2118,6 +2172,7 @@ export default function AdminProductNew() {
                         ) : (
                           <label className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-border bg-card cursor-pointer hover:bg-secondary">
                             <ImagePlus className="w-4 h-4" />
+
                             Choisir une photo
 
                             <input
