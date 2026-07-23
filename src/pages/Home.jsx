@@ -329,24 +329,33 @@ export default function Home() {
     <div data-testid="home-page">
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-16 pb-12 lg:pt-24 lg:pb-16">
-          <div className="max-w-2xl">
+          <div className="max-w-3xl">
+            <p className="overline text-primary mb-4">
+              EcoConfortHabitat.fr
+            </p>
+
             <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.05]">
-              L&apos;énergie durable,
+              Le confort de votre habitat
               <br />
-              au juste prix.
+
+              <span className="text-primary">
+                à prix discount.
+              </span>
             </h1>
 
-            <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-md leading-relaxed">
+            <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
               Panneaux solaires,
               climatiseurs, chauffe-eau,
               pompes à chaleur et
-              solutions de stockage.
+              solutions de stockage pour
+              améliorer durablement votre
+              confort.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/produits"
-                className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
+                className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
               >
                 Voir les produits
 
@@ -355,7 +364,7 @@ export default function Home() {
 
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 h-12 px-7 rounded-full border border-border font-semibold hover:bg-secondary"
+                className="inline-flex items-center gap-2 h-12 px-7 rounded-full border border-border font-semibold hover:bg-secondary transition-colors"
               >
                 Nous contacter
               </Link>
@@ -378,7 +387,7 @@ export default function Home() {
 
           <Link
             to="/produits"
-            className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold hover:text-primary"
+            className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold hover:text-primary transition-colors"
           >
             Tout voir
 
@@ -522,7 +531,7 @@ export default function Home() {
 
         <Link
           to="/produits"
-          className="sm:hidden mt-7 inline-flex items-center gap-2 h-11 px-6 rounded-full border border-border font-semibold hover:bg-secondary"
+          className="sm:hidden mt-7 inline-flex items-center gap-2 h-11 px-6 rounded-full border border-border font-semibold hover:bg-secondary transition-colors"
         >
           Voir tout le catalogue
 
