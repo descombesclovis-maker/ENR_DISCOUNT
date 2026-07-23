@@ -302,7 +302,7 @@ export default function Home() {
             </p>
 
             <h2 className="font-display font-bold text-3xl sm:text-4xl tracking-tight">
-              Nos produits
+              Nos produits en vedette
             </h2>
           </div>
 

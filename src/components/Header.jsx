@@ -13,7 +13,6 @@ import {
   PackageSearch,
   ShoppingBag,
   X,
-  Zap,
 } from "lucide-react";
 
 import {
@@ -82,19 +81,20 @@ export const Header = () => {
           <Link
             to="/"
             data-testid="logo-link"
-            className="flex items-center gap-2 group shrink-0"
+            aria-label="Retour à l’accueil EcoConfortHabitat.fr"
+            className="group shrink-0 flex items-center"
           >
-            <span className="w-9 h-9 rounded-lg bg-primary text-primary-foreground grid place-items-center">
-              <Zap
-                className="w-5 h-5"
-                strokeWidth={2.4}
-              />
-            </span>
+            <span className="whitespace-nowrap font-display font-black text-[15px] sm:text-xl tracking-[-0.045em] leading-none">
+              <span className="text-foreground transition-colors group-hover:text-primary">
+                EcoConfort
+              </span>
 
-            <span className="hidden xs:inline font-display font-extrabold text-lg sm:text-xl tracking-tight leading-none">
-              ENR{" "}
               <span className="text-primary">
-                discount
+                Habitat
+              </span>
+
+              <span className="text-primary/70 text-[0.72em] tracking-[-0.02em]">
+                .fr
               </span>
             </span>
           </Link>
