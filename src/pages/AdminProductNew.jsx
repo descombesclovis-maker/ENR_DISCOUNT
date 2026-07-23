@@ -27,6 +27,33 @@ import { toast } from "sonner";
 
 import { supabase } from "../lib/supabase";
 
+const PRODUCT_CONDITIONS = [
+  {
+    value: "new_packaged",
+    label: "Neuf avec emballage",
+    badgeClass:
+      "border-emerald-200 bg-emerald-50 text-emerald-700",
+  },
+  {
+    value: "good_opened",
+    label: "Bon état déballé",
+    badgeClass:
+      "border-yellow-200 bg-yellow-50 text-yellow-700",
+  },
+  {
+    value: "used",
+    label: "Occasion",
+    badgeClass:
+      "border-orange-200 bg-orange-50 text-orange-700",
+  },
+  {
+    value: "for_parts",
+    label: "Pour pièces",
+    badgeClass:
+      "border-red-200 bg-red-50 text-red-700",
+  },
+];
+
 const initialForm = {
   name: "",
   slug: "",
@@ -39,6 +66,8 @@ const initialForm = {
   description: "",
   price: "",
   stock: "0",
+  product_condition:
+    "new_packaged",
   on_demand: false,
   is_active: true,
   is_featured: false,
@@ -47,26 +76,48 @@ const initialForm = {
 function createSlug(value) {
   return String(value || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(
+      /[^a-z0-9]+/g,
+      "-"
+    )
+    .replace(
+      /^-+|-+$/g,
+      ""
+    );
 }
 
-function sanitizeFileName(value) {
+function sanitizeFileName(
+  value
+) {
   return String(value || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
     .toLowerCase()
-    .replace(/[^a-z0-9.]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(
+      /[^a-z0-9.]+/g,
+      "-"
+    )
+    .replace(
+      /^-+|-+$/g,
+      ""
+    );
 }
 
 function createLocalId() {
   if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
+    typeof crypto !==
+      "undefined" &&
+    typeof crypto.randomUUID ===
+      "function"
   ) {
     return crypto.randomUUID();
   }
@@ -80,26 +131,32 @@ function createVariant(
   displayOrder = 0
 ) {
   return {
-    local_id: createLocalId(),
+    local_id:
+      createLocalId(),
     name: "",
     price: "",
     stock: "0",
     reference: "",
     sku: "",
     is_active: true,
-    display_order: displayOrder,
+    display_order:
+      displayOrder,
     image_file: null,
     image_preview: "",
   };
 }
 
-function validateImageFile(file) {
+function validateImageFile(
+  file
+) {
   if (!file) {
     return "Aucun fichier sélectionné.";
   }
 
   if (
-    !file.type.startsWith("image/")
+    !file.type.startsWith(
+      "image/"
+    )
   ) {
     return "Le fichier sélectionné doit être une image.";
   }
@@ -107,7 +164,10 @@ function validateImageFile(file) {
   const maximumSize =
     5 * 1024 * 1024;
 
-  if (file.size > maximumSize) {
+  if (
+    file.size >
+    maximumSize
+  ) {
     return "Chaque image doit peser 5 Mo maximum.";
   }
 
@@ -119,7 +179,9 @@ async function uploadImage({
   folder,
 }) {
   const safeFileName =
-    sanitizeFileName(file.name) ||
+    sanitizeFileName(
+      file.name
+    ) ||
     `image-${Date.now()}.jpg`;
 
   const uniqueFileName =
@@ -136,9 +198,11 @@ async function uploadImage({
       storagePath,
       file,
       {
-        cacheControl: "3600",
+        cacheControl:
+          "3600",
         upsert: false,
-        contentType: file.type,
+        contentType:
+          file.type,
       }
     );
 
@@ -150,7 +214,9 @@ async function uploadImage({
     data: publicUrlData,
   } = supabase.storage
     .from("produits")
-    .getPublicUrl(storagePath);
+    .getPublicUrl(
+      storagePath
+    );
 
   const publicUrl =
     publicUrlData?.publicUrl;
@@ -168,12 +234,15 @@ async function uploadImage({
 }
 
 export default function AdminProductNew() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
   const [
     form,
     setForm,
-  ] = useState(initialForm);
+  ] = useState(
+    initialForm
+  );
 
   const [
     categories,
@@ -205,15 +274,6 @@ export default function AdminProductNew() {
     setSlugManuallyChanged,
   ] = useState(false);
 
-  /*
-   * Cette référence conserve toutes
-   * les URL temporaires créées avec
-   * URL.createObjectURL().
-   *
-   * Elle permet de nettoyer les aperçus
-   * lors de la fermeture de la page sans
-   * dépendre de productImages ou variants.
-   */
   const previewUrlsRef =
     useRef(new Set());
 
@@ -221,7 +281,9 @@ export default function AdminProductNew() {
     file
   ) => {
     const previewUrl =
-      URL.createObjectURL(file);
+      URL.createObjectURL(
+        file
+      );
 
     previewUrlsRef.current.add(
       previewUrl
@@ -264,7 +326,9 @@ export default function AdminProductNew() {
             data,
             error,
           } = await supabase
-            .from("categories")
+            .from(
+              "categories"
+            )
             .select(`
               id,
               name,
@@ -279,12 +343,17 @@ export default function AdminProductNew() {
             .order(
               "display_order",
               {
-                ascending: true,
+                ascending:
+                  true,
               }
             )
-            .order("name", {
-              ascending: true,
-            });
+            .order(
+              "name",
+              {
+                ascending:
+                  true,
+              }
+            );
 
           if (error) {
             throw error;
@@ -326,14 +395,6 @@ export default function AdminProductNew() {
     };
   }, []);
 
-  /*
-   * Nettoyage de toutes les URL temporaires
-   * uniquement lorsque la page est quittée.
-   *
-   * Cette version ne dépend pas des états
-   * productImages et variants, donc elle
-   * supprime l’avertissement ESLint de Vercel.
-   */
   useEffect(() => {
     const previewUrls =
       previewUrlsRef.current;
@@ -362,6 +423,20 @@ export default function AdminProductNew() {
       [
         categories,
         form.category_id,
+      ]
+    );
+
+  const selectedCondition =
+    useMemo(
+      () =>
+        PRODUCT_CONDITIONS.find(
+          (condition) =>
+            condition.value ===
+            form.product_condition
+        ) ||
+        PRODUCT_CONDITIONS[0],
+      [
+        form.product_condition,
       ]
     );
 
@@ -442,7 +517,6 @@ export default function AdminProductNew() {
     setForm(
       (currentForm) => ({
         ...currentForm,
-
         slug: createSlug(
           event.target.value
         ),
@@ -454,8 +528,8 @@ export default function AdminProductNew() {
     (event) => {
       const selectedFiles =
         Array.from(
-          event.target.files ||
-            []
+          event.target
+            .files || []
         );
 
       if (
@@ -518,7 +592,8 @@ export default function AdminProductNew() {
         }
       );
 
-      event.target.value = "";
+      event.target.value =
+        "";
     };
 
   const removeProductImage = (
@@ -554,7 +629,6 @@ export default function AdminProductNew() {
               index
             ) => ({
               ...image,
-
               is_primary:
                 index === 0,
             })
@@ -574,7 +648,6 @@ export default function AdminProductNew() {
         currentImages.map(
           (image) => ({
             ...image,
-
             is_primary:
               image.local_id ===
               localId,
@@ -587,7 +660,6 @@ export default function AdminProductNew() {
     setVariants(
       (currentVariants) => [
         ...currentVariants,
-
         createVariant(
           currentVariants.length
         ),
@@ -636,7 +708,6 @@ export default function AdminProductNew() {
               index
             ) => ({
               ...variant,
-
               display_order:
                 index,
             })
@@ -663,9 +734,10 @@ export default function AdminProductNew() {
           return currentVariants;
         }
 
-        const reorderedVariants = [
-          ...currentVariants,
-        ];
+        const reorderedVariants =
+          [
+            ...currentVariants,
+          ];
 
         const [
           movedVariant,
@@ -687,7 +759,6 @@ export default function AdminProductNew() {
             variantIndex
           ) => ({
             ...variant,
-
             display_order:
               variantIndex,
           })
@@ -702,7 +773,8 @@ export default function AdminProductNew() {
       event
     ) => {
       const selectedFile =
-        event.target.files?.[0];
+        event.target
+          .files?.[0];
 
       if (!selectedFile) {
         return;
@@ -741,10 +813,8 @@ export default function AdminProductNew() {
 
               return {
                 ...variant,
-
                 image_file:
                   selectedFile,
-
                 image_preview:
                   createPreviewUrl(
                     selectedFile
@@ -754,7 +824,8 @@ export default function AdminProductNew() {
           )
       );
 
-      event.target.value = "";
+      event.target.value =
+        "";
     };
 
   const removeVariantImage = (
@@ -777,12 +848,8 @@ export default function AdminProductNew() {
 
             return {
               ...variant,
-
-              image_file:
-                null,
-
-              image_preview:
-                "",
+              image_file: null,
+              image_preview: "",
             };
           }
         )
@@ -798,8 +865,20 @@ export default function AdminProductNew() {
       return "Le slug du produit est obligatoire.";
     }
 
-    if (!form.category_id) {
+    if (
+      !form.category_id
+    ) {
       return "Choisis une catégorie.";
+    }
+
+    if (
+      !PRODUCT_CONDITIONS.some(
+        (condition) =>
+          condition.value ===
+          form.product_condition
+      )
+    ) {
+      return "Choisis un état valide pour le produit.";
     }
 
     if (
@@ -807,7 +886,8 @@ export default function AdminProductNew() {
       Number.isNaN(
         Number(form.price)
       ) ||
-      Number(form.price) < 0
+      Number(form.price) <
+        0
     ) {
       return "Le prix général doit être supérieur ou égal à zéro.";
     }
@@ -817,7 +897,8 @@ export default function AdminProductNew() {
       Number.isNaN(
         Number(form.stock)
       ) ||
-      Number(form.stock) < 0 ||
+      Number(form.stock) <
+        0 ||
       !Number.isInteger(
         Number(form.stock)
       )
@@ -1009,6 +1090,9 @@ export default function AdminProductNew() {
         stock:
           calculatedStock,
 
+        product_condition:
+          form.product_condition,
+
         on_demand:
           form.on_demand,
 
@@ -1058,7 +1142,6 @@ export default function AdminProductNew() {
         const uploadedImage =
           await uploadImage({
             file: image.file,
-
             folder:
               createdProduct.slug,
           });
@@ -1089,7 +1172,9 @@ export default function AdminProductNew() {
         error:
           imagesDatabaseError,
       } = await supabase
-        .from("product_images")
+        .from(
+          "product_images"
+        )
         .insert(
           productImageRows
         );
@@ -1170,7 +1255,8 @@ export default function AdminProductNew() {
         }
 
         const {
-          error: variantsError,
+          error:
+            variantsError,
         } = await supabase
           .from(
             "product_variants"
@@ -1179,7 +1265,9 @@ export default function AdminProductNew() {
             variantRows
           );
 
-        if (variantsError) {
+        if (
+          variantsError
+        ) {
           throw variantsError;
         }
       }
@@ -1227,7 +1315,9 @@ export default function AdminProductNew() {
         }
       }
 
-      if (createdProductId) {
+      if (
+        createdProductId
+      ) {
         const {
           error:
             productCleanupError,
@@ -1568,11 +1658,11 @@ export default function AdminProductNew() {
 
           <section className="rounded-3xl border border-border bg-card p-6 sm:p-8">
             <h2 className="font-display font-bold text-xl">
-              Prix et disponibilité générale
+              Prix, état et disponibilité
             </h2>
 
             <p className="text-sm text-muted-foreground mt-2 mb-6">
-              Ces valeurs sont utilisées lorsque le produit ne possède aucune variante.
+              Définis le prix, l’état réel du produit et sa disponibilité.
             </p>
 
             <div className="grid sm:grid-cols-2 gap-5">
@@ -1632,6 +1722,51 @@ export default function AdminProductNew() {
                     Calculé automatiquement avec la somme des stocks des variantes.
                   </p>
                 )}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold mb-2">
+                  État du produit *
+                </label>
+
+                <select
+                  name="product_condition"
+                  value={
+                    form.product_condition
+                  }
+                  onChange={
+                    handleFieldChange
+                  }
+                  disabled={
+                    submitting
+                  }
+                  className="w-full h-12 rounded-xl border border-border bg-background px-4"
+                >
+                  {PRODUCT_CONDITIONS.map(
+                    (condition) => (
+                      <option
+                        key={
+                          condition.value
+                        }
+                        value={
+                          condition.value
+                        }
+                      >
+                        {
+                          condition.label
+                        }
+                      </option>
+                    )
+                  )}
+                </select>
+
+                <div
+                  className={`inline-flex items-center min-h-9 px-4 mt-3 rounded-full border text-sm font-bold ${selectedCondition.badgeClass}`}
+                >
+                  {
+                    selectedCondition.label
+                  }
+                </div>
               </div>
             </div>
 
@@ -1715,7 +1850,6 @@ export default function AdminProductNew() {
 
               <label className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-primary text-primary-foreground font-semibold cursor-pointer">
                 <ImagePlus className="w-4 h-4" />
-
                 Ajouter des photos
 
                 <input
@@ -1979,8 +2113,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "name",
-                                event.target
-                                  .value
+                                event.target.value
                               )
                             }
                             disabled={
@@ -2008,8 +2141,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "price",
-                                event.target
-                                  .value
+                                event.target.value
                               )
                             }
                             disabled={
@@ -2037,8 +2169,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "stock",
-                                event.target
-                                  .value
+                                event.target.value
                               )
                             }
                             disabled={
@@ -2063,8 +2194,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "reference",
-                                event.target
-                                  .value
+                                event.target.value
                               )
                             }
                             disabled={
@@ -2089,8 +2219,7 @@ export default function AdminProductNew() {
                               updateVariant(
                                 variant.local_id,
                                 "sku",
-                                event.target
-                                  .value
+                                event.target.value
                               )
                             }
                             disabled={
@@ -2113,8 +2242,7 @@ export default function AdminProductNew() {
                                 updateVariant(
                                   variant.local_id,
                                   "is_active",
-                                  event.target
-                                    .checked
+                                  event.target.checked
                                 )
                               }
                               disabled={
@@ -2172,7 +2300,6 @@ export default function AdminProductNew() {
                         ) : (
                           <label className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-border bg-card cursor-pointer hover:bg-secondary">
                             <ImagePlus className="w-4 h-4" />
-
                             Choisir une photo
 
                             <input
