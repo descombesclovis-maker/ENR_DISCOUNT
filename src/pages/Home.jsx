@@ -3,7 +3,9 @@ import React, {
   useState,
 } from "react";
 
-import { Link } from "react-router-dom";
+import {
+  Link,
+} from "react-router-dom";
 
 import {
   AlertCircle,
@@ -12,8 +14,39 @@ import {
   LoaderCircle,
 } from "lucide-react";
 
-import { supabase } from "../lib/supabase";
-import { priceLabel } from "../lib/api";
+import {
+  supabase,
+} from "../lib/supabase";
+
+import {
+  priceLabel,
+} from "../lib/api";
+
+const PRODUCT_CONDITIONS = {
+  new_packaged: {
+    label: "Neuf avec emballage",
+    className:
+      "border-emerald-200 bg-emerald-50 text-emerald-700",
+  },
+
+  good_opened: {
+    label: "Bon état déballé",
+    className:
+      "border-yellow-200 bg-yellow-50 text-yellow-700",
+  },
+
+  used: {
+    label: "Occasion",
+    className:
+      "border-orange-200 bg-orange-50 text-orange-700",
+  },
+
+  for_parts: {
+    label: "Pour pièces",
+    className:
+      "border-red-200 bg-red-50 text-red-700",
+  },
+};
 
 function getPrimaryImage(
   images,
@@ -24,12 +57,17 @@ function getPrimaryImage(
     images.length === 0
   ) {
     return {
-      url: "/images/product-placeholder.png",
-      alt: productName,
+      url:
+        "/images/product-placeholder.png",
+
+      alt:
+        productName,
     };
   }
 
-  const sortedImages = [...images].sort(
+  const sortedImages = [
+    ...images,
+  ].sort(
     (
       firstImage,
       secondImage
@@ -50,10 +88,12 @@ function getPrimaryImage(
 
       return (
         Number(
-          firstImage.display_order || 0
+          firstImage.display_order ||
+            0
         ) -
         Number(
-          secondImage.display_order || 0
+          secondImage.display_order ||
+            0
         )
       );
     }
@@ -82,8 +122,11 @@ function getAvailability(
 
   if (numericStock > 0) {
     return {
-      label: "Disponible",
-      className: "text-primary",
+      label:
+        "Disponible",
+
+      className:
+        "text-primary",
     };
   }
 
@@ -91,13 +134,16 @@ function getAvailability(
     return {
       label:
         "Disponible sur demande",
+
       className:
         "text-amber-600",
     };
   }
 
   return {
-    label: "Indisponible",
+    label:
+      "Indisponible",
+
     className:
       "text-destructive",
   };
@@ -120,7 +166,11 @@ export default function Home() {
   ] = useState("");
 
   useEffect(() => {
-    let componentIsMounted = true;
+    document.title =
+      "Accueil | EcoConfortHabitat.fr";
+
+    let componentIsMounted =
+      true;
 
     const loadFeaturedProducts =
       async () => {
@@ -140,6 +190,7 @@ export default function Home() {
               brand,
               price,
               stock,
+              product_condition,
               on_demand,
               is_featured,
               created_at,
@@ -167,7 +218,8 @@ export default function Home() {
             .order(
               "created_at",
               {
-                ascending: false,
+                ascending:
+                  false,
               }
             )
             .limit(3);
@@ -191,8 +243,20 @@ export default function Home() {
                     product.on_demand
                   );
 
+                const condition =
+                  PRODUCT_CONDITIONS[
+                    product.product_condition
+                  ] ||
+                  PRODUCT_CONDITIONS.new_packaged;
+
                 return {
                   ...product,
+
+                  price:
+                    Number(
+                      product.price ||
+                        0
+                    ),
 
                   category:
                     product.categories
@@ -209,6 +273,12 @@ export default function Home() {
 
                   availabilityClassName:
                     availability.className,
+
+                  conditionLabel:
+                    condition.label,
+
+                  conditionClassName:
+                    condition.className,
                 };
               }
             );
@@ -377,7 +447,7 @@ export default function Home() {
                         `${index * 60}ms`,
                     }}
                   >
-                    <div className="aspect-square overflow-hidden bg-white grid place-items-center p-6">
+                    <div className="relative aspect-square overflow-hidden bg-white grid place-items-center p-6">
                       <img
                         src={
                           product.image
@@ -397,6 +467,14 @@ export default function Home() {
                             "/images/product-placeholder.png";
                         }}
                       />
+
+                      <span
+                        className={`absolute top-4 left-4 z-10 inline-flex items-center min-h-8 px-3 rounded-full border text-xs font-bold shadow-sm ${product.conditionClassName}`}
+                      >
+                        {
+                          product.conditionLabel
+                        }
+                      </span>
                     </div>
 
                     <div className="flex flex-col flex-1 p-5 border-t border-border">
@@ -441,6 +519,15 @@ export default function Home() {
               )}
             </div>
           )}
+
+        <Link
+          to="/produits"
+          className="sm:hidden mt-7 inline-flex items-center gap-2 h-11 px-6 rounded-full border border-border font-semibold hover:bg-secondary"
+        >
+          Voir tout le catalogue
+
+          <ArrowUpRight className="w-4 h-4" />
+        </Link>
       </section>
     </div>
   );
