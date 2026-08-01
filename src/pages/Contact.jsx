@@ -1,28 +1,75 @@
-import React, {
-  useEffect,
-} from "react";
+import React, { useState } from "react";
 
 import {
-  Clock3,
+  Phone,
   Mail,
   MapPin,
+  Clock,
+  Send,
   MessageCircle,
-  Phone,
-  ShieldCheck,
   Sparkles,
+  Clock3,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function Contact() {
-  useEffect(() => {
-    document.title =
-      "Contact | QEH OUTLET";
-  }, []);
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const handleChange = (e) => {
+    setForm((current) => ({
+      ...current,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Le formulaire sera connecté
+    // directement à ton adresse
+    // contact@qeh-outlet.com
+    // à l'étape suivante.
+
+    alert(
+      "Votre message est prêt à être envoyé."
+    );
+  };
 
   return (
-    <div
-      data-testid="contact-page"
-      className="min-h-screen bg-slate-50"
-    >
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 py-16">
+
+      <div className="mb-16 text-center">
+
+        <p className="uppercase tracking-[0.35em] text-primary text-xs font-black">
+
+          QEH OUTLET
+
+        </p>
+
+        <h1 className="font-display font-black text-5xl mt-4">
+
+          Contactez-nous
+
+        </h1>
+
+        <p className="text-muted-foreground mt-5 max-w-2xl mx-auto text-lg">
+
+          Une question concernant un produit,
+          un devis ou une commande ?
+          Notre équipe vous répond dans
+          les meilleurs délais.
+
+        </p>
+
+      </div>
+
       <section className="relative overflow-hidden bg-[#020714]">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-48 -left-40 w-[480px] h-[480px] rounded-full bg-[#0b5ca8]/25 blur-3xl" />
@@ -61,7 +108,91 @@ export default function Contact() {
           </div>
         </div>
       </section>
+<section className="mt-12 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
 
+  <p className="text-xs font-black uppercase tracking-[0.2em] text-[#ff5a00]">
+    Formulaire de contact
+  </p>
+
+  <h2 className="font-display font-black text-3xl mt-3 text-slate-900">
+    Envoyez-nous un message
+  </h2>
+
+  <p className="text-slate-500 mt-3 mb-8">
+    Une question, une demande de devis ou un renseignement ?
+    Complétez simplement le formulaire ci-dessous.
+  </p>
+
+  <form
+    onSubmit={handleSubmit}
+    className="grid md:grid-cols-2 gap-5"
+  >
+
+    <input
+      name="lastName"
+      value={form.lastName}
+      onChange={handleChange}
+      placeholder="Nom *"
+      className="h-12 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#0b5ca8]"
+      required
+    />
+
+    <input
+      name="firstName"
+      value={form.firstName}
+      onChange={handleChange}
+      placeholder="Prénom *"
+      className="h-12 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#0b5ca8]"
+      required
+    />
+
+    <input
+      name="phone"
+      value={form.phone}
+      onChange={handleChange}
+      placeholder="Téléphone"
+      className="h-12 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#0b5ca8]"
+    />
+
+    <input
+      type="email"
+      name="email"
+      value={form.email}
+      onChange={handleChange}
+      placeholder="Adresse e-mail *"
+      className="h-12 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#0b5ca8]"
+      required
+    />
+
+    <input
+      name="subject"
+      value={form.subject}
+      onChange={handleChange}
+      placeholder="Sujet"
+      className="md:col-span-2 h-12 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#0b5ca8]"
+    />
+
+    <textarea
+      name="message"
+      value={form.message}
+      onChange={handleChange}
+      placeholder="Votre message..."
+      rows={7}
+      className="md:col-span-2 rounded-xl border border-slate-300 p-4 resize-none outline-none focus:border-[#0b5ca8]"
+      required
+    />
+
+    <button
+      type="submit"
+      className="md:col-span-2 h-14 rounded-xl bg-[#ff5a00] text-white font-bold flex items-center justify-center gap-3 hover:bg-[#e14f00] transition-colors"
+    >
+      <Send className="w-5 h-5" />
+      Envoyer le message
+    </button>
+
+  </form>
+
+</section>
       <main className="max-w-7xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
         <section className="grid md:grid-cols-3 gap-5">
           <article className="group rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-sm hover:-translate-y-1 hover:border-[#0b5ca8]/40 hover:shadow-[0_20px_50px_rgba(2,7,20,0.10)] transition-all duration-300">
@@ -73,14 +204,13 @@ export default function Contact() {
               Téléphone
             </p>
 
-            <h2 className="font-display font-black text-xl text-slate-950 mt-2">
-              Numéro à venir
-            </h2>
+           <h2 className="font-display font-black text-xl text-slate-950 mt-2">
+  06 15 59 68 46
+</h2>
 
-            <p className="text-sm text-slate-500 leading-relaxed mt-3">
-              Le nouveau numéro de contact sera ajouté lors de la
-              prochaine étape.
-            </p>
+<p className="text-sm text-slate-500 leading-relaxed mt-3">
+  Appelez-nous du lundi au vendredi pour toute demande.
+</p>
           </article>
 
           <article className="group rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-sm hover:-translate-y-1 hover:border-[#0b5ca8]/40 hover:shadow-[0_20px_50px_rgba(2,7,20,0.10)] transition-all duration-300">
@@ -91,15 +221,13 @@ export default function Contact() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff5a00] mt-6">
               E-mail
             </p>
+<h2 className="font-display font-black text-xl text-slate-950 mt-2">
+  contact@qeh-outlet.com
+</h2>
 
-            <h2 className="font-display font-black text-xl text-slate-950 mt-2">
-              Adresse à venir
-            </h2>
-
-            <p className="text-sm text-slate-500 leading-relaxed mt-3">
-              La nouvelle adresse e-mail QEH OUTLET sera bientôt
-              affichée ici.
-            </p>
+<p className="text-sm text-slate-500 leading-relaxed mt-3">
+  Nous répondons généralement sous 24 heures.
+</p>
           </article>
 
           <article className="group rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-sm hover:-translate-y-1 hover:border-[#0b5ca8]/40 hover:shadow-[0_20px_50px_rgba(2,7,20,0.10)] transition-all duration-300">
@@ -111,14 +239,15 @@ export default function Contact() {
               Adresse
             </p>
 
-            <h2 className="font-display font-black text-xl text-slate-950 mt-2">
-              Localisation à venir
-            </h2>
+          <h2 className="font-display font-black text-xl text-slate-950 mt-2">
+  5 Rue Basse
+  <br />
+  21430 Savilly
+</h2>
 
-            <p className="text-sm text-slate-500 leading-relaxed mt-3">
-              Les nouvelles coordonnées de l’entreprise seront
-              ajoutées à la prochaine étape.
-            </p>
+<p className="text-sm text-slate-500 leading-relaxed mt-3">
+  Siège de QEH OUTLET.
+</p>
           </article>
         </section>
 
