@@ -573,170 +573,203 @@ export default function Products() {
       data-testid="products-page"
       className="max-w-7xl mx-auto px-5 sm:px-8 py-12"
     >
-      <p className="overline text-primary mb-2">
-        Catalogue
+<section className="relative overflow-hidden rounded-[32px] mb-10">
+
+  <div className="absolute inset-0 bg-gradient-to-r from-[#041426] via-[#08233d] to-[#0b5ca8]" />
+
+  <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#ff6b00]/20 blur-3xl" />
+
+  <div className="absolute -bottom-20 -left-16 w-72 h-72 rounded-full bg-[#ffffff]/5 blur-3xl" />
+
+  <div className="relative px-8 py-10 lg:px-12 lg:py-14 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+
+    <div>
+
+      <p className="uppercase tracking-[0.30em] text-[#ff8a3d] text-xs font-black mb-4">
+        QEH OUTLET
       </p>
 
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 mb-8">
-        <div>
-          <h1 className="font-display font-black text-4xl sm:text-5xl tracking-tight">
-            {selectedCategoryName
-              ? selectedCategoryName
-              : "Nos produits"}
-          </h1>
+      <h1 className="font-display font-black text-white text-4xl lg:text-6xl leading-none">
 
-          <p className="text-muted-foreground mt-3">
-            {visibleProducts.length}{" "}
-            {visibleProducts.length > 1
-              ? "produits disponibles"
-              : "produit disponible"}
-          </p>
-        </div>
+        {selectedCategoryName
+          ? selectedCategoryName
+          : "Catalogue"}
 
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={
-              clearAllFilters
-            }
-            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-border bg-card font-semibold text-sm hover:bg-secondary"
-          >
-            <X className="w-4 h-4" />
-            Réinitialiser
-          </button>
-        )}
+      </h1>
+
+      <p className="text-blue-100 mt-5 max-w-2xl text-lg">
+
+        Découvrez notre sélection de matériels neufs,
+        déstockés et d'occasion destinés aux
+        professionnels et aux particuliers.
+
+      </p>
+
+    </div>
+
+    <div className="flex flex-col items-start lg:items-end gap-4">
+
+
+      {hasActiveFilters && (
+
+        <button
+          type="button"
+          onClick={clearAllFilters}
+          className="inline-flex items-center gap-2 px-6 h-12 rounded-full bg-[#ff6b00] hover:bg-[#ff7f23] text-white font-bold transition-all"
+        >
+
+          <X className="w-4 h-4" />
+
+          Réinitialiser les filtres
+
+        </button>
+
+      )}
+
+    </div>
+
+  </div>
+
+</section><section className="mb-12 rounded-[30px] border border-slate-200 bg-white shadow-sm overflow-hidden">
+
+  <div className="bg-gradient-to-r from-[#0d2237] to-[#135ea8] px-8 py-6">
+
+    <div className="flex items-center gap-4">
+
+      <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-lg grid place-items-center">
+
+        <Filter className="w-7 h-7 text-white" />
+
       </div>
 
-      <section className="rounded-3xl border border-border bg-card p-5 sm:p-6 mb-10">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary grid place-items-center">
-            <Filter className="w-5 h-5" />
-          </div>
+      <div>
 
-          <div>
-            <h2 className="font-display font-bold text-lg">
-              Trier et filtrer
-            </h2>
+        <h2 className="font-display font-black text-2xl text-white">
+          Recherche avancée
+        </h2>
 
-            <p className="text-xs text-muted-foreground">
-              Affine la liste des produits.
-            </p>
-          </div>
-        </div>
+        <p className="text-blue-100 mt-1">
+          Affinez rapidement votre sélection.
+        </p>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Trier par
-            </label>
+      </div>
 
-            <select
-              value={sortMode}
-              onChange={(event) =>
-                setSortMode(
-                  event.target.value
-                )
-              }
-              className="w-full h-11 rounded-xl border border-border bg-background px-4"
-            >
-              <option value="relevance">
-                Pertinence
-              </option>
+    </div>
 
-              <option value="price-asc">
-                Prix croissant
-              </option>
+  </div>
 
-              <option value="price-desc">
-                Prix décroissant
-              </option>
+  <div className="grid lg:grid-cols-3 gap-8 p-8">
 
-              <option value="brand">
-                Marque
-              </option>
+    <div>
 
-              <option value="condition">
-                État du produit
-              </option>
+      <label className="block mb-2 font-bold text-slate-700">
+        Trier les produits
+      </label>
 
-              <option value="used">
-                Occasion uniquement
-              </option>
-            </select>
-          </div>
+      <select
+        value={sortMode}
+        onChange={(e)=>setSortMode(e.target.value)}
+        className="w-full h-12 rounded-xl border border-slate-300 bg-white px-4 font-medium"
+      >
 
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Marque
-            </label>
+        <option value="relevance">
+          Pertinence
+        </option>
 
-            <select
-              value={
-                selectedBrand
-              }
-              onChange={(event) =>
-                setSelectedBrand(
-                  event.target.value
-                )
-              }
-              className="w-full h-11 rounded-xl border border-border bg-background px-4"
-            >
-              <option value="">
-                Toutes les marques
-              </option>
+        <option value="price-asc">
+          Prix croissant
+        </option>
 
-              {availableBrands.map(
-                (brand) => (
-                  <option
-                    key={brand}
-                    value={brand}
-                  >
-                    {brand}
-                  </option>
-                )
-              )}
-            </select>
-          </div>
+        <option value="price-desc">
+          Prix décroissant
+        </option>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              État
-            </label>
+        <option value="brand">
+          Marque
+        </option>
 
-            <select
-              value={
-                selectedCondition
-              }
-              onChange={(event) =>
-                setSelectedCondition(
-                  event.target.value
-                )
-              }
-              className="w-full h-11 rounded-xl border border-border bg-background px-4"
-            >
-              <option value="">
-                Tous les états
-              </option>
+        <option value="condition">
+          Etat
+        </option>
 
-              <option value="new_packaged">
-                Neuf avec emballage
-              </option>
+        <option value="used">
+          Occasion uniquement
+        </option>
 
-              <option value="good_opened">
-                Bon état déballé
-              </option>
+      </select>
 
-              <option value="used">
-                Occasion
-              </option>
+    </div>
 
-              <option value="for_parts">
-                Pour pièces
-              </option>
-            </select>
-          </div>
-        </div>
-      </section>
+    <div>
+
+      <label className="block mb-2 font-bold text-slate-700">
+        Marque
+      </label>
+
+      <select
+        value={selectedBrand}
+        onChange={(e)=>setSelectedBrand(e.target.value)}
+        className="w-full h-12 rounded-xl border border-slate-300 bg-white px-4 font-medium"
+      >
+
+        <option value="">
+          Toutes les marques
+        </option>
+
+        {availableBrands.map((brand)=>(
+
+          <option
+            key={brand}
+            value={brand}
+          >
+            {brand}
+          </option>
+
+        ))}
+
+      </select>
+
+    </div>
+
+    <div>
+
+      <label className="block mb-2 font-bold text-slate-700">
+        Etat du produit
+      </label>
+
+      <select
+        value={selectedCondition}
+        onChange={(e)=>setSelectedCondition(e.target.value)}
+        className="w-full h-12 rounded-xl border border-slate-300 bg-white px-4 font-medium"
+      >
+
+        <option value="">
+          Tous les états
+        </option>
+
+        <option value="new_packaged">
+          Neuf avec emballage
+        </option>
+
+        <option value="good_opened">
+          Bon état déballé
+        </option>
+
+        <option value="used">
+          Occasion
+        </option>
+
+        <option value="for_parts">
+          Pour pièces
+        </option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+</section>
 
       {visibleProducts.length ===
       0 ? (

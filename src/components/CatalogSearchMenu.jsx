@@ -12,6 +12,7 @@ import {
 
 import {
   AlertCircle,
+  Boxes,
   ChevronDown,
   ChevronRight,
   LoaderCircle,
@@ -455,10 +456,10 @@ export default function CatalogSearchMenu() {
         }
         aria-expanded={open}
         title="Rechercher un produit"
-        className={`w-11 h-11 rounded-full border grid place-items-center transition-colors ${
+        className={`w-11 h-11 rounded-full border grid place-items-center transition-all duration-200 ${
           open
-            ? "border-primary bg-primary text-primary-foreground"
-            : "border-border bg-white text-slate-900 hover:bg-slate-100"
+            ? "border-[#ff5a00] bg-[#ff5a00] text-white shadow-[0_10px_30px_rgba(255,90,0,0.28)]"
+            : "border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20"
         }`}
       >
         {open ? (
@@ -469,10 +470,26 @@ export default function CatalogSearchMenu() {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-[calc(100%+14px)] z-[70] w-[min(92vw,720px)] max-h-[calc(100vh-110px)] overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-2xl">
-          <div className="border-b border-slate-200 bg-white p-4 sm:p-5">
+        <div className="absolute left-0 top-[calc(100%+14px)] z-[70] w-[min(94vw,760px)] max-h-[calc(100vh-110px)] overflow-hidden rounded-3xl border border-[#0b5ca8]/35 bg-white text-slate-900 shadow-[0_28px_90px_rgba(2,7,20,0.35)]">
+          <div className="relative overflow-hidden border-b border-white/10 bg-[#020714] p-4 sm:p-5">
+            <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-[#0b5ca8]/25 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-16 w-56 h-56 rounded-full bg-[#ff5a00]/15 blur-3xl pointer-events-none" />
+
+            <div className="relative mb-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#ff5a00]">
+                QEH OUTLET
+              </p>
+
+              <h2 className="font-display font-black text-xl sm:text-2xl text-white mt-1">
+                Catalogue et recherche
+              </h2>
+
+              <p className="text-xs sm:text-sm text-white/50 mt-1">
+                Recherchez un produit ou explorez les catégories.
+              </p>
+            </div>
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 w-5 h-5 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-4 top-1/2 w-5 h-5 -translate-y-1/2 text-[#55a8ff]" />
 
               <input
                 ref={searchInputRef}
@@ -487,7 +504,7 @@ export default function CatalogSearchMenu() {
                 }}
                 placeholder="Rechercher un produit, une marque ou une référence…"
                 autoComplete="off"
-                className="w-full h-12 rounded-xl border border-slate-300 bg-white pl-12 pr-12 text-slate-900 placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-12 rounded-2xl border border-white/15 bg-white/10 pl-12 pr-12 text-white placeholder:text-white/40 outline-none focus:border-[#0b5ca8] focus:ring-2 focus:ring-[#0b5ca8]/30"
               />
 
               {searchText && (
@@ -498,7 +515,7 @@ export default function CatalogSearchMenu() {
                     setOpenedCategories([]);
                   }}
                   aria-label="Effacer la recherche"
-                  className="absolute right-3 top-1/2 w-8 h-8 -translate-y-1/2 rounded-full grid place-items-center text-slate-500 hover:bg-slate-100"
+                  className="absolute right-3 top-1/2 w-8 h-8 -translate-y-1/2 rounded-full grid place-items-center text-white/60 hover:bg-white/10 hover:text-white"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -508,7 +525,7 @@ export default function CatalogSearchMenu() {
             {!loading &&
               !errorMessage &&
               normalizedSearchText && (
-                <p className="mt-3 text-xs text-slate-500">
+                <p className="relative mt-3 text-xs text-white/55">
                   {totalVisibleProducts}{" "}
                   {totalVisibleProducts > 1
                     ? "produits trouvés"
@@ -517,10 +534,10 @@ export default function CatalogSearchMenu() {
               )}
           </div>
 
-          <div className="max-h-[calc(100vh-205px)] overflow-y-auto bg-white">
+          <div className="max-h-[calc(100vh-255px)] overflow-y-auto bg-slate-50">
             {loading && (
               <div className="py-16 text-center">
-                <LoaderCircle className="w-9 h-9 animate-spin text-primary mx-auto mb-4" />
+                <LoaderCircle className="w-9 h-9 animate-spin text-[#0b5ca8] mx-auto mb-4" />
 
                 <p className="font-semibold text-slate-900">
                   Chargement du catalogue…
@@ -544,7 +561,7 @@ export default function CatalogSearchMenu() {
                   <button
                     type="button"
                     onClick={handleRetry}
-                    className="h-10 px-5 mt-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
+                    className="h-10 px-5 mt-5 rounded-full bg-[#ff5a00] text-white text-sm font-bold hover:bg-[#e95000]"
                   >
                     Réessayer
                   </button>
@@ -574,7 +591,7 @@ export default function CatalogSearchMenu() {
               !errorMessage &&
               groupedCategories.length >
                 0 && (
-                <div className="divide-y divide-slate-200">
+                <div className="p-3 sm:p-4 space-y-3">
                   {groupedCategories.map(
                     (category) => {
                       const categoryIsOpened =
@@ -585,9 +602,9 @@ export default function CatalogSearchMenu() {
                       return (
                         <section
                           key={category.id}
-                          className="bg-white"
+                          className="overflow-hidden rounded-2xl border border-[#0b5ca8]/20 bg-white shadow-sm"
                         >
-                          <div className="flex items-center bg-slate-100">
+                          <div className="flex items-stretch bg-[linear-gradient(135deg,#020714_0%,#071b35_100%)]">
                             <Link
                               to={`/produits?categorie=${encodeURIComponent(
                                 category.slug
@@ -595,21 +612,27 @@ export default function CatalogSearchMenu() {
                               onClick={
                                 handleCloseMenu
                               }
-                              className="flex-1 min-w-0 px-5 sm:px-6 py-4 hover:bg-slate-200 transition-colors"
+                              className="group flex-1 min-w-0 flex items-center gap-4 px-5 sm:px-6 py-4 hover:bg-white/5 transition-colors"
                             >
-                              <span className="block font-display font-bold text-base text-slate-900">
-                                {category.name}
+                              <span className="w-11 h-11 shrink-0 rounded-2xl border border-[#0b5ca8]/45 bg-[#0b5ca8]/15 text-[#55a8ff] grid place-items-center group-hover:border-[#ff5a00]/60 group-hover:text-[#ff5a00] transition-colors">
+                                <Boxes className="w-5 h-5" />
                               </span>
 
-                              <span className="block text-xs text-slate-500 mt-1">
-                                {
-                                  category.products
-                                    .length
-                                }{" "}
-                                {category.products
-                                  .length > 1
-                                  ? "produits"
-                                  : "produit"}
+                              <span className="min-w-0">
+                                <span className="block font-display font-black text-base text-white truncate">
+                                  {category.name}
+                                </span>
+
+                                <span className="inline-flex items-center min-h-6 px-2.5 mt-1.5 rounded-full bg-[#ff5a00]/15 text-[#ff8b4d] text-[11px] font-black">
+                                  {
+                                    category.products
+                                      .length
+                                  }{" "}
+                                  {category.products
+                                    .length > 1
+                                    ? "produits"
+                                    : "produit"}
+                                </span>
                               </span>
                             </Link>
 
@@ -628,7 +651,7 @@ export default function CatalogSearchMenu() {
                               aria-expanded={
                                 categoryIsOpened
                               }
-                              className="w-16 self-stretch border-l border-slate-200 grid place-items-center text-slate-600 hover:bg-slate-200 hover:text-primary transition-colors"
+                              className="w-16 self-stretch border-l border-white/10 grid place-items-center text-white/65 hover:bg-[#ff5a00] hover:text-white transition-colors"
                             >
                               <ChevronDown
                                 className={`w-5 h-5 transition-transform duration-200 ${
@@ -641,7 +664,7 @@ export default function CatalogSearchMenu() {
                           </div>
 
                           {categoryIsOpened && (
-                            <div className="border-t border-slate-200 bg-white">
+                            <div className="border-t border-[#0b5ca8]/15 bg-white">
                               {category.products
                                 .length > 0 ? (
                                 <ul className="divide-y divide-slate-100">
@@ -659,10 +682,10 @@ export default function CatalogSearchMenu() {
                                           onClick={
                                             handleCloseMenu
                                           }
-                                          className="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 hover:bg-slate-50 transition-colors"
+                                          className="group flex items-center justify-between gap-4 px-5 sm:px-6 py-4 hover:bg-[#0b5ca8]/5 transition-colors"
                                         >
                                           <span className="min-w-0">
-                                            <span className="block text-sm font-semibold text-slate-900">
+                                            <span className="block text-sm font-bold text-slate-950 group-hover:text-[#0b5ca8] transition-colors">
                                               {
                                                 product.name
                                               }
@@ -687,7 +710,9 @@ export default function CatalogSearchMenu() {
                                             )}
                                           </span>
 
-                                          <ChevronRight className="w-4 h-4 shrink-0 text-slate-400" />
+                                          <span className="w-9 h-9 shrink-0 rounded-full bg-slate-100 text-slate-400 grid place-items-center group-hover:bg-[#ff5a00] group-hover:text-white transition-colors">
+                                            <ChevronRight className="w-4 h-4" />
+                                          </span>
                                         </Link>
                                       </li>
                                     )
@@ -706,7 +731,7 @@ export default function CatalogSearchMenu() {
                                 onClick={
                                   handleCloseMenu
                                 }
-                                className="flex items-center justify-center gap-2 min-h-11 border-t border-slate-100 px-5 text-xs font-semibold text-primary hover:bg-slate-50"
+                                className="flex items-center justify-center gap-2 min-h-12 border-t border-slate-100 px-5 text-xs font-black uppercase tracking-[0.12em] text-[#0b5ca8] hover:bg-[#0b5ca8]/5 hover:text-[#ff5a00] transition-colors"
                               >
                                 Voir toute la catégorie
 
@@ -725,14 +750,14 @@ export default function CatalogSearchMenu() {
               !errorMessage &&
               uncategorizedProducts.length >
                 0 && (
-                <section className="border-t border-slate-200 bg-white">
-                  <div className="flex items-center bg-slate-100">
+                <section className="mx-3 sm:mx-4 mb-4 overflow-hidden rounded-2xl border border-[#0b5ca8]/20 bg-white shadow-sm">
+                  <div className="flex items-stretch bg-[linear-gradient(135deg,#020714_0%,#071b35_100%)]">
                     <div className="flex-1 px-5 sm:px-6 py-4">
-                      <p className="font-display font-bold text-base text-slate-900">
+                      <p className="font-display font-black text-base text-white">
                         Autres produits
                       </p>
 
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs font-bold text-[#ff8b4d] mt-1">
                         {
                           uncategorizedProducts.length
                         }{" "}
@@ -760,7 +785,7 @@ export default function CatalogSearchMenu() {
                       aria-expanded={isCategoryOpened(
                         otherProductsCategoryId
                       )}
-                      className="w-16 self-stretch border-l border-slate-200 grid place-items-center text-slate-600 hover:bg-slate-200 hover:text-primary transition-colors"
+                      className="w-16 self-stretch border-l border-white/10 grid place-items-center text-white/65 hover:bg-[#ff5a00] hover:text-white transition-colors"
                     >
                       <ChevronDown
                         className={`w-5 h-5 transition-transform duration-200 ${
@@ -777,7 +802,7 @@ export default function CatalogSearchMenu() {
                   {isCategoryOpened(
                     otherProductsCategoryId
                   ) && (
-                    <ul className="border-t border-slate-200 divide-y divide-slate-100 bg-white">
+                    <ul className="border-t border-[#0b5ca8]/15 divide-y divide-slate-100 bg-white">
                       {uncategorizedProducts.map(
                         (product) => (
                           <li
@@ -826,13 +851,13 @@ export default function CatalogSearchMenu() {
 
             {!loading &&
               !errorMessage && (
-                <div className="sticky bottom-0 border-t border-slate-200 bg-white p-4 sm:p-5">
+                <div className="sticky bottom-0 border-t border-slate-200 bg-white/95 p-4 sm:p-5 backdrop-blur">
                   <Link
                     to="/produits"
                     onClick={
                       handleCloseMenu
                     }
-                    className="flex items-center justify-center gap-2 h-12 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
+                    className="flex items-center justify-center gap-2 h-12 rounded-full bg-[#ff5a00] text-white font-black hover:bg-[#e95000] transition-colors shadow-[0_12px_35px_rgba(255,90,0,0.22)]"
                   >
                     Voir tout le catalogue
 

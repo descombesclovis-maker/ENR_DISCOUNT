@@ -11,7 +11,10 @@ import {
   AlertCircle,
   ArrowRight,
   ArrowUpRight,
+  BadgeEuro,
   LoaderCircle,
+  PackageCheck,
+  ShieldCheck,
 } from "lucide-react";
 
 import {
@@ -24,29 +27,72 @@ import {
 
 const PRODUCT_CONDITIONS = {
   new_packaged: {
-    label: "Neuf avec emballage",
+    label:
+      "Neuf avec emballage",
+
     className:
       "border-emerald-200 bg-emerald-50 text-emerald-700",
   },
 
   good_opened: {
-    label: "Bon état déballé",
+    label:
+      "Bon état déballé",
+
     className:
       "border-yellow-200 bg-yellow-50 text-yellow-700",
   },
 
   used: {
-    label: "Occasion",
+    label:
+      "Occasion",
+
     className:
       "border-orange-200 bg-orange-50 text-orange-700",
   },
 
   for_parts: {
-    label: "Pour pièces",
+    label:
+      "Pour pièces",
+
     className:
       "border-red-200 bg-red-50 text-red-700",
   },
 };
+
+const advantages = [
+  {
+    icon:
+      PackageCheck,
+
+    title:
+      "Produits contrôlés",
+
+    description:
+      "Chaque article est identifié et présenté avec son état réel.",
+  },
+
+  {
+    icon:
+      BadgeEuro,
+
+    title:
+      "Prix bas",
+
+    description:
+      "Des équipements professionnels proposés à prix outlet.",
+  },
+
+  {
+    icon:
+      ShieldCheck,
+
+    title:
+      "Achat sécurisé",
+
+    description:
+      "Paiement sécurisé et suivi de commande directement en ligne.",
+  },
+];
 
 function getPrimaryImage(
   images,
@@ -126,7 +172,7 @@ function getAvailability(
         "Disponible",
 
       className:
-        "text-primary",
+        "text-emerald-600",
     };
   }
 
@@ -145,7 +191,7 @@ function getAvailability(
       "Indisponible",
 
     className:
-      "text-destructive",
+      "text-red-600",
   };
 }
 
@@ -167,7 +213,7 @@ export default function Home() {
 
   useEffect(() => {
     document.title =
-      "Accueil | EcoConfortHabitat.fr";
+      "QEH OUTLET | Déstockage, prix bas et qualité";
 
     let componentIsMounted =
       true;
@@ -222,7 +268,7 @@ export default function Home() {
                   false,
               }
             )
-            .limit(3);
+            .limit(6);
 
           if (error) {
             throw error;
@@ -326,45 +372,42 @@ export default function Home() {
   }, []);
 
   return (
-    <div data-testid="home-page">
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-16 pb-12 lg:pt-24 lg:pb-16">
-          <div className="max-w-3xl">
-            <p className="overline text-primary mb-4">
-              EcoConfortHabitat.fr
-            </p>
+    <div
+      data-testid="home-page"
+      className="bg-white"
+    >
+      <section className="relative overflow-hidden bg-[#020714]">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-44 -left-44 w-[430px] h-[430px] rounded-full bg-[#0b5ca8]/20 blur-3xl" />
 
-            <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.05]">
-              Le confort de votre habitat
-              <br />
+          <div className="absolute -bottom-52 -right-40 w-[480px] h-[480px] rounded-full bg-[#ff5a00]/15 blur-3xl" />
 
-              <span className="text-primary">
-                à prix discount.
-              </span>
-            </h1>
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(11,92,168,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(11,92,168,0.08)_1px,transparent_1px)] bg-[size:48px_48px]" />
+        </div>
 
-            <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
-              Panneaux solaires,
-              climatiseurs, chauffe-eau,
-              pompes à chaleur et
-              solutions de stockage pour
-              améliorer durablement votre
-              confort.
-            </p>
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-20 lg:py-24">
+          <div className="max-w-5xl mx-auto text-center">
+            <div className="inline-flex max-w-full rounded-3xl border border-[#0b5ca8]/60 bg-[#010611]/80 p-3 sm:p-5 shadow-[0_30px_100px_rgba(0,0,0,0.48)]">
+              <img
+                src="/images/qeh-outlet-logo.jpg"
+                alt="QEH OUTLET — Déstockage, prix bas, qualité"
+                className="w-full max-w-[900px] h-auto object-contain"
+              />
+            </div>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/produits"
-                className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 min-h-12 px-8 rounded-full bg-[#ff5a00] text-white font-bold shadow-[0_12px_35px_rgba(255,90,0,0.25)] hover:bg-[#e95000] transition-colors"
               >
-                Voir les produits
+                Découvrir les produits
 
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5" />
               </Link>
 
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 h-12 px-7 rounded-full border border-border font-semibold hover:bg-secondary transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center min-h-12 px-8 rounded-full border border-white/25 bg-white/5 text-white font-semibold hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20 transition-colors"
               >
                 Nous contacter
               </Link>
@@ -373,33 +416,71 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-5 sm:px-8 py-12">
-        <div className="flex items-end justify-between mb-8">
+      <section className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 -mt-2 sm:-mt-7">
+        <div className="grid md:grid-cols-3 gap-4 rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_20px_65px_rgba(2,7,20,0.12)]">
+          {advantages.map(
+            (advantage) => {
+              const Icon =
+                advantage.icon;
+
+              return (
+                <article
+                  key={
+                    advantage.title
+                  }
+                  className="flex items-start gap-4 rounded-2xl p-4 sm:p-5 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#0b5ca8]/10 text-[#0b5ca8] grid place-items-center">
+                    <Icon className="w-6 h-6" />
+                  </div>
+
+                  <div>
+                    <h2 className="font-display font-bold text-base text-slate-950">
+                      {
+                        advantage.title
+                      }
+                    </h2>
+
+                    <p className="text-sm text-slate-500 leading-relaxed mt-1">
+                      {
+                        advantage.description
+                      }
+                    </p>
+                  </div>
+                </article>
+              );
+            }
+          )}
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
+        <div className="flex items-end justify-between gap-5 mb-9">
           <div>
-            <p className="overline text-primary mb-2">
-              Catalogue
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ff5a00] mb-3">
+              Sélection QEH OUTLET
             </p>
 
-            <h2 className="font-display font-bold text-3xl sm:text-4xl tracking-tight">
+            <h2 className="font-display font-black text-3xl sm:text-4xl tracking-tight text-slate-950">
               Nos produits en vedette
             </h2>
           </div>
 
           <Link
             to="/produits"
-            className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold hover:text-primary transition-colors"
+            className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-[#0b5ca8] hover:text-[#ff5a00] transition-colors"
           >
-            Tout voir
+            Tout le catalogue
 
             <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>
 
         {loading && (
-          <div className="rounded-3xl border border-border bg-card px-6 py-14 text-center">
-            <LoaderCircle className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center">
+            <LoaderCircle className="w-10 h-10 animate-spin text-[#0b5ca8] mx-auto mb-4" />
 
-            <h3 className="font-display font-bold text-xl">
+            <h3 className="font-display font-bold text-xl text-slate-950">
               Chargement des produits
             </h3>
           </div>
@@ -407,14 +488,14 @@ export default function Home() {
 
         {!loading &&
           errorMessage && (
-            <div className="rounded-3xl border border-destructive/30 bg-card px-6 py-14 text-center">
-              <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-4" />
+            <div className="rounded-3xl border border-red-200 bg-white px-6 py-16 text-center">
+              <AlertCircle className="w-10 h-10 text-red-600 mx-auto mb-4" />
 
-              <h3 className="font-display font-bold text-xl">
+              <h3 className="font-display font-bold text-xl text-slate-950">
                 Impossible de charger les produits
               </h3>
 
-              <p className="text-muted-foreground mt-2">
+              <p className="text-slate-500 mt-2">
                 {errorMessage}
               </p>
             </div>
@@ -424,15 +505,13 @@ export default function Home() {
           !errorMessage &&
           featuredProducts.length ===
             0 && (
-            <div className="rounded-3xl border border-border bg-card px-6 py-14 text-center">
-              <h3 className="font-display font-bold text-xl">
+            <div className="rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center">
+              <h3 className="font-display font-bold text-xl text-slate-950">
                 Aucun produit vedette
               </h3>
 
-              <p className="text-muted-foreground mt-2">
-                Active l’option « Produit
-                vedette » dans
-                l’administration.
+              <p className="text-slate-500 mt-2">
+                Active l’option « Produit vedette » dans l’administration.
               </p>
             </div>
           )}
@@ -448,9 +527,11 @@ export default function Home() {
                   index
                 ) => (
                   <Link
-                    key={product.id}
+                    key={
+                      product.id
+                    }
                     to={`/produits/${product.slug}`}
-                    className="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:-translate-y-1 transition-transform duration-200 hover:shadow-lg"
+                    className="group flex flex-col rounded-3xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1.5 hover:border-[#0b5ca8]/50 hover:shadow-[0_22px_55px_rgba(2,7,20,0.13)] transition-all duration-300"
                     style={{
                       animationDelay:
                         `${index * 60}ms`,
@@ -486,41 +567,47 @@ export default function Home() {
                       </span>
                     </div>
 
-                    <div className="flex flex-col flex-1 p-5 border-t border-border">
+                    <div className="flex flex-col flex-1 p-5 sm:p-6 border-t border-slate-100">
                       {product.category && (
-                        <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
+                        <p className="text-xs font-black uppercase tracking-[0.12em] text-[#0b5ca8] mb-2">
                           {
                             product.category
                           }
                         </p>
                       )}
 
-                      <h3 className="font-display font-semibold text-base leading-snug">
+                      <h3 className="font-display font-bold text-base leading-snug text-slate-950 group-hover:text-[#0b5ca8] transition-colors">
                         {product.name}
                       </h3>
 
                       {product.brand && (
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-sm text-slate-500 mt-1">
                           {
                             product.brand
                           }
                         </p>
                       )}
 
-                      <div className="mt-auto pt-4">
-                        <p className="font-display font-bold text-lg">
-                          {priceLabel(
-                            product
-                          )}
-                        </p>
+                      <div className="mt-auto pt-5 flex items-end justify-between gap-4">
+                        <div>
+                          <p className="font-display font-black text-xl text-slate-950">
+                            {priceLabel(
+                              product
+                            )}
+                          </p>
 
-                        <p
-                          className={`text-xs font-semibold mt-1 ${product.availabilityClassName}`}
-                        >
-                          {
-                            product.availabilityLabel
-                          }
-                        </p>
+                          <p
+                            className={`text-xs font-bold mt-1 ${product.availabilityClassName}`}
+                          >
+                            {
+                              product.availabilityLabel
+                            }
+                          </p>
+                        </div>
+
+                        <span className="w-10 h-10 rounded-full bg-[#020714] text-white grid place-items-center group-hover:bg-[#ff5a00] transition-colors">
+                          <ArrowRight className="w-4 h-4" />
+                        </span>
                       </div>
                     </div>
                   </Link>
@@ -531,7 +618,7 @@ export default function Home() {
 
         <Link
           to="/produits"
-          className="sm:hidden mt-7 inline-flex items-center gap-2 h-11 px-6 rounded-full border border-border font-semibold hover:bg-secondary transition-colors"
+          className="sm:hidden mt-8 inline-flex items-center justify-center gap-2 min-h-12 w-full rounded-full bg-[#020714] text-white font-bold"
         >
           Voir tout le catalogue
 

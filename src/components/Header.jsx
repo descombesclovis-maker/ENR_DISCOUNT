@@ -49,8 +49,10 @@ export const Header = () => {
     count: wishlistCount,
   } = useWishlist();
 
-  const [open, setOpen] =
-    useState(false);
+  const [
+    open,
+    setOpen,
+  ] = useState(false);
 
   const location =
     useLocation();
@@ -69,53 +71,58 @@ export const Header = () => {
     );
   };
 
+  const closeMobileMenu =
+    () => {
+      setOpen(false);
+    };
+
   return (
     <header
       data-testid="site-header"
-      className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/60"
+      className="sticky top-0 z-50 border-b border-[#0b5ca8]/30 bg-[#030a18]/95 text-white shadow-[0_10px_35px_rgba(0,0,0,0.18)] backdrop-blur-xl"
     >
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 min-h-20 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <CatalogSearchMenu />
 
           <Link
             to="/"
             data-testid="logo-link"
-            aria-label="Retour à l’accueil EcoConfortHabitat.fr"
-            className="group shrink-0 flex items-center"
+            aria-label="Retour à l’accueil QEH OUTLET"
+            className="group flex items-center shrink-0"
           >
-            <span className="whitespace-nowrap font-display font-black text-[15px] sm:text-xl tracking-[-0.045em] leading-none">
-              <span className="text-foreground transition-colors group-hover:text-primary">
-                EcoConfort
-              </span>
-
-              <span className="text-primary">
-                Habitat
-              </span>
-
-              <span className="text-primary/70 text-[0.72em] tracking-[-0.02em]">
-                .fr
-              </span>
+            <span className="flex items-center overflow-hidden rounded-xl border border-[#0b5ca8]/50 bg-[#020714] shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-all duration-300 group-hover:border-[#ff5a00]/80 group-hover:shadow-[0_10px_30px_rgba(255,90,0,0.12)]">
+              <img
+                src="/images/qeh-outlet-logo.jpg"
+                alt="QEH OUTLET"
+                className="h-11 sm:h-14 w-auto max-w-[150px] sm:max-w-[220px] object-contain"
+              />
             </span>
           </Link>
         </div>
 
-        <nav className="hidden lg:flex items-center gap-9">
+        <nav className="hidden lg:flex items-center gap-8">
           {links.map(
             (link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 data-testid={`nav-${link.label.toLowerCase()}`}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
+                className={`relative py-2 text-sm font-semibold transition-colors ${
                   isLinkActive(
                     link.to
                   )
-                    ? "text-primary"
-                    : "text-foreground/70"
+                    ? "text-[#ff5a00]"
+                    : "text-white/75 hover:text-white"
                 }`}
               >
                 {link.label}
+
+                {isLinkActive(
+                  link.to
+                ) && (
+                  <span className="absolute left-0 right-0 -bottom-1 h-0.5 rounded-full bg-[#ff5a00]" />
+                )}
               </Link>
             )
           )}
@@ -127,16 +134,16 @@ export const Header = () => {
             data-testid="tracking-link"
             title="Suivre une commande"
             aria-label="Suivre une commande"
-            className={`hidden sm:inline-flex items-center justify-center gap-2 h-11 px-4 rounded-full border transition-colors ${
+            className={`hidden sm:inline-flex items-center justify-center gap-2 h-11 px-4 rounded-full border text-sm font-semibold transition-colors ${
               location.pathname ===
               "/suivi-commande"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border hover:bg-secondary"
+                ? "border-[#ff5a00] bg-[#ff5a00] text-white"
+                : "border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20"
             }`}
           >
             <PackageSearch className="w-5 h-5" />
 
-            <span className="hidden xl:inline text-sm font-semibold">
+            <span className="hidden xl:inline">
               Suivi
             </span>
           </Link>
@@ -149,8 +156,8 @@ export const Header = () => {
             className={`relative w-11 h-11 rounded-full border grid place-items-center transition-colors ${
               location.pathname ===
               "/favoris"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border hover:bg-secondary"
+                ? "border-[#ff5a00] bg-[#ff5a00] text-white"
+                : "border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20"
             }`}
           >
             <Heart className="w-5 h-5" />
@@ -158,7 +165,7 @@ export const Header = () => {
             {wishlistCount > 0 && (
               <span
                 data-testid="wishlist-count"
-                className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold grid place-items-center"
+                className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#ff5a00] text-white text-[11px] font-bold grid place-items-center"
               >
                 {wishlistCount}
               </span>
@@ -173,8 +180,8 @@ export const Header = () => {
             className={`relative w-11 h-11 rounded-full border grid place-items-center transition-colors ${
               location.pathname ===
               "/panier"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border hover:bg-secondary"
+                ? "border-[#ff5a00] bg-[#ff5a00] text-white"
+                : "border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20"
             }`}
           >
             <ShoppingBag className="w-5 h-5" />
@@ -182,7 +189,7 @@ export const Header = () => {
             {cartCount > 0 && (
               <span
                 data-testid="cart-count"
-                className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold grid place-items-center"
+                className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#ff5a00] text-white text-[11px] font-bold grid place-items-center"
               >
                 {cartCount}
               </span>
@@ -191,7 +198,6 @@ export const Header = () => {
 
           <button
             type="button"
-            className="lg:hidden w-11 h-11 rounded-full border border-border grid place-items-center hover:bg-secondary transition-colors"
             onClick={() =>
               setOpen(
                 (
@@ -207,6 +213,7 @@ export const Header = () => {
                 : "Ouvrir le menu"
             }
             aria-expanded={open}
+            className="lg:hidden w-11 h-11 rounded-full border border-white/20 bg-white/5 text-white grid place-items-center hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20 transition-colors"
           >
             {open ? (
               <X className="w-5 h-5" />
@@ -218,42 +225,42 @@ export const Header = () => {
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-border px-5 py-4 bg-background">
+        <div className="lg:hidden border-t border-white/10 bg-[#030a18] px-5 py-5">
           <nav className="flex flex-col gap-2">
             {links.map(
               (link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  onClick={() =>
-                    setOpen(false)
+                  onClick={
+                    closeMobileMenu
                   }
-                  className={`min-h-11 flex items-center rounded-xl px-4 text-base font-medium transition-colors ${
+                  data-testid={`mobile-nav-${link.label.toLowerCase()}`}
+                  className={`min-h-11 flex items-center rounded-xl px-4 text-base font-semibold transition-colors ${
                     isLinkActive(
                       link.to
                     )
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-secondary"
+                      ? "bg-[#ff5a00] text-white"
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
                   }`}
-                  data-testid={`mobile-nav-${link.label.toLowerCase()}`}
                 >
                   {link.label}
                 </Link>
               )
             )}
 
-            <div className="h-px bg-border my-2" />
+            <div className="h-px bg-white/10 my-2" />
 
             <Link
               to="/suivi-commande"
-              onClick={() =>
-                setOpen(false)
+              onClick={
+                closeMobileMenu
               }
-              className={`min-h-11 flex items-center gap-3 rounded-xl px-4 text-base font-medium transition-colors ${
+              className={`min-h-11 flex items-center gap-3 rounded-xl px-4 text-base font-semibold transition-colors ${
                 location.pathname ===
                 "/suivi-commande"
-                  ? "bg-primary/10 text-primary"
-                  : "hover:bg-secondary"
+                  ? "bg-[#ff5a00] text-white"
+                  : "text-white/80 hover:bg-white/10 hover:text-white"
               }`}
             >
               <PackageSearch className="w-5 h-5" />
@@ -263,24 +270,23 @@ export const Header = () => {
 
             <Link
               to="/favoris"
-              onClick={() =>
-                setOpen(false)
+              onClick={
+                closeMobileMenu
               }
-              className={`min-h-11 flex items-center justify-between gap-3 rounded-xl px-4 text-base font-medium transition-colors ${
+              className={`min-h-11 flex items-center justify-between gap-3 rounded-xl px-4 text-base font-semibold transition-colors ${
                 location.pathname ===
                 "/favoris"
-                  ? "bg-primary/10 text-primary"
-                  : "hover:bg-secondary"
+                  ? "bg-[#ff5a00] text-white"
+                  : "text-white/80 hover:bg-white/10 hover:text-white"
               }`}
             >
               <span className="flex items-center gap-3">
                 <Heart className="w-5 h-5" />
-
                 Mes favoris
               </span>
 
               {wishlistCount > 0 && (
-                <span className="min-w-6 h-6 px-2 rounded-full bg-primary text-primary-foreground text-xs font-bold grid place-items-center">
+                <span className="min-w-6 h-6 px-2 rounded-full bg-[#ff5a00] text-white text-xs font-bold grid place-items-center">
                   {wishlistCount}
                 </span>
               )}
@@ -288,24 +294,23 @@ export const Header = () => {
 
             <Link
               to="/panier"
-              onClick={() =>
-                setOpen(false)
+              onClick={
+                closeMobileMenu
               }
-              className={`min-h-11 flex items-center justify-between gap-3 rounded-xl px-4 text-base font-medium transition-colors ${
+              className={`min-h-11 flex items-center justify-between gap-3 rounded-xl px-4 text-base font-semibold transition-colors ${
                 location.pathname ===
                 "/panier"
-                  ? "bg-primary/10 text-primary"
-                  : "hover:bg-secondary"
+                  ? "bg-[#ff5a00] text-white"
+                  : "text-white/80 hover:bg-white/10 hover:text-white"
               }`}
             >
               <span className="flex items-center gap-3">
                 <ShoppingBag className="w-5 h-5" />
-
                 Mon panier
               </span>
 
               {cartCount > 0 && (
-                <span className="min-w-6 h-6 px-2 rounded-full bg-primary text-primary-foreground text-xs font-bold grid place-items-center">
+                <span className="min-w-6 h-6 px-2 rounded-full bg-[#ff5a00] text-white text-xs font-bold grid place-items-center">
                   {cartCount}
                 </span>
               )}
