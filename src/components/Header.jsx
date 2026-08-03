@@ -1,17 +1,23 @@
 import React, {
+  useEffect,
+  useRef,
   useState,
 } from "react";
 
 import {
   Link,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 
 import {
+  ChevronDown,
   Heart,
+  LogOut,
   Menu,
   PackageSearch,
   ShoppingBag,
+  User,
   X,
 } from "lucide-react";
 
@@ -22,6 +28,10 @@ import {
 import {
   useWishlist,
 } from "../context/WishlistContext";
+
+import {
+  useCustomerAuth,
+} from "../context/CustomerAuthContext";
 
 import CatalogSearchMenu from "./CatalogSearchMenu";
 
@@ -41,6 +51,12 @@ const links = [
 ];
 
 export const Header = () => {
+  const navigate =
+    useNavigate();
+
+  const location =
+    useLocation();
+
   const {
     count: cartCount,
   } = useCart();
@@ -49,13 +65,25 @@ export const Header = () => {
     count: wishlistCount,
   } = useWishlist();
 
+  const {
+    isAuthenticated,
+    profile,
+    user,
+    signOut,
+  } = useCustomerAuth();
+
   const [
-    open,
-    setOpen,
+    mobileMenuOpen,
+    setMobileMenuOpen,
   ] = useState(false);
 
-  const location =
-    useLocation();
+  const [
+    accountMenuOpen,
+    setAccountMenuOpen,
+  ] = useState(false);
+
+  const accountMenuRef =
+    useRef(null);
 
   const isLinkActive = (
     path
@@ -73,8 +101,106 @@ export const Header = () => {
 
   const closeMobileMenu =
     () => {
-      setOpen(false);
+      setMobileMenuOpen(false);
     };
+
+  const closeAccountMenu =
+    () => {
+      setAccountMenuOpen(false);
+    };
+
+  const handleLogout =
+    async () => {
+      try {
+        await signOut();
+
+        closeAccountMenu();
+        closeMobileMenu();
+
+        navigate("/");
+      } catch (error) {
+        console.error(
+          "Erreur lors de la déconnexion client :",
+          error
+        );
+      }
+    };
+
+  useEffect(() => {
+    closeMobileMenu();
+    closeAccountMenu();
+  }, [
+    location.pathname,
+    location.search,
+  ]);
+
+  useEffect(() => {
+    const handleOutsideClick =
+      (event) => {
+        if (
+          accountMenuRef.current &&
+          !accountMenuRef.current.contains(
+            event.target
+          )
+        ) {
+          closeAccountMenu();
+        }
+      };
+
+    const handleEscapeKey =
+      (event) => {
+        if (
+          event.key === "Escape"
+        ) {
+          closeAccountMenu();
+          closeMobileMenu();
+        }
+      };
+
+    document.addEventListener(
+      "mousedown",
+      handleOutsideClick
+    );
+
+    document.addEventListener(
+      "keydown",
+      handleEscapeKey
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleEscapeKey
+      );
+    };
+  }, []);
+
+  const customerFirstName =
+    profile?.first_name?.trim() ||
+    user?.user_metadata
+      ?.first_name?.trim() ||
+    "";
+
+  const customerLastName =
+    profile?.last_name?.trim() ||
+    user?.user_metadata
+      ?.last_name?.trim() ||
+    "";
+
+  const customerDisplayName =
+    [
+      customerFirstName,
+      customerLastName,
+    ]
+      .filter(Boolean)
+      .join(" ") ||
+    user?.email ||
+    "Client";
 
   return (
     <header
@@ -134,7 +260,7 @@ export const Header = () => {
             data-testid="tracking-link"
             title="Suivre une commande"
             aria-label="Suivre une commande"
-            className={`hidden sm:inline-flex items-center justify-center gap-2 h-11 px-4 rounded-full border text-sm font-semibold transition-colors ${
+            className={`hidden xl:inline-flex items-center justify-center gap-2 h-11 px-4 rounded-full border text-sm font-semibold transition-colors ${
               location.pathname ===
               "/suivi-commande"
                 ? "border-[#ff5a00] bg-[#ff5a00] text-white"
@@ -143,7 +269,7 @@ export const Header = () => {
           >
             <PackageSearch className="w-5 h-5" />
 
-            <span className="hidden xl:inline">
+            <span>
               Suivi
             </span>
           </Link>
@@ -195,129 +321,262 @@ export const Header = () => {
               </span>
             )}
           </Link>
+                    {!isAuthenticated ? (
+
+            <Link
+              to="/connexion"
+              data-testid="customer-login-link"
+              className="hidden lg:inline-flex items-center gap-2 h-11 px-5 rounded-full bg-[#ff5a00] text-white font-semibold hover:bg-[#ff6d1f] transition-colors"
+            >
+              <User className="w-5 h-5" />
+              Connexion
+            </Link>
+
+          ) : (
+
+            <div
+              ref={accountMenuRef}
+              className="relative hidden lg:block"
+            >
+
+              <button
+                type="button"
+                onClick={() =>
+                  setAccountMenuOpen(
+                    (currentValue) =>
+                      !currentValue
+                  )
+                }
+                className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20 transition-colors"
+              >
+
+                <User className="w-5 h-5" />
+
+                <span className="max-w-[150px] truncate">
+                  {customerDisplayName}
+                </span>
+
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    accountMenuOpen
+                      ? "rotate-180"
+                      : ""
+                  }`}
+                />
+
+              </button>
+
+              {accountMenuOpen && (
+
+                <div className="absolute right-0 top-14 w-72 rounded-2xl border border-border bg-card text-foreground shadow-2xl overflow-hidden">
+
+                  <div className="px-5 py-4 border-b border-border">
+
+                    <p className="font-display font-bold text-lg">
+                      {customerDisplayName}
+                    </p>
+
+                    <p className="text-sm text-muted-foreground">
+                      {user?.email}
+                    </p>
+
+                  </div>
+
+                  <Link
+                    to="/mon-compte"
+                    onClick={closeAccountMenu}
+                    className="flex items-center gap-3 px-5 py-4 hover:bg-secondary transition-colors"
+                  >
+
+                    <User className="w-5 h-5" />
+
+                    Mon compte
+
+                  </Link>
+
+                  <Link
+                    to="/favoris"
+                    onClick={closeAccountMenu}
+                    className="flex items-center gap-3 px-5 py-4 hover:bg-secondary transition-colors"
+                  >
+
+                    <Heart className="w-5 h-5" />
+
+                    Mes favoris
+
+                  </Link>
+
+                  <Link
+                    to="/suivi-commande"
+                    onClick={closeAccountMenu}
+                    className="flex items-center gap-3 px-5 py-4 hover:bg-secondary transition-colors"
+                  >
+
+                    <PackageSearch className="w-5 h-5" />
+
+                    Suivi de commande
+
+                  </Link>
+
+                  <div className="border-t border-border" />
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-red-50 hover:text-red-600 transition-colors"
+                  >
+
+                    <LogOut className="w-5 h-5" />
+
+                    Déconnexion
+
+                  </button>
+
+                </div>
+
+              )}
+
+            </div>
+
+          )}
 
           <button
             type="button"
             onClick={() =>
-              setOpen(
-                (
-                  currentValue
-                ) =>
+              setMobileMenuOpen(
+                (currentValue) =>
                   !currentValue
               )
             }
             data-testid="mobile-menu-toggle"
             aria-label={
-              open
+              mobileMenuOpen
                 ? "Fermer le menu"
                 : "Ouvrir le menu"
             }
-            aria-expanded={open}
             className="lg:hidden w-11 h-11 rounded-full border border-white/20 bg-white/5 text-white grid place-items-center hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20 transition-colors"
           >
-            {open ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
-          </button>
-        </div>
-      </div>
 
-      {open && (
-        <div className="lg:hidden border-t border-white/10 bg-[#030a18] px-5 py-5">
-          <nav className="flex flex-col gap-2">
-            {links.map(
-              (link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={
-                    closeMobileMenu
-                  }
-                  data-testid={`mobile-nav-${link.label.toLowerCase()}`}
-                  className={`min-h-11 flex items-center rounded-xl px-4 text-base font-semibold transition-colors ${
-                    isLinkActive(
-                      link.to
-                    )
-                      ? "bg-[#ff5a00] text-white"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              )
+            {mobileMenuOpen ? (
+
+              <X className="w-5 h-5" />
+
+            ) : (
+
+              <Menu className="w-5 h-5" />
+
             )}
+
+          </button>
+
+        </div>
+
+      </div>
+            {mobileMenuOpen && (
+
+        <div className="lg:hidden border-t border-white/10 bg-[#030a18] px-5 py-5">
+
+          <nav className="flex flex-col gap-2">
+
+            {links.map((link) => (
+
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={closeMobileMenu}
+                className={`min-h-11 flex items-center rounded-xl px-4 text-base font-semibold transition-colors ${
+                  isLinkActive(link.to)
+                    ? "bg-[#ff5a00] text-white"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {link.label}
+              </Link>
+
+            ))}
 
             <div className="h-px bg-white/10 my-2" />
 
             <Link
               to="/suivi-commande"
-              onClick={
-                closeMobileMenu
-              }
-              className={`min-h-11 flex items-center gap-3 rounded-xl px-4 text-base font-semibold transition-colors ${
-                location.pathname ===
-                "/suivi-commande"
-                  ? "bg-[#ff5a00] text-white"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
-              }`}
+              onClick={closeMobileMenu}
+              className="min-h-11 flex items-center gap-3 rounded-xl px-4 text-white hover:bg-white/10"
             >
-              <PackageSearch className="w-5 h-5" />
+
+              <PackageSearch className="w-5 h-5"/>
 
               Suivi de commande
+
             </Link>
 
-            <Link
-              to="/favoris"
-              onClick={
-                closeMobileMenu
-              }
-              className={`min-h-11 flex items-center justify-between gap-3 rounded-xl px-4 text-base font-semibold transition-colors ${
-                location.pathname ===
-                "/favoris"
-                  ? "bg-[#ff5a00] text-white"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <Heart className="w-5 h-5" />
-                Mes favoris
-              </span>
+            {!isAuthenticated ? (
 
-              {wishlistCount > 0 && (
-                <span className="min-w-6 h-6 px-2 rounded-full bg-[#ff5a00] text-white text-xs font-bold grid place-items-center">
-                  {wishlistCount}
-                </span>
-              )}
-            </Link>
+              <Link
+                to="/connexion"
+                onClick={closeMobileMenu}
+                className="min-h-11 flex items-center justify-center gap-3 rounded-xl bg-[#ff5a00] text-white font-bold"
+              >
 
-            <Link
-              to="/panier"
-              onClick={
-                closeMobileMenu
-              }
-              className={`min-h-11 flex items-center justify-between gap-3 rounded-xl px-4 text-base font-semibold transition-colors ${
-                location.pathname ===
-                "/panier"
-                  ? "bg-[#ff5a00] text-white"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <ShoppingBag className="w-5 h-5" />
-                Mon panier
-              </span>
+                <User className="w-5 h-5"/>
 
-              {cartCount > 0 && (
-                <span className="min-w-6 h-6 px-2 rounded-full bg-[#ff5a00] text-white text-xs font-bold grid place-items-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
+                Connexion
+
+              </Link>
+
+            ) : (
+
+              <>
+
+                <Link
+                  to="/mon-compte"
+                  onClick={closeMobileMenu}
+                  className="min-h-11 flex items-center gap-3 rounded-xl px-4 text-white hover:bg-white/10"
+                >
+
+                  <User className="w-5 h-5"/>
+
+                  Mon compte
+
+                </Link>
+
+                <Link
+                  to="/favoris"
+                  onClick={closeMobileMenu}
+                  className="min-h-11 flex items-center gap-3 rounded-xl px-4 text-white hover:bg-white/10"
+                >
+
+                  <Heart className="w-5 h-5"/>
+
+                  Mes favoris
+
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="min-h-11 flex items-center gap-3 rounded-xl px-4 text-left text-red-400 hover:bg-red-500/10"
+                >
+
+                  <LogOut className="w-5 h-5"/>
+
+                  Déconnexion
+
+                </button>
+
+              </>
+
+            )}
+
           </nav>
+
         </div>
+
       )}
+
     </header>
+
   );
+
 };
+
+export default Header;

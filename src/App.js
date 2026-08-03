@@ -10,21 +10,13 @@ import {
 
 import { Toaster } from "sonner";
 
-import {
-  CartProvider,
-} from "./context/CartContext";
-
-import {
-  AuthProvider,
-} from "./context/AuthContext";
-
-import {
-  WishlistProvider,
-} from "./context/WishlistContext";
+import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
+import { AuthProvider } from "./context/AuthContext";
+import { CustomerAuthProvider } from "./context/CustomerAuthContext";
 
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
-
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Home from "./pages/Home";
@@ -36,6 +28,11 @@ import Contact from "./pages/Contact";
 import SupabaseTest from "./pages/SupabaseTest";
 import Wishlist from "./pages/Wishlist";
 import Tracking from "./pages/Tracking";
+
+import CustomerOrderDetail from "./pages/CustomerOrderDetail";
+import CustomerLogin from "./pages/CustomerLogin";
+import CustomerRegister from "./pages/CustomerRegister";
+import CustomerAccount from "./pages/CustomerAccount";
 
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -62,106 +59,149 @@ function StoreLayout() {
 function App() {
   return (
     <div className="App">
+
       <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <BrowserRouter>
-              <Toaster
-                position="top-center"
-                richColors
-              />
 
-              <Routes>
-                <Route element={<StoreLayout />}>
-                  <Route
-                    path="/"
-                    element={<Home />}
-                  />
+        <CustomerAuthProvider>
 
-                  <Route
-                    path="/produits"
-                    element={<Products />}
-                  />
+          <CartProvider>
 
-                  <Route
-                    path="/produits/:slug"
-                    element={<ProductDetail />}
-                  />
+            <WishlistProvider>
 
-                  <Route
-                    path="/favoris"
-                    element={<Wishlist />}
-                  />
+              <BrowserRouter>
 
-                  <Route
-                    path="/suivi-commande"
-                    element={<Tracking />}
-                  />
-
-                  <Route
-                    path="/panier"
-                    element={<Cart />}
-                  />
-
-                  <Route
-                    path="/commande/succes"
-                    element={<CheckoutSuccess />}
-                  />
-
-                  <Route
-                    path="/contact"
-                    element={<Contact />}
-                  />
-
-                  <Route
-                    path="/test-supabase"
-                    element={<SupabaseTest />}
-                  />
-                </Route>
-
-                <Route
-                  path="/admin/login"
-                  element={<AdminLogin />}
+                <Toaster
+                  position="top-center"
+                  richColors
                 />
 
-                <Route element={<ProtectedRoute />}>
+                <Routes>
+
+                  <Route element={<StoreLayout />}>
+
+                    <Route
+                      path="/"
+                      element={<Home />}
+                    />
+
+                    <Route
+                      path="/produits"
+                      element={<Products />}
+                    />
+
+                    <Route
+                      path="/produits/:slug"
+                      element={<ProductDetail />}
+                    />
+
+                    <Route
+                      path="/favoris"
+                      element={<Wishlist />}
+                    />
+
+                    <Route
+                      path="/suivi-commande"
+                      element={<Tracking />}
+                    />
+
+                    <Route
+                      path="/panier"
+                      element={<Cart />}
+                    />
+
+                    <Route
+                      path="/commande/succes"
+                      element={<CheckoutSuccess />}
+                    />
+
+                    <Route
+                      path="/contact"
+                      element={<Contact />}
+                    />
+
+                    <Route
+                      path="/connexion"
+                      element={<CustomerLogin />}
+                    />
+
+                    <Route
+                      path="/inscription"
+                      element={<CustomerRegister />}
+                    />
+
+                    <Route
+                      path="/mon-compte"
+                      element={<CustomerAccount />}
+                    />
                   <Route
-                    path="/admin"
-                    element={<AdminDashboard />}
+                    path="/mes-commandes"
+                    element={<CustomerOrders />}
                   />
+                  <Route
+                    path="/compte/commandes/:id"
+                      element={<CustomerOrderDetail />}
+/>
+                    <Route
+                      path="/test-supabase"
+                      element={<SupabaseTest />}
+                    />
+
+                  </Route>
 
                   <Route
-                    path="/admin/produits"
-                    element={<AdminProducts />}
+                    path="/admin/login"
+                    element={<AdminLogin />}
                   />
 
-                  <Route
-                    path="/admin/produits/nouveau"
-                    element={<AdminProductNew />}
-                  />
+                  <Route element={<ProtectedRoute />}>
 
-                  <Route
-                    path="/admin/produits/:productId/modifier"
-                    element={<AdminProductEdit />}
-                  />
+                    <Route
+                      path="/admin"
+                      element={<AdminDashboard />}
+                    />
 
-                  <Route
-                    path="/admin/categories"
-                    element={<AdminCategories />}
-                  />
+                    <Route
+                      path="/admin/produits"
+                      element={<AdminProducts />}
+                    />
 
-                  <Route
-                    path="/admin/commandes"
-                    element={<AdminOrders />}
-                  />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </WishlistProvider>
-        </CartProvider>
+                    <Route
+                      path="/admin/produits/nouveau"
+                      element={<AdminProductNew />}
+                    />
+
+                    <Route
+                      path="/admin/produits/:productId/modifier"
+                      element={<AdminProductEdit />}
+                    />
+
+                    <Route
+                      path="/admin/categories"
+                      element={<AdminCategories />}
+                    />
+
+                    <Route
+                      path="/admin/commandes"
+                      element={<AdminOrders />}
+                    />
+
+                  </Route>
+
+                </Routes>
+
+              </BrowserRouter>
+
+            </WishlistProvider>
+
+          </CartProvider>
+
+        </CustomerAuthProvider>
+
       </AuthProvider>
+
     </div>
   );
 }
 
 export default App;
+import CustomerOrders from "./pages/CustomerOrders";
