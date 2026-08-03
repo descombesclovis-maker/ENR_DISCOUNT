@@ -209,11 +209,11 @@ export default function CustomerOrderDetail() {
 
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
 
-    loadOrder();
+  loadOrders();
 
-  }, [loadOrder]);
+}, [loadOrders]);
 
   if (authLoading) {
 

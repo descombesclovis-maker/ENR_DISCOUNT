@@ -1,4 +1,5 @@
 import React, {
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -38,18 +39,12 @@ export default function CustomerOrders() {
     setLoading,
   ] = useState(true);
 
-  useEffect(() => {
+  const loadOrders = useCallback(async () => {
 
     if (!user) {
       setLoading(false);
       return;
     }
-
-    loadOrders();
-
-  }, [user]);
-
-  async function loadOrders() {
 
     setLoading(true);
 
@@ -87,7 +82,13 @@ export default function CustomerOrders() {
 
     setLoading(false);
 
-  }
+  }, [user]);
+
+  useEffect(() => {
+
+    loadOrders();
+
+  }, [loadOrders]);
 
   return (
 
@@ -97,9 +98,9 @@ export default function CustomerOrders() {
 
         <div className="absolute inset-0">
 
-          <div className="absolute -left-40 -top-40 w-[420px] h-[420px] rounded-full bg-[#0b5ca8]/25 blur-3xl"/>
+          <div className="absolute -left-40 -top-40 w-[420px] h-[420px] rounded-full bg-[#0b5ca8]/25 blur-3xl" />
 
-          <div className="absolute -right-32 bottom-0 w-[420px] h-[420px] rounded-full bg-[#ff5a00]/20 blur-3xl"/>
+          <div className="absolute -right-32 bottom-0 w-[420px] h-[420px] rounded-full bg-[#ff5a00]/20 blur-3xl" />
 
         </div>
 
@@ -159,12 +160,14 @@ export default function CustomerOrders() {
             </div>
 
           </div>
-          <div className="py-10 px-8">
 
-            {loading ? (
+          <div className="py-10 px-8"></div>
+                      {loading ? (
 
               <div className="text-center py-20">
+
                 Chargement des commandes...
+
               </div>
 
             ) : orders.length === 0 ? (
@@ -172,15 +175,21 @@ export default function CustomerOrders() {
               <div className="text-center py-20">
 
                 <div className="mx-auto w-24 h-24 rounded-full bg-[#ff5a00]/10 flex items-center justify-center">
+
                   <ShoppingBag className="w-12 h-12 text-[#ff5a00]" />
+
                 </div>
 
                 <h2 className="text-3xl font-black mt-8">
+
                   Aucune commande
+
                 </h2>
 
                 <p className="text-slate-500 mt-4">
+
                   Vous n'avez encore passé aucune commande.
+
                 </p>
 
               </div>
@@ -200,141 +209,180 @@ export default function CustomerOrders() {
 
                       <div>
 
+                        <div className="text-xs uppercase tracking-widest text-[#ff5a00] font-bold mb-1">
+
+                          QEH OUTLET
+
+                        </div>
+
                         <p className="text-sm text-slate-500">
-                          Commande Qeh Outlet
+
+                          Commande
+
                         </p>
 
                         <h2 className="font-black text-xl">
-                            <div className="text-xs uppercase tracking-widest text-[#ff5a00] font-bold mb-1">
-  QEH OUTLET
-</div>
-                         #{order.order_number}
+
+                          #{order.order_number}
+
                         </h2>
 
                       </div>
-<span
-  className={`px-4 py-2 rounded-full font-bold ${
-    order.payment_status === "paid"
-      ? "bg-green-100 text-green-700"
-      : order.payment_status === "pending"
-      ? "bg-yellow-100 text-yellow-700"
-      : "bg-red-100 text-red-700"
-  }`}
->
-  {order.payment_status === "paid"
-    ? "Payée"
-    : order.payment_status === "pending"
-    ? "En attente"
-    : "Échec"}
-</span>
+
+                      <span
+                        className={`px-4 py-2 rounded-full font-bold ${
+                          order.payment_status === "paid"
+                            ? "bg-green-100 text-green-700"
+                            : order.payment_status === "pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+
+                        {order.payment_status === "paid"
+                          ? "Payée"
+                          : order.payment_status === "pending"
+                          ? "En attente"
+                          : "Échec"}
+
+                      </span>
+
                     </div>
 
-                   <div className="grid md:grid-cols-3 gap-6 mt-8">
+                    <div className="grid md:grid-cols-3 gap-6 mt-8">
 
-  <div>
+                      <div>
 
-    <div className="flex items-center gap-2 text-slate-500">
-      <Calendar className="w-5 h-5" />
-      Date
-    </div>
+                        <div className="flex items-center gap-2 text-slate-500">
 
-    <div className="font-bold mt-2">
-      {new Date(order.created_at).toLocaleDateString("fr-FR")}
-    </div>
+                          <Calendar className="w-5 h-5" />
 
-  </div>
+                          Date
 
-  <div>
+                        </div>
 
-    <div className="flex items-center gap-2 text-slate-500">
-      <CreditCard className="w-5 h-5" />
-      Montant
-    </div>
+                        <div className="font-bold mt-2">
 
-    <div className="font-bold mt-2">
-      {Number(order.total).toFixed(2)} €
-    </div>
+                          {new Date(
+                            order.created_at
+                          ).toLocaleDateString("fr-FR")}
 
-  </div>
+                        </div>
 
-  <div>
+                      </div>
 
-    <div className="flex items-center gap-2 text-slate-500">
-      <Truck className="w-5 h-5" />
-      Livraison
-    </div>
+                      <div>
 
-    <div className="font-bold mt-2">
-   {order.fulfillment_status === "pending"
-  ? "Préparation"
-  : order.fulfillment_status === "processing"
-  ? "En préparation"
-  : order.fulfillment_status === "shipped"
-  ? "Expédiée"
-  : order.fulfillment_status === "delivered"
-  ? "Livrée"
-  : order.fulfillment_status}
-    </div>
+                        <div className="flex items-center gap-2 text-slate-500">
 
-  </div>
+                          <CreditCard className="w-5 h-5" />
 
-</div>
+                          Montant
 
-{order.order_items?.length > 0 && (
+                        </div>
 
-  <div className="mt-8 border-t border-slate-200 pt-6">
+                        <div className="font-bold mt-2">
 
-    <h3 className="font-black text-lg mb-4">
-      Produits commandés
-    </h3>
+                          {Number(order.total).toFixed(2)} €
 
-    <div className="space-y-3">
+                        </div>
 
-      {order.order_items.map((item) => (
+                      </div>
 
-        <div
-          key={item.id}
-          className="flex items-center justify-between rounded-2xl bg-slate-50 p-4"
-        >
+                      <div>
 
-          <div>
+                        <div className="flex items-center gap-2 text-slate-500">
 
-            <div className="font-bold">
-              {item.product_name}
-            </div>
+                          <Truck className="w-5 h-5" />
 
-            <div className="text-sm text-slate-500">
-              Quantité : {item.quantity}
-            </div>
+                          Livraison
 
-          </div>
+                        </div>
 
-          <div className="font-black text-[#ff5a00]">
-            {Number(item.line_total).toFixed(2)} €
-          </div>
+                        <div className="font-bold mt-2">
 
-        </div>
+                          {order.fulfillment_status === "pending"
+                            ? "Préparation"
+                            : order.fulfillment_status === "processing"
+                            ? "En préparation"
+                            : order.fulfillment_status === "shipped"
+                            ? "Expédiée"
+                            : order.fulfillment_status === "delivered"
+                            ? "Livrée"
+                            : order.fulfillment_status}
 
-      ))}
+                        </div>
 
-    </div>
+                      </div>
 
-  </div>
+                    </div>
 
-)}
-<div className="mt-8 flex justify-end">
+                    {order.order_items?.length > 0 && (
 
-  <button
-    className="inline-flex items-center gap-3 h-12 px-6 rounded-xl border border-[#0b5ca8] text-[#0b5ca8] hover:bg-[#0b5ca8] hover:text-white transition-all font-bold"
-  >
+                      <div className="mt-8 border-t border-slate-200 pt-6">
 
-    Voir la commande
+                        <h3 className="font-black text-lg mb-4">
 
-    <ArrowRight className="w-5 h-5" />
+                          Produits commandés
 
-  </button>
+                        </h3>
 
-</div>
+                        <div className="space-y-3">
+
+                          {order.order_items.map((item) => (
+
+                            <div
+                              key={item.id}
+                              className="flex items-center justify-between rounded-2xl bg-slate-50 p-4"
+                            >
+
+                              <div>
+
+                                <div className="font-bold">
+
+                                  {item.product_name}
+
+                                </div>
+
+                                <div className="text-sm text-slate-500">
+
+                                  Quantité : {item.quantity}
+
+                                </div>
+
+                              </div>
+
+                              <div className="font-black text-[#ff5a00]">
+
+                                {Number(item.line_total).toFixed(2)} €
+
+                              </div>
+
+                            </div>
+
+                          ))}
+
+                        </div>
+
+                      </div>
+
+                    )}
+
+                    <div className="mt-8 flex justify-end">
+
+                      <Link
+                        to={`/compte/commandes/${order.id}`}
+                        className="inline-flex items-center gap-3 h-12 px-6 rounded-xl bg-[#0b5ca8] hover:bg-[#094b89] text-white font-bold transition-all"
+                      >
+
+                        Voir les détails
+
+                        <ArrowRight className="w-5 h-5" />
+
+                      </Link>
+
+                    </div>
+
                   </div>
 
                 ))}
@@ -347,15 +395,19 @@ export default function CustomerOrders() {
               to="/produits"
               className="inline-flex items-center gap-3 mt-14 h-14 px-8 rounded-2xl bg-[#ff5a00] hover:bg-[#ff6f22] text-white font-black transition-all"
             >
+
               Découvrir nos produits
+
               <ArrowRight className="w-5 h-5" />
+
             </Link>
-          </div>
-                  </div>
+
+             </div>
+
+        </div>
 
       </div>
 
-    </div>
 
   );
 
