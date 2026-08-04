@@ -432,7 +432,7 @@ sale_start,
 sale_end,
 is_on_sale,
 stock,
-                compare_at_price,
+              
                 sale_price,
                 sale_start,
                 sale_end,
