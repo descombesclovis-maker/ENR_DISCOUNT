@@ -199,7 +199,11 @@ export default function Products() {
               brand,
               reference,
               price,
-              stock,
+sale_price,
+sale_start,
+sale_end,
+is_on_sale,
+stock,
               product_condition,
               on_demand,
               is_active,
@@ -257,10 +261,19 @@ export default function Products() {
                 return {
                   ...product,
 
-                  price:
-                    Number(
-                      product.price || 0
-                    ),
+                  price: Number(product.price || 0),
+
+sale_price:
+  product.sale_price === null
+    ? null
+    : Number(product.sale_price),
+
+sale_start: product.sale_start,
+
+sale_end: product.sale_end,
+
+is_on_sale:
+  Boolean(product.is_on_sale),
 
                   category:
                     product.categories
@@ -871,11 +884,34 @@ export default function Products() {
                   )}
 
                   <div className="mt-auto pt-4">
-                    <p className="font-display font-bold text-lg">
-                      {priceLabel(
-                        product
-                      )}
-                    </p>
+                   {product.is_on_sale &&
+product.sale_price ? (
+
+  <div>
+
+    <p className="text-sm text-slate-400 line-through">
+
+      {Number(product.price).toFixed(2)} €
+
+    </p>
+
+    <p className="font-display font-black text-2xl text-[#ff5a00]">
+
+      {Number(product.sale_price).toFixed(2)} €
+
+    </p>
+
+  </div>
+
+) : (
+
+  <p className="font-display font-black text-xl text-slate-950">
+
+    {priceLabel(product)}
+
+  </p>
+
+)}
 
                     <p
                       className={`text-xs font-semibold mt-1 ${product.availabilityClassName}`}

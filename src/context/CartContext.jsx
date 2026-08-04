@@ -60,6 +60,15 @@ function normalizeProduct(product, quantity) {
       null,
 
     price: Number(product.price || 0),
+
+sale_price:
+  product.sale_price === null ||
+  product.sale_price === undefined
+    ? null
+    : Number(product.sale_price),
+
+is_on_sale:
+  Boolean(product.is_on_sale),
     stock: Number(product.stock || 0),
 
     image:
@@ -222,17 +231,28 @@ export function CartProvider({ children }) {
     [items]
   );
 
-  const total = useMemo(
-    () =>
-      items.reduce(
-        (sum, item) =>
+const total = useMemo(
+  () =>
+    items.reduce(
+      (sum, item) => {
+
+        const unitPrice =
+          item.is_on_sale &&
+          item.sale_price
+            ? Number(item.sale_price)
+            : Number(item.price);
+
+        return (
           sum +
-          Number(item.price || 0) *
-            Number(item.quantity || 0),
-        0
-      ),
-    [items]
-  );
+          unitPrice *
+          Number(item.quantity || 0)
+        );
+
+      },
+      0
+    ),
+  [items]
+);
 
   const value = useMemo(
     () => ({

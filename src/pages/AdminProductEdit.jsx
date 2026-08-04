@@ -36,7 +36,13 @@ const initialForm = {
   sku: "",
   short_description: "",
   description: "",
+
   price: "",
+  sale_price: "",
+  sale_start: "",
+  sale_end: "",
+  is_on_sale: false,
+
   stock: "0",
   on_demand: false,
   is_active: true,
@@ -421,7 +427,17 @@ export default function AdminProductEdit() {
                 short_description,
                 description,
                 price,
-                stock,
+sale_price,
+sale_start,
+sale_end,
+is_on_sale,
+stock,
+                compare_at_price,
+                sale_price,
+                sale_start,
+                sale_end,
+                is_on_sale,
+                
                 on_demand,
                 is_active,
                 is_featured,
@@ -617,6 +633,48 @@ export default function AdminProductEdit() {
                 : String(
                     product.price
                   ),
+
+                  compare_at_price:
+  product.compare_at_price === null
+    ? ""
+    : String(product.compare_at_price),
+
+sale_price:
+  product.sale_price === null
+    ? ""
+    : String(product.sale_price),
+
+sale_start:
+  product.sale_start || "",
+
+sale_end:
+  product.sale_end || "",
+
+is_on_sale:
+  Boolean(product.is_on_sale),
+
+  sale_price:
+  product.sale_price === null ||
+  product.sale_price === undefined
+    ? ""
+    : String(product.sale_price),
+
+sale_start:
+  product.sale_start
+    ? new Date(product.sale_start)
+        .toISOString()
+        .slice(0, 16)
+    : "",
+
+sale_end:
+  product.sale_end
+    ? new Date(product.sale_end)
+        .toISOString()
+        .slice(0, 16)
+    : "",
+
+is_on_sale:
+  Boolean(product.is_on_sale),
 
             stock:
               product.stock ===
@@ -1186,6 +1244,31 @@ export default function AdminProductEdit() {
   };
 
   const validateForm = () => {
+    if (form.is_on_sale) {
+  if (
+    form.sale_price === "" ||
+    Number.isNaN(Number(form.sale_price)) ||
+    Number(form.sale_price) < 0
+  ) {
+    return "Le prix promotionnel doit être supérieur ou égal à zéro.";
+  }
+
+  if (
+    Number(form.sale_price) >=
+    Number(form.price)
+  ) {
+    return "Le prix promotionnel doit être inférieur au prix normal.";
+  }
+
+  if (
+    form.sale_start &&
+    form.sale_end &&
+    new Date(form.sale_end) <=
+      new Date(form.sale_start)
+  ) {
+    return "La date de fin doit être postérieure à la date de début.";
+  }
+}
     if (!form.name.trim()) {
       return "Le nom du produit est obligatoire.";
     }
@@ -1404,6 +1487,50 @@ export default function AdminProductEdit() {
 
           price:
             Number(form.price),
+
+            sale_price:
+  form.is_on_sale &&
+  form.sale_price !== ""
+    ? Number(form.sale_price)
+    : null,
+
+sale_start:
+  form.is_on_sale &&
+  form.sale_start
+    ? new Date(
+        form.sale_start
+      ).toISOString()
+    : null,
+
+sale_end:
+  form.is_on_sale &&
+  form.sale_end
+    ? new Date(
+        form.sale_end
+      ).toISOString()
+    : null,
+
+is_on_sale:
+  Boolean(form.is_on_sale),
+
+            compare_at_price:
+  form.compare_at_price === ""
+    ? null
+    : Number(form.compare_at_price),
+
+sale_price:
+  form.sale_price === ""
+    ? null
+    : Number(form.sale_price),
+
+sale_start:
+  form.sale_start || null,
+
+sale_end:
+  form.sale_end || null,
+
+is_on_sale:
+  form.is_on_sale,
 
           stock:
             calculatedProductStock,

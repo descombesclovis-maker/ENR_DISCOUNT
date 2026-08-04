@@ -37,12 +37,13 @@ import {
 } from "../lib/supabase";
 
 export default function Cart() {
-  const {
-    items,
-    updateQuantity,
-    removeItem,
-    total,
-  } = useCart();
+const {
+  items,
+  updateQuantity,
+  removeItem,
+  total,
+  savings,
+} = useCart();
 
   const [
     loading,
@@ -358,15 +359,34 @@ export default function Cart() {
 
                         <div className="mt-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                              Prix unitaire
-                            </p>
+                           {item.is_on_sale &&
+item.sale_price ? (
 
-                            <p className="font-display font-black text-xl text-slate-950 mt-1">
-                              {formatPrice(
-                                item.price
-                              )}
-                            </p>
+  <div>
+
+    <p className="text-sm text-slate-400 line-through">
+
+      {formatPrice(item.price)}
+
+    </p>
+
+    <p className="font-display font-black text-xl text-[#ff5a00]">
+
+      {formatPrice(item.sale_price)}
+
+    </p>
+
+  </div>
+
+) : (
+
+  <p className="font-display font-black text-xl text-slate-950">
+
+    {formatPrice(item.price)}
+
+  </p>
+
+)} 
                           </div>
 
                           <div className="flex flex-wrap items-center justify-between sm:justify-end gap-4">
@@ -421,10 +441,13 @@ export default function Cart() {
                               </p>
 
                               <p className="font-display font-black text-xl text-[#ff5a00] mt-1">
-                                {formatPrice(
-                                  item.price *
-                                    item.quantity
-                                )}
+                                (
+  item.is_on_sale &&
+  item.sale_price
+    ? item.sale_price
+    : item.price
+) *
+item.quantity
                               </p>
                             </div>
                           </div>
@@ -535,7 +558,25 @@ export default function Cart() {
                     </span>
                   </div>
                 </div>
+{savings > 0 && (
 
+<div className="flex justify-between gap-4 text-sm">
+
+<span className="text-green-600 font-bold">
+
+Économies
+
+</span>
+
+<span className="font-black text-green-600">
+
+- {formatPrice(savings)}
+
+</span>
+
+</div>
+
+)}
                 <div className="h-px bg-slate-200 my-6" />
 
                 <div className="flex items-end justify-between gap-4">
