@@ -576,24 +576,6 @@ is_on_sale:
                       <span
                         className={`absolute top-4 left-4 z-10 inline-flex items-center min-h-8 px-3 rounded-full border text-xs font-bold shadow-sm ${product.conditionClassName}`}
                       >
-                        {product.is_on_sale &&
-product.sale_price && (
-
-<span className="absolute top-4 right-4 rounded-full bg-[#ff5a00] text-white text-xs font-black px-3 py-2 shadow-lg">
-
--
-
-{Math.round(
-
-((product.price-product.sale_price)/product.price)*100
-
-)}
-
-%
-
-</span>
-
-)}
                         {
                           product.conditionLabel
                         }
