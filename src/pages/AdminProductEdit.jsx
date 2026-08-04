@@ -634,10 +634,7 @@ stock,
                     product.price
                   ),
 
-                  compare_at_price:
-  product.compare_at_price === null
-    ? ""
-    : String(product.compare_at_price),
+                  
 
 sale_price:
   product.sale_price === null
@@ -1513,11 +1510,6 @@ sale_end:
 is_on_sale:
   Boolean(form.is_on_sale),
 
-            compare_at_price:
-  form.compare_at_price === ""
-    ? null
-    : Number(form.compare_at_price),
-
 sale_price:
   form.sale_price === ""
     ? null
@@ -2259,7 +2251,82 @@ is_on_sale:
             <p className="text-sm text-muted-foreground mt-2 mb-6">
               Ces informations sont utilisées lorsque le produit ne possède aucune variante.
             </p>
+            <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5 mb-6">
 
+  <label className="flex items-center gap-3 mb-5">
+
+    <input
+      type="checkbox"
+      name="is_on_sale"
+      checked={form.is_on_sale}
+      onChange={handleFieldChange}
+    />
+
+    <span className="font-semibold text-orange-700">
+      Produit en promotion
+    </span>
+
+  </label>
+
+  {form.is_on_sale && (
+
+    <div className="grid md:grid-cols-3 gap-4">
+
+      <div>
+
+        <label className="block text-sm font-semibold mb-2">
+          Prix promotionnel (€)
+        </label>
+
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          name="sale_price"
+          value={form.sale_price}
+          onChange={handleFieldChange}
+          className="w-full h-12 rounded-xl border border-border px-4"
+        />
+
+      </div>
+
+      <div>
+
+        <label className="block text-sm font-semibold mb-2">
+          Début
+        </label>
+
+        <input
+          type="datetime-local"
+          name="sale_start"
+          value={form.sale_start}
+          onChange={handleFieldChange}
+          className="w-full h-12 rounded-xl border border-border px-4"
+        />
+
+      </div>
+
+      <div>
+
+        <label className="block text-sm font-semibold mb-2">
+          Fin
+        </label>
+
+        <input
+          type="datetime-local"
+          name="sale_end"
+          value={form.sale_end}
+          onChange={handleFieldChange}
+          className="w-full h-12 rounded-xl border border-border px-4"
+        />
+
+      </div>
+
+    </div>
+
+  )}
+
+</div>
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-semibold mb-2">

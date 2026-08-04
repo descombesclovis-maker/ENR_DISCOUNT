@@ -235,7 +235,11 @@ export default function Home() {
               slug,
               brand,
               price,
-              stock,
+sale_price,
+sale_start,
+sale_end,
+is_on_sale,
+stock,
               product_condition,
               on_demand,
               is_featured,
@@ -299,10 +303,21 @@ export default function Home() {
                   ...product,
 
                   price:
-                    Number(
-                      product.price ||
-                        0
-                    ),
+  Number(product.price || 0),
+
+sale_price:
+  product.sale_price === null
+    ? null
+    : Number(product.sale_price),
+
+sale_start:
+  product.sale_start,
+
+sale_end:
+  product.sale_end,
+
+is_on_sale:
+  Boolean(product.is_on_sale),
 
                   category:
                     product.categories
@@ -561,6 +576,24 @@ export default function Home() {
                       <span
                         className={`absolute top-4 left-4 z-10 inline-flex items-center min-h-8 px-3 rounded-full border text-xs font-bold shadow-sm ${product.conditionClassName}`}
                       >
+                        {product.is_on_sale &&
+product.sale_price && (
+
+<span className="absolute top-4 right-4 rounded-full bg-[#ff5a00] text-white text-xs font-black px-3 py-2 shadow-lg">
+
+-
+
+{Math.round(
+
+((product.price-product.sale_price)/product.price)*100
+
+)}
+
+%
+
+</span>
+
+)}
                         {
                           product.conditionLabel
                         }
@@ -590,11 +623,34 @@ export default function Home() {
 
                       <div className="mt-auto pt-5 flex items-end justify-between gap-4">
                         <div>
-                          <p className="font-display font-black text-xl text-slate-950">
-                            {priceLabel(
-                              product
-                            )}
-                          </p>
+                          {product.is_on_sale &&
+product.sale_price ? (
+
+  <div>
+
+    <p className="text-sm text-slate-400 line-through">
+
+      {Number(product.price).toFixed(2)} €
+
+    </p>
+
+    <p className="font-display font-black text-2xl text-[#ff5a00]">
+
+      {Number(product.sale_price).toFixed(2)} €
+
+    </p>
+
+  </div>
+
+) : (
+
+  <p className="font-display font-black text-xl text-slate-950">
+
+    {priceLabel(product)}
+
+  </p>
+
+)}
 
                           <p
                             className={`text-xs font-bold mt-1 ${product.availabilityClassName}`}
