@@ -448,20 +448,16 @@ export function CustomerAuthProvider({
       [signInWithProvider]
     );
 
-  const signInWithX =
-    useCallback(
-      async () => {
-        /*
-         * Dans Supabase, le fournisseur
-         * correspondant à X conserve le
-         * nom technique "twitter".
-         */
-        return signInWithProvider(
-          "twitter"
-        );
-      },
-      [signInWithProvider]
-    );
+ const signInWithX = useCallback(async () => {
+  console.log("OAuth provider :", "twitter");
+
+  return await supabase.auth.signInWithOAuth({
+    provider: "twitter",
+    options: {
+      redirectTo: `${window.location.origin}/mon-compte`,
+    },
+  });
+}, []);
 
   const signOut =
     useCallback(
