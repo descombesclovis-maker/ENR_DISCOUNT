@@ -441,14 +441,15 @@ item.sale_price ? (
                               </p>
 
                               <p className="font-display font-black text-xl text-[#ff5a00] mt-1">
-                                (
-  item.is_on_sale &&
-  item.sale_price
-    ? item.sale_price
-    : item.price
-) *
-item.quantity
-                              </p>
+  {formatPrice(
+    (
+      item.is_on_sale &&
+      item.sale_price
+        ? item.sale_price
+        : item.price
+    ) * item.quantity
+  )}
+</p>
                             </div>
                           </div>
                         </div>

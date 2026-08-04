@@ -812,7 +812,21 @@ product?.sale_price
           displayedSku,
 
         price:
-          displayedPrice,
+  Number(normalPrice),
+
+sale_price:
+  product.is_on_sale
+    ? Number(product.sale_price)
+    : null,
+
+is_on_sale:
+  Boolean(product.is_on_sale),
+
+sale_start:
+  product.sale_start,
+
+sale_end:
+  product.sale_end,
 
         stock:
           displayedStock,
@@ -848,7 +862,21 @@ product?.sale_price
                   selectedVariant.sku,
 
                 price:
-                  displayedPrice,
+  selectedVariant
+    ? Number(selectedVariant.price)
+    : Number(product.price),
+
+sale_price:
+  product.sale_price,
+
+is_on_sale:
+  product.is_on_sale,
+
+sale_start:
+  product.sale_start,
+
+sale_end:
+  product.sale_end,
 
                 stock:
                   displayedStock,
