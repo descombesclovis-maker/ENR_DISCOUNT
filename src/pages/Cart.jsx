@@ -270,7 +270,7 @@ const {
               (item) => {
                 const itemId =
                   item.cart_item_id;
-
+console.log(item);
                 return (
                   <article
                     key={itemId}
@@ -440,14 +440,11 @@ item.sale_price ? (
                                 Total
                               </p>
 
-                              <p className="font-display font-black text-xl text-[#ff5a00] mt-1">
+                              <p className="font-display font-bold">
   {formatPrice(
-    (
-      item.is_on_sale &&
-      item.sale_price
-        ? item.sale_price
-        : item.price
-    ) * item.quantity
+    (item.is_on_sale && item.sale_price
+      ? item.sale_price
+      : item.price) * item.quantity
   )}
 </p>
                             </div>
