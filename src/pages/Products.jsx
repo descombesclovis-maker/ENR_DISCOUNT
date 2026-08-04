@@ -413,8 +413,18 @@ is_on_sale:
             firstProduct,
             secondProduct
           ) =>
-            firstProduct.price -
-            secondProduct.price
+          (
+  firstProduct.is_on_sale &&
+  firstProduct.sale_price
+    ? firstProduct.sale_price
+    : firstProduct.price
+) -
+(
+  secondProduct.is_on_sale &&
+  secondProduct.sale_price
+    ? secondProduct.sale_price
+    : secondProduct.price
+)
         );
       }
 
@@ -426,8 +436,18 @@ is_on_sale:
             firstProduct,
             secondProduct
           ) =>
-            secondProduct.price -
-            firstProduct.price
+          (
+  secondProduct.is_on_sale &&
+  secondProduct.sale_price
+    ? secondProduct.sale_price
+    : secondProduct.price
+) -
+(
+  firstProduct.is_on_sale &&
+  firstProduct.sale_price
+    ? firstProduct.sale_price
+    : firstProduct.price
+)
         );
       }
 
@@ -854,6 +874,24 @@ is_on_sale:
                     }
                   </span>
                 </div>
+                {product.is_on_sale &&
+ product.sale_price && (
+
+  <span
+    className="absolute top-4 right-4 bg-[#ff5a00] text-white font-black text-xs px-3 py-2 rounded-full shadow-lg"
+  >
+    -
+    {Math.round(
+      (
+        (product.price -
+          product.sale_price) /
+        product.price
+      ) * 100
+    )}
+    %
+  </span>
+
+)}
 
                 <div className="flex flex-col flex-1 p-5 border-t border-border">
                   {product.category && (

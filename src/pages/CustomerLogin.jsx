@@ -27,8 +27,6 @@ export default function CustomerLogin() {
   const {
     signIn,
     signInWithGoogle,
-    signInWithApple,
-    signInWithX,
   } = useCustomerAuth();
 
   const [

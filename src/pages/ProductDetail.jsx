@@ -265,7 +265,11 @@ export default function ProductDetail() {
               short_description,
               description,
               price,
-              stock,
+sale_price,
+sale_start,
+sale_end,
+is_on_sale,
+stock,
               product_condition,
               on_demand,
               is_active,
@@ -329,6 +333,22 @@ export default function ProductDetail() {
           const normalizedProduct =
             {
               ...data,
+              price:
+  Number(data.price || 0),
+
+sale_price:
+  data.sale_price === null
+    ? null
+    : Number(data.sale_price),
+
+sale_start:
+  data.sale_start,
+
+sale_end:
+  data.sale_end,
+
+is_on_sale:
+  Boolean(data.is_on_sale),
 
               category:
                 data.categories
@@ -465,17 +485,15 @@ export default function ProductDetail() {
       variantIndex,
     ]);
 
-  const displayedPrice =
-    selectedVariant?.price !==
-      null &&
-    selectedVariant?.price !==
-      undefined
-      ? Number(
-          selectedVariant.price
-        )
-      : Number(
-          product?.price || 0
-        );
+  const normalPrice =
+selectedVariant?.price ??
+Number(product?.price || 0);
+
+const displayedPrice =
+product?.is_on_sale &&
+product?.sale_price
+  ? Number(product.sale_price)
+  : Number(normalPrice);
 
   const displayedStock =
     selectedVariant?.stock !==
@@ -968,6 +986,24 @@ export default function ProductDetail() {
                   }
                 </span>
               </div>
+              {product.is_on_sale &&
+product.sale_price && (
+
+  <div className="absolute top-20 left-5 z-10">
+
+    <span className="rounded-full bg-[#ff5a00] px-4 py-2 text-white font-black shadow-lg">
+
+      -
+      {Math.round(
+        ((product.price - product.sale_price) / product.price) * 100
+      )}
+      %
+
+    </span>
+
+  </div>
+
+)}
 
               <button
                 type="button"
@@ -1194,11 +1230,45 @@ export default function ProductDetail() {
                       Prix 
                     </p>
 
-                    <p className="font-display font-black text-3xl sm:text-4xl text-white mt-2">
-                      {priceLabel(
-                        displayedProduct
-                      )}
-                    </p>
+                    {product.is_on_sale &&
+product.sale_price ? (
+
+<div>
+
+<p className="text-lg text-white/50 line-through">
+
+{Number(product.price).toFixed(2)} €
+
+</p>
+
+<p className="font-display font-black text-4xl text-[#ff7a33] mt-1">
+
+{Number(product.sale_price).toFixed(2)} €
+
+</p>
+
+<p className="text-sm text-green-400 mt-2">
+
+Vous économisez{" "}
+
+{(
+Number(product.price)-
+Number(product.sale_price)
+).toFixed(2)} €
+
+</p>
+
+</div>
+
+) : (
+
+<p className="font-display font-black text-3xl sm:text-4xl text-white mt-2">
+
+{priceLabel(displayedProduct)}
+
+</p>
+
+)}
                   </div>
 
                   <div>

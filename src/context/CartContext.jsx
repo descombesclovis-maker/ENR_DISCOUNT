@@ -230,6 +230,32 @@ export function CartProvider({ children }) {
       ),
     [items]
   );
+  const savings = useMemo(
+  () =>
+    items.reduce(
+      (sum, item) => {
+
+        if (
+          !item.is_on_sale ||
+          !item.sale_price
+        ) {
+          return sum;
+        }
+
+        return (
+          sum +
+          (
+            Number(item.price) -
+            Number(item.sale_price)
+          ) *
+          Number(item.quantity)
+        );
+
+      },
+      0
+    ),
+  [items]
+);
 
 const total = useMemo(
   () =>
