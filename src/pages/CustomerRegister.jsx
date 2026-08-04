@@ -5,12 +5,17 @@ import {
   Mail,
   Lock,
   UserPlus,
+  ArrowRight,
+  ShieldCheck,
+  Truck,
+  BadgeEuro,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useCustomerAuth } from "../context/CustomerAuthContext";
 
 export default function CustomerRegister() {
+
   const navigate = useNavigate();
 
   const { signUp } = useCustomerAuth();
@@ -23,256 +28,385 @@ export default function CustomerRegister() {
     confirmPassword: "",
   });
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (event) => {
     setForm((current) => ({
       ...current,
-      [event.target.name]:
-        event.target.value,
+      [event.target.name]: event.target.value,
     }));
   };
 
-  const handleSubmit = async (
-    event
-  ) => {
+  const handleSubmit = async (event) => {
+
     event.preventDefault();
 
     if (loading) return;
 
-    if (
-      form.password !==
-      form.confirmPassword
-    ) {
-      toast.error(
-        "Les mots de passe ne correspondent pas."
-      );
+    if (form.password !== form.confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas.");
       return;
     }
 
     try {
+
       setLoading(true);
 
       await signUp({
         email: form.email,
         password: form.password,
-        first_name:
-          form.first_name,
-        last_name:
-          form.last_name,
+        first_name: form.first_name,
+        last_name: form.last_name,
       });
 
-      toast.success(
-        "Compte créé avec succès."
-      );
+      toast.success("Compte créé avec succès.");
 
       navigate("/connexion");
+
     } catch (error) {
-      console.error(error);
 
       toast.error(
         error.message ||
-          "Impossible de créer le compte."
+        "Impossible de créer le compte."
       );
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
   return (
-    <div className="max-w-xl mx-auto px-5 py-16">
 
-      <div className="rounded-3xl border border-border bg-card p-8 shadow-lg">
+<div className="min-h-screen bg-gradient-to-br from-[#020814] via-[#071a35] to-[#0b5ca8]">
 
-        <p className="overline text-primary mb-3">
-          QEH OUTLET
-        </p>
+<div className="max-w-7xl mx-auto min-h-screen grid lg:grid-cols-2">
 
-        <h1 className="font-display font-black text-4xl mb-3">
-          Créer un compte
-        </h1>
+<div className="hidden lg:flex flex-col justify-center px-16 text-white relative overflow-hidden">
 
-        <p className="text-muted-foreground mb-8">
-          Créez votre espace client
-          pour commander rapidement
-          et suivre vos commandes.
-        </p>
+<div className="absolute -left-20 -top-20 w-80 h-80 rounded-full bg-[#ff5a00]/20 blur-3xl"/>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5"
-        >
+<div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-[#0b5ca8]/30 blur-3xl"/>
 
-          <div className="grid sm:grid-cols-2 gap-4">
+<img
+src="/images/qeh-outlet-logo.jpg"
+alt="QEH OUTLET"
+className="w-64 mb-10"
+/>
 
-            <div>
+<p className="uppercase tracking-[0.35em] text-[#ff5a00] font-black text-xs">
 
-              <label className="text-sm font-semibold block mb-2">
-                Prénom
-              </label>
+QEH OUTLET
 
-              <div className="relative">
+</p>
 
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+<h1 className="text-6xl font-black leading-tight mt-6">
 
-                <input
-                  name="first_name"
-                  required
-                  value={
-                    form.first_name
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  className="w-full h-12 rounded-xl border border-border pl-12 pr-4"
-                />
+Créez votre
+espace client
 
-              </div>
+</h1>
 
-            </div>
+<p className="mt-8 text-white/70 text-xl leading-relaxed">
 
-            <div>
+Suivez vos commandes,
+téléchargez vos factures,
+retrouvez vos devis
+et bénéficiez d'un espace
+client sécurisé.
 
-              <label className="text-sm font-semibold block mb-2">
-                Nom
-              </label>
+</p>
 
-              <div className="relative">
+<div className="space-y-7 mt-16">
 
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+<div className="flex items-center gap-5">
 
-                <input
-                  name="last_name"
-                  required
-                  value={
-                    form.last_name
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  className="w-full h-12 rounded-xl border border-border pl-12 pr-4"
-                />
+<div className="w-14 h-14 rounded-2xl bg-[#ff5a00] flex items-center justify-center">
 
-              </div>
+<ShieldCheck className="w-7 h-7"/>
 
-            </div>
+</div>
 
-          </div>
+<div>
 
-          <div>
+<div className="font-black">
 
-            <label className="text-sm font-semibold block mb-2">
-              Adresse e-mail
-            </label>
+Paiement sécurisé
 
-            <div className="relative">
+</div>
 
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+<div className="text-white/60">
 
-              <input
-                type="email"
-                name="email"
-                required
-                value={form.email}
-                onChange={
-                  handleChange
-                }
-                className="w-full h-12 rounded-xl border border-border pl-12 pr-4"
-              />
+Protection Stripe
 
-            </div>
+</div>
 
-          </div>
+</div>
 
-          <div>
+</div>
 
-            <label className="text-sm font-semibold block mb-2">
-              Mot de passe
-            </label>
+<div className="flex items-center gap-5">
 
-            <div className="relative">
+<div className="w-14 h-14 rounded-2xl bg-[#ff5a00] flex items-center justify-center">
 
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+<Truck className="w-7 h-7"/>
 
-              <input
-                type="password"
-                name="password"
-                required
-                value={
-                  form.password
-                }
-                onChange={
-                  handleChange
-                }
-                className="w-full h-12 rounded-xl border border-border pl-12 pr-4"
-              />
+</div>
 
-            </div>
+<div>
 
-          </div>
+<div className="font-black">
 
-          <div>
+Livraison rapide
 
-            <label className="text-sm font-semibold block mb-2">
-              Confirmation
-            </label>
+</div>
 
-            <div className="relative">
+<div className="text-white/60">
 
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+Suivi en temps réel
 
-              <input
-                type="password"
-                name="confirmPassword"
-                required
-                value={
-                  form.confirmPassword
-                }
-                onChange={
-                  handleChange
-                }
-                className="w-full h-12 rounded-xl border border-border pl-12 pr-4"
-              />
+</div>
 
-            </div>
+</div>
 
-          </div>
+</div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
-          >
+<div className="flex items-center gap-5">
 
-            <UserPlus className="w-5 h-5" />
+<div className="w-14 h-14 rounded-2xl bg-[#ff5a00] flex items-center justify-center">
 
-            {loading
-              ? "Création..."
-              : "Créer mon compte"}
+<BadgeEuro className="w-7 h-7"/>
 
-          </button>
+</div>
 
-        </form>
+<div>
 
-        <div className="border-t border-border mt-8 pt-8 text-center">
+<div className="font-black">
 
-          <p className="text-muted-foreground">
+Prix Outlet
 
-            Déjà client ?
+</div>
 
-          </p>
+<div className="text-white/60">
 
-          <Link
-            to="/connexion"
-            className="inline-flex mt-4 h-11 items-center justify-center px-6 rounded-full border border-primary text-primary font-semibold hover:bg-primary hover:text-white transition-colors"
-          >
-            Se connecter
-          </Link>
+Les meilleures offres
 
-        </div>
+</div>
 
-      </div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div className="flex items-center justify-center p-8">
+
+<div className="w-full max-w-xl rounded-[36px] bg-white shadow-2xl p-10">
+
+<p className="uppercase tracking-[0.30em] text-xs font-black text-[#ff5a00]">
+
+Créer un compte
+
+</p>
+
+<h2 className="text-4xl font-black mt-4">
+
+Bienvenue chez
+QEH OUTLET
+
+</h2>
+
+<p className="text-slate-500 mt-4">
+
+Complétez les informations ci-dessous
+pour créer votre espace client.
+
+</p>
+
+<form
+onSubmit={handleSubmit}
+className="space-y-6 mt-10">
+
+</form>
+<div className="grid md:grid-cols-2 gap-5">
+
+  <div>
+
+    <label className="block text-sm font-bold mb-2">
+      Prénom
+    </label>
+
+    <div className="relative">
+
+      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0b5ca8]" />
+
+      <input
+        name="first_name"
+        required
+        value={form.first_name}
+        onChange={handleChange}
+        placeholder="Votre prénom"
+        className="w-full h-14 rounded-2xl border border-slate-300 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-[#ff5a00] focus:border-transparent transition-all"
+      />
+
     </div>
-  );
+
+  </div>
+
+  <div>
+
+    <label className="block text-sm font-bold mb-2">
+      Nom
+    </label>
+
+    <div className="relative">
+
+      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0b5ca8]" />
+
+      <input
+        name="last_name"
+        required
+        value={form.last_name}
+        onChange={handleChange}
+        placeholder="Votre nom"
+        className="w-full h-14 rounded-2xl border border-slate-300 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-[#ff5a00] focus:border-transparent transition-all"
+      />
+
+    </div>
+
+  </div>
+
+</div>
+
+<div>
+
+  <label className="block text-sm font-bold mb-2">
+    Adresse e-mail
+  </label>
+
+  <div className="relative">
+
+    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0b5ca8]" />
+
+    <input
+      type="email"
+      name="email"
+      required
+      value={form.email}
+      onChange={handleChange}
+      placeholder="exemple@email.fr"
+      className="w-full h-14 rounded-2xl border border-slate-300 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-[#ff5a00] focus:border-transparent transition-all"
+    />
+
+  </div>
+
+</div>
+
+<div>
+
+  <label className="block text-sm font-bold mb-2">
+    Mot de passe
+  </label>
+
+  <div className="relative">
+
+    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0b5ca8]" />
+
+    <input
+      type="password"
+      name="password"
+      required
+      value={form.password}
+      onChange={handleChange}
+      placeholder="Minimum 8 caractères"
+      className="w-full h-14 rounded-2xl border border-slate-300 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-[#ff5a00] focus:border-transparent transition-all"
+    />
+
+  </div>
+
+</div>
+
+<div>
+
+  <label className="block text-sm font-bold mb-2">
+    Confirmer le mot de passe
+  </label>
+
+  <div className="relative">
+
+    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0b5ca8]" />
+
+    <input
+      type="password"
+      name="confirmPassword"
+      required
+      value={form.confirmPassword}
+      onChange={handleChange}
+      placeholder="Retapez votre mot de passe"
+      className="w-full h-14 rounded-2xl border border-slate-300 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-[#ff5a00] focus:border-transparent transition-all"
+    />
+
+  </div>
+
+</div>
+
+<button
+  type="submit"
+  disabled={loading}
+  className="w-full h-14 rounded-2xl bg-[#ff5a00] hover:bg-[#ff6f22] text-white font-black flex items-center justify-center gap-3 shadow-xl transition-all duration-300"
+>
+
+  <UserPlus className="w-5 h-5"/>
+
+  {loading
+    ? "Création du compte..."
+    : "Créer mon compte"}
+
+  <ArrowRight className="w-5 h-5"/>
+
+</button>
+
+<div className="border-t border-slate-200 pt-8 mt-8">
+
+  <p className="text-center text-slate-500">
+
+    Déjà client ?
+
+  </p>
+
+  <Link
+    to="/connexion"
+    className="w-full mt-5 h-14 rounded-2xl border-2 border-[#0b5ca8] text-[#0b5ca8] hover:bg-[#0b5ca8] hover:text-white font-black flex items-center justify-center gap-3 transition-all duration-300"
+  >
+
+    Se connecter
+
+    <ArrowRight className="w-5 h-5"/>
+
+  </Link>
+
+</div>
+
+<p className="text-xs text-center text-slate-400 leading-relaxed mt-8">
+
+En créant votre compte, vous acceptez
+les Conditions Générales d'Utilisation
+et la Politique de Confidentialité
+de QEH OUTLET.
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+);
 }
