@@ -10,6 +10,8 @@ import {
 
 import { Toaster } from "sonner";
 
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -159,7 +161,15 @@ function App() {
                       path="/admin"
                       element={<AdminDashboard />}
                     />
+<Route
+  path="/politique-de-confidentialite"
+  element={<PrivacyPolicy />}
+/>
 
+<Route
+  path="/conditions-generales"
+  element={<Terms />}
+/>
                     <Route
                       path="/admin/produits"
                       element={<AdminProducts />}
