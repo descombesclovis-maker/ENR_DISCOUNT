@@ -222,14 +222,20 @@ export function CustomerAuthProvider({
       []
     );
 
-  const signUp =
-    useCallback(
-      async ({
-        email,
-        password,
-        first_name,
-        last_name,
-      }) => {
+ const signUp = useCallback(
+  async ({
+    email,
+    password,
+    first_name,
+    last_name,
+    phone,
+    company,
+    address,
+    address2,
+    postal_code,
+    city,
+    country,
+  }) => {
         const cleanedEmail =
           String(email || "")
             .trim()
@@ -245,56 +251,40 @@ export function CustomerAuthProvider({
             last_name || ""
           ).trim();
 
-        const {
-          data,
-          error,
-        } =
-          await supabase.auth.signUp(
-            {
-              email:
-                cleanedEmail,
+       const {
+  data,
+  error,
+} = await supabase.auth.signUp({
+  email: cleanedEmail,
+  password,
+  options: {
+    data: {
+      first_name: cleanedFirstName,
+      last_name: cleanedLastName,
+      phone,
+      company,
+      address,
+      address2,
+      postal_code,
+      city,
+      country,
+    },
+    emailRedirectTo: getOAuthRedirectUrl(),
+  },
+});
 
-              password,
+if (error) {
+  throw error;
+}
+      if (data.user && data.session) {
 
-              options: {
-                data: {
-                  first_name:
-                    cleanedFirstName,
+  await loadProfile(data.user);
 
-                  last_name:
-                    cleanedLastName,
-                },
-
-                emailRedirectTo:
-                  getOAuthRedirectUrl(),
-              },
-            }
-          );
-
-        if (error) {
-          throw error;
-        }
-
-        /*
-         * Si Supabase connecte immédiatement
-         * le nouvel utilisateur, on crée son
-         * profil maintenant.
-         *
-         * Si la confirmation par e-mail est
-         * obligatoire, le profil sera créé
-         * automatiquement à sa première
-         * connexion.
-         */
-        if (
-          data.user &&
-          data.session
-        ) {
-          await loadProfile(
-            data.user
-          );
-        }
+}
+        
 
         return {
+          
           user:
             data.user || null,
 
@@ -308,9 +298,12 @@ export function CustomerAuthProvider({
                 !data.session
             ),
         };
-      },
-      [loadProfile]
-    );
+        },
+[
+  loadProfile,
+]
+);
+        
 
   const signIn =
     useCallback(

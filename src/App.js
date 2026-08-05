@@ -43,6 +43,9 @@ import AdminProductNew from "./pages/AdminProductNew";
 import AdminProductEdit from "./pages/AdminProductEdit";
 import AdminCategories from "./pages/AdminCategories";
 import AdminOrders from "./pages/AdminOrders";
+import AdminCustomers from "./pages/AdminCustomers";
+import AdminMessages from "./pages/AdminMessages";
+import AdminSettings from "./pages/AdminSettings";
 
 function StoreLayout() {
   return (
@@ -194,6 +197,20 @@ function App() {
                       path="/admin/commandes"
                       element={<AdminOrders />}
                     />
+                    <Route
+  path="/admin/clients"
+  element={<AdminCustomers />}
+/>
+
+<Route
+  path="/admin/messages"
+  element={<AdminMessages />}
+/>
+
+<Route
+  path="/admin/parametres"
+  element={<AdminSettings />}
+/>
 
                   </Route>
 

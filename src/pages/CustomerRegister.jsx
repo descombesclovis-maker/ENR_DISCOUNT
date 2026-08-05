@@ -21,12 +21,19 @@ export default function CustomerRegister() {
   const { signUp } = useCustomerAuth();
 
   const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  first_name: "",
+  last_name: "",
+  company: "",
+  phone: "",
+  address: "",
+  address2: "",
+  postal_code: "",
+  city: "",
+  country: "France",
+  email: "",
+  password: "",
+  confirmPassword: "",
+});
 
   const [loading, setLoading] = useState(false);
 
@@ -231,7 +238,7 @@ pour créer votre espace client.
 onSubmit={handleSubmit}
 className="space-y-6 mt-10">
 
-</form>
+
 <div className="grid md:grid-cols-2 gap-5">
 
   <div>
@@ -262,7 +269,97 @@ className="space-y-6 mt-10">
     <label className="block text-sm font-bold mb-2">
       Nom
     </label>
+    <div className="grid md:grid-cols-2 gap-5">
 
+  <div>
+
+    <label className="block text-sm font-bold mb-2">
+      Société
+    </label>
+
+    <input
+      name="company"
+      value={form.company}
+      onChange={handleChange}
+      className="w-full h-14 rounded-2xl border border-slate-300 px-4"
+    />
+
+  </div>
+
+  <div>
+
+    <label className="block text-sm font-bold mb-2">
+      Téléphone
+    </label>
+
+    <input
+      name="phone"
+      value={form.phone}
+      onChange={handleChange}
+      className="w-full h-14 rounded-2xl border border-slate-300 px-4"
+    />
+
+  </div>
+
+</div>
+
+<div>
+
+  <label className="block text-sm font-bold mb-2">
+    Adresse
+  </label>
+
+  <input
+    name="address"
+    value={form.address}
+    onChange={handleChange}
+    className="w-full h-14 rounded-2xl border border-slate-300 px-4"
+  />
+
+</div>
+
+<div>
+
+  <label className="block text-sm font-bold mb-2">
+    Complément d'adresse
+  </label>
+
+  <input
+    name="address2"
+    value={form.address2}
+    onChange={handleChange}
+    className="w-full h-14 rounded-2xl border border-slate-300 px-4"
+  />
+
+</div>
+
+<div className="grid md:grid-cols-3 gap-5">
+
+  <input
+    placeholder="Code postal"
+    name="postal_code"
+    value={form.postal_code}
+    onChange={handleChange}
+    className="h-14 rounded-2xl border border-slate-300 px-4"
+  />
+
+  <input
+    placeholder="Ville"
+    name="city"
+    value={form.city}
+    onChange={handleChange}
+    className="h-14 rounded-2xl border border-slate-300 px-4"
+  />
+
+  <input
+    placeholder="Pays"
+    name="country"
+    value={form.country}
+    onChange={handleChange}
+    className="h-14 rounded-2xl border border-slate-300 px-4"
+  />
+
+</div>
     <div className="relative">
 
       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0b5ca8]" />
@@ -369,6 +466,8 @@ className="space-y-6 mt-10">
   <ArrowRight className="w-5 h-5"/>
 
 </button>
+
+</form>
 
 <div className="border-t border-slate-200 pt-8 mt-8">
 
