@@ -185,12 +185,12 @@ export default function CustomerLogin() {
 
               </label>
 
-              <button
-                type="button"
-                className="text-sm text-[#0b5ca8] hover:underline"
-              >
-                Mot de passe oublié ?
-              </button>
+              <Link
+               to="/mot-de-passe-oublie"
+              className="text-sm text-[#0b5ca8] hover:underline"
+>
+            Mot de passe oublié ?
+          </Link>
 
             </div>
 

@@ -35,6 +35,8 @@ import CustomerOrderDetail from "./pages/CustomerOrderDetail";
 import CustomerLogin from "./pages/CustomerLogin";
 import CustomerRegister from "./pages/CustomerRegister";
 import CustomerAccount from "./pages/CustomerAccount";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -130,10 +132,18 @@ function App() {
                     />
 
                     <Route
+                    path="/mot-de-passe-oublie"
+                    element={<ForgotPassword />}
+                    />
+
+                    <Route
                       path="/inscription"
                       element={<CustomerRegister />}
                     />
-
+                  <Route
+                    path="/reinitialiser-mot-de-passe"
+                    element={<ResetPassword />}
+                  />
                     <Route
                       path="/mon-compte"
                       element={<CustomerAccount />}
@@ -164,15 +174,15 @@ function App() {
                       path="/admin"
                       element={<AdminDashboard />}
                     />
-<Route
-  path="/politique-de-confidentialite"
-  element={<PrivacyPolicy />}
-/>
+                    <Route
+                      path="/politique-de-confidentialite"
+                      element={<PrivacyPolicy />}
+                    />
 
-<Route
-  path="/conditions-generales"
-  element={<Terms />}
-/>
+                    <Route
+                      path="/conditions-generales"
+                      element={<Terms />}
+                    />
                     <Route
                       path="/admin/produits"
                       element={<AdminProducts />}
@@ -198,19 +208,19 @@ function App() {
                       element={<AdminOrders />}
                     />
                     <Route
-  path="/admin/clients"
-  element={<AdminCustomers />}
-/>
+                    path="/admin/clients"
+                    element={<AdminCustomers />}
+                    />
 
-<Route
-  path="/admin/messages"
-  element={<AdminMessages />}
-/>
+                <Route
+                  path="/admin/messages"
+                  element={<AdminMessages />}
+                />
 
-<Route
-  path="/admin/parametres"
-  element={<AdminSettings />}
-/>
+                <Route
+                 path="/admin/parametres"
+                 element={<AdminSettings />}
+                />
 
                   </Route>
 

@@ -521,7 +521,7 @@ setVerificationStep(true);
                         value
                       );
                     }}
-                    placeholder="000000"
+                    placeholder="00000000"
                     className="w-full h-20 rounded-2xl border-2 border-slate-300 text-center text-3xl font-black tracking-[0.45em] focus:outline-none focus:ring-2 focus:ring-[#ff5a00] focus:border-transparent"
                   />
 
