@@ -168,9 +168,9 @@ setVerificationStep(true);
         .replace(/\D/g, "")
         .trim();
 
-    if (code.length !== 6) {
+    if (code.length !== 8) {
       toast.error(
-        "Veuillez saisir le code à 6 chiffres."
+        "Veuillez saisir le code à 8 chiffres."
       );
       return;
     }
@@ -480,7 +480,7 @@ setVerificationStep(true);
 
                 <p className="text-slate-500 mt-4 leading-relaxed">
                   Un code de confirmation
-                  à 6 chiffres a été envoyé à :
+                  à 8 chiffres a été envoyé à :
                 </p>
 
                 <p className="font-black text-[#0b5ca8] mt-3 break-all">
@@ -499,7 +499,7 @@ setVerificationStep(true);
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     autoFocus
-                    maxLength={6}
+                    maxLength={8}
                     value={
                       verificationCode
                     }
@@ -514,7 +514,7 @@ setVerificationStep(true);
                           )
                           .slice(
                             0,
-                            6
+                            8
                           );
 
                       setVerificationCode(
@@ -530,7 +530,7 @@ setVerificationStep(true);
                     disabled={
                       verifying ||
                       verificationCode.length !==
-                        6
+                        8
                     }
                     className="w-full h-14 mt-6 rounded-2xl bg-[#ff5a00] hover:bg-[#ff6f22] disabled:opacity-50 disabled:cursor-not-allowed text-white font-black flex items-center justify-center gap-3 transition-all"
                   >
