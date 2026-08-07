@@ -38,6 +38,7 @@ const initialForm = {
   short_description: "",
   description: "",
   price: "",
+  weight_kg: "",
   stock: "0",
   on_demand: false,
   is_active: true,
@@ -813,6 +814,16 @@ export default function AdminProductNew() {
     }
 
     if (
+  form.weight_kg === "" ||
+  Number.isNaN(
+    Number(form.weight_kg)
+  ) ||
+  Number(form.weight_kg) <= 0
+) {
+  return "Le poids du produit doit être supérieur à zéro.";
+}
+
+    if (
       form.stock === "" ||
       Number.isNaN(
         Number(form.stock)
@@ -1000,14 +1011,19 @@ export default function AdminProductNew() {
           null,
 
         description:
-          form.description.trim() ||
-          null,
+      form.description.trim() ||
+      null,
 
-        price:
-          Number(form.price),
+      price:
+      Number(form.price),
+
+        weight_kg:
+        form.weight_kg === ""
+        ? null
+        : Number(form.weight_kg),
 
         stock:
-          calculatedStock,
+        calculatedStock,
 
         on_demand:
           form.on_demand,
@@ -1360,6 +1376,32 @@ export default function AdminProductNew() {
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 />
               </div>
+              
+              <div>
+  <label className="block text-sm font-semibold mb-2">
+    Poids du produit (kg)
+  </label>
+
+  <input
+    name="weight_kg"
+    type="number"
+    min="0"
+    step="0.001"
+    value={form.weight_kg}
+    onChange={
+      handleFieldChange
+    }
+    disabled={
+      submitting
+    }
+    placeholder="Ex : 2.500"
+    className="w-full h-12 rounded-xl border border-border bg-background px-4"
+  />
+
+  <p className="text-xs text-muted-foreground mt-2">
+    Utilisé pour calculer automatiquement les frais de livraison.
+  </p>
+</div>
 
               <div>
                 <label className="block text-sm font-semibold mb-2">

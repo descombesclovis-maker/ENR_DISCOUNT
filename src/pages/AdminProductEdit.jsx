@@ -38,6 +38,7 @@ const initialForm = {
   description: "",
 
   price: "",
+  weight_kg: "",
   sale_price: "",
   sale_start: "",
   sale_end: "",
@@ -425,8 +426,9 @@ export default function AdminProductEdit() {
                 reference,
                 sku,
                 short_description,
-                description,
-                price,
+         description,
+price,
+weight_kg,
 sale_price,
 sale_start,
 sale_end,
@@ -633,6 +635,12 @@ stock,
                 : String(
                     product.price
                   ),
+
+                  weight_kg:
+  product.weight_kg === null ||
+  product.weight_kg === undefined
+    ? ""
+    : String(product.weight_kg),
 
                   
 
@@ -1485,6 +1493,11 @@ is_on_sale:
           price:
             Number(form.price),
 
+            weight_kg:
+  form.weight_kg === ""
+    ? null
+    : Number(form.weight_kg),
+
             sale_price:
   form.is_on_sale &&
   form.sale_price !== ""
@@ -2058,6 +2071,32 @@ is_on_sale:
                   }
                   className="w-full h-12 rounded-xl border border-border bg-background px-4"
                 />
+
+<div>
+  <label className="block text-sm font-semibold text-gray-700 mb-2">
+    Poids du produit (kg)
+  </label>
+
+  <input
+    type="number"
+    min="0"
+    step="0.001"
+    value={form.weight_kg}
+    onChange={(event) =>
+      setForm({
+        ...form,
+        weight_kg: event.target.value,
+      })
+    }
+    placeholder="Ex : 2.500"
+    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0b5ca8]"
+  />
+
+  <p className="mt-1 text-xs text-gray-500">
+    Poids utilisé pour calculer automatiquement les frais de livraison.
+  </p>
+</div>
+
               </div>
 
               <div>
