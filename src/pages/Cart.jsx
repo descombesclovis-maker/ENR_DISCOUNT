@@ -621,7 +621,7 @@ item.sale_price ? (
     </div>
   </button>
 
-  {subtotal >= 100 && (
+  {total >= 100 && (
     <p className="text-sm font-semibold text-green-600">
       Livraison offerte dès 100 € d'achat
     </p>
