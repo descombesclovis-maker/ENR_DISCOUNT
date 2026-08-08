@@ -265,12 +265,20 @@ export default function ProductDetail() {
               short_description,
               description,
               price,
+
+              price,
+weight_kg,
+length_cm,
+width_cm,
+height_cm,
+requires_pallet,
 sale_price,
 sale_start,
 sale_end,
 is_on_sale,
 stock,
-              product_condition,
+product_condition,
+
               on_demand,
               is_active,
               is_featured,
@@ -829,14 +837,29 @@ sale_end:
   product.sale_end,
 
         stock:
-          displayedStock,
+  displayedStock,
 
-        product_condition:
-          product.product_condition,
+weight_kg:
+  Number(product.weight_kg || 0),
 
-        image:
-          cartImage,
+length_cm:
+  Number(product.length_cm || 0),
 
+width_cm:
+  Number(product.width_cm || 0),
+
+height_cm:
+  Number(product.height_cm || 0),
+
+requires_pallet:
+  Boolean(product.requires_pallet),
+
+product_condition:
+  product.product_condition,
+
+image:
+  cartImage,
+  
         images:
           galleryImages.map(
             (image) =>

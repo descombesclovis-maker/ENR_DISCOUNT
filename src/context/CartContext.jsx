@@ -71,14 +71,18 @@ is_on_sale:
   Boolean(product.is_on_sale),
     stock: Number(product.stock || 0),
 
-    requires_pallet:
+weight_kg: Number(product.weight_kg || 0),
+length_cm: Number(product.length_cm || 0),
+width_cm: Number(product.width_cm || 0),
+height_cm: Number(product.height_cm || 0),
+
+requires_pallet:
   Boolean(product.requires_pallet),
 
-
-    image:
-      product.image ||
-      product.images?.[0] ||
-      "",
+image:
+  product.image ||
+  product.images?.[0] ||
+  "",
 
     images: Array.isArray(product.images)
       ? product.images
