@@ -38,11 +38,12 @@ const initialForm = {
   description: "",
 
   price: "",
-  weight_kg: "",
-  sale_price: "",
-  sale_start: "",
-  sale_end: "",
-  is_on_sale: false,
+weight_kg: "",
+length_cm: "",
+width_cm: "",
+height_cm: "",
+requires_pallet: false,
+sale_price: "",
 
   stock: "0",
   on_demand: false,
@@ -641,6 +642,27 @@ stock,
   product.weight_kg === undefined
     ? ""
     : String(product.weight_kg),
+
+    length_cm:
+  product.length_cm === null ||
+  product.length_cm === undefined
+    ? ""
+    : String(product.length_cm),
+
+width_cm:
+  product.width_cm === null ||
+  product.width_cm === undefined
+    ? ""
+    : String(product.width_cm),
+
+height_cm:
+  product.height_cm === null ||
+  product.height_cm === undefined
+    ? ""
+    : String(product.height_cm),
+
+requires_pallet:
+  Boolean(product.requires_pallet),
 
                   
 
@@ -1498,6 +1520,24 @@ is_on_sale:
     ? null
     : Number(form.weight_kg),
 
+    length_cm:
+  form.length_cm === ""
+    ? null
+    : Number(form.length_cm),
+
+width_cm:
+  form.width_cm === ""
+    ? null
+    : Number(form.width_cm),
+
+height_cm:
+  form.height_cm === ""
+    ? null
+    : Number(form.height_cm),
+
+requires_pallet:
+  Boolean(form.requires_pallet),
+
             sale_price:
   form.is_on_sale &&
   form.sale_price !== ""
@@ -2096,6 +2136,96 @@ is_on_sale:
     Poids utilisé pour calculer automatiquement les frais de livraison.
   </p>
 </div>
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      Longueur (cm)
+    </label>
+
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      value={form.length_cm}
+      onChange={(event) =>
+        setForm({
+          ...form,
+          length_cm: event.target.value,
+        })
+      }
+      placeholder="Ex : 120"
+      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0b5ca8]"
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      Largeur (cm)
+    </label>
+
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      value={form.width_cm}
+      onChange={(event) =>
+        setForm({
+          ...form,
+          width_cm: event.target.value,
+        })
+      }
+      placeholder="Ex : 80"
+      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0b5ca8]"
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      Hauteur (cm)
+    </label>
+
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      value={form.height_cm}
+      onChange={(event) =>
+        setForm({
+          ...form,
+          height_cm: event.target.value,
+        })
+      }
+      placeholder="Ex : 150"
+      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0b5ca8]"
+    />
+  </div>
+</div>
+
+<label className="flex items-start gap-3 p-4 rounded-xl border border-gray-200 cursor-pointer">
+  <input
+    type="checkbox"
+    checked={form.requires_pallet}
+    onChange={(event) =>
+      setForm({
+        ...form,
+        requires_pallet: event.target.checked,
+      })
+    }
+    className="mt-1"
+  />
+
+  <div>
+    <p className="font-semibold text-gray-900">
+      Expédition sur palette obligatoire
+    </p>
+
+    <p className="text-sm text-gray-500">
+      À activer pour les pompes à chaleur et les produits
+      nécessitant un transport Fret / Palette.
+    </p>
+  </div>
+</label>
 
               </div>
 

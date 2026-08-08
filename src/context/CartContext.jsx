@@ -71,6 +71,10 @@ is_on_sale:
   Boolean(product.is_on_sale),
     stock: Number(product.stock || 0),
 
+    requires_pallet:
+  Boolean(product.requires_pallet),
+
+
     image:
       product.image ||
       product.images?.[0] ||

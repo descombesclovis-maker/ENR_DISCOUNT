@@ -45,6 +45,15 @@ const {
   savings,
 } = useCart();
 
+const [shippingCarrier, setShippingCarrier] =
+  useState("colissimo");
+
+  const requiresFreight =
+  items.some(
+    (item) =>
+      item.requires_pallet === true
+  );
+
   const [
     loading,
     setLoading,
@@ -96,6 +105,8 @@ const {
               body: {
                 items:
                   checkoutItems,
+
+                  shipping_carrier: shippingCarrier,
 
                 origin_url:
                   window.location.origin,
@@ -533,9 +544,89 @@ item.sale_price ? (
                       Livraison
                     </span>
 
-                    <span className="font-bold text-slate-950">
-                      À confirmer
-                    </span>
+                    <div className="space-y-3">
+  <p className="font-semibold text-gray-900">
+    Mode de livraison
+  </p>
+
+  <button
+    type="button"
+    onClick={() =>
+      setShippingCarrier("colissimo")
+    }
+    className={`w-full rounded-xl border p-4 text-left transition ${
+      shippingCarrier === "colissimo"
+        ? "border-[#0b5ca8] bg-blue-50"
+        : "border-gray-200 hover:border-gray-300"
+    }`}
+  >
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <p className="font-bold">
+          Colissimo
+        </p>
+
+        <p className="text-sm text-gray-500">
+          Livraison standard
+        </p>
+      </div>
+
+      <div
+        className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+          shippingCarrier === "colissimo"
+            ? "border-[#0b5ca8]"
+            : "border-gray-300"
+        }`}
+      >
+        {shippingCarrier === "colissimo" && (
+          <div className="h-2.5 w-2.5 rounded-full bg-[#0b5ca8]" />
+        )}
+      </div>
+    </div>
+  </button>
+
+  <button
+    type="button"
+    onClick={() =>
+      setShippingCarrier("chronopost")
+    }
+    className={`w-full rounded-xl border p-4 text-left transition ${
+      shippingCarrier === "chronopost"
+        ? "border-[#0b5ca8] bg-blue-50"
+        : "border-gray-200 hover:border-gray-300"
+    }`}
+  >
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <p className="font-bold">
+          Chronopost
+        </p>
+
+        <p className="text-sm text-gray-500">
+          Livraison express
+        </p>
+      </div>
+
+      <div
+        className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+          shippingCarrier === "chronopost"
+            ? "border-[#0b5ca8]"
+            : "border-gray-300"
+        }`}
+      >
+        {shippingCarrier === "chronopost" && (
+          <div className="h-2.5 w-2.5 rounded-full bg-[#0b5ca8]" />
+        )}
+      </div>
+    </div>
+  </button>
+
+  {subtotal >= 100 && (
+    <p className="text-sm font-semibold text-green-600">
+      Livraison offerte dès 100 € d'achat
+    </p>
+  )}
+</div>
                   </div>
 
                   <div className="flex justify-between gap-4 text-sm">

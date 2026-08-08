@@ -39,6 +39,10 @@ const initialForm = {
   description: "",
   price: "",
   weight_kg: "",
+  length_cm: "",
+  width_cm: "",
+  height_cm: "",
+  requires_pallet: false,
   stock: "0",
   on_demand: false,
   is_active: true,
@@ -1022,6 +1026,24 @@ export default function AdminProductNew() {
         ? null
         : Number(form.weight_kg),
 
+        length_cm:
+  form.length_cm === ""
+    ? null
+    : Number(form.length_cm),
+
+width_cm:
+  form.width_cm === ""
+    ? null
+    : Number(form.width_cm),
+
+height_cm:
+  form.height_cm === ""
+    ? null
+    : Number(form.height_cm),
+
+requires_pallet:
+  Boolean(form.requires_pallet),
+
         stock:
         calculatedStock,
 
@@ -1402,6 +1424,84 @@ export default function AdminProductNew() {
     Utilisé pour calculer automatiquement les frais de livraison.
   </p>
 </div>
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div>
+    <label className="block text-sm font-semibold mb-2">
+      Longueur (cm)
+    </label>
+
+    <input
+      name="length_cm"
+      type="number"
+      min="0"
+      step="0.01"
+      value={form.length_cm}
+      onChange={handleFieldChange}
+      disabled={submitting}
+      placeholder="Ex : 120"
+      className="w-full h-12 rounded-xl border border-border bg-background px-4"
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-semibold mb-2">
+      Largeur (cm)
+    </label>
+
+    <input
+      name="width_cm"
+      type="number"
+      min="0"
+      step="0.01"
+      value={form.width_cm}
+      onChange={handleFieldChange}
+      disabled={submitting}
+      placeholder="Ex : 80"
+      className="w-full h-12 rounded-xl border border-border bg-background px-4"
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-semibold mb-2">
+      Hauteur (cm)
+    </label>
+
+    <input
+      name="height_cm"
+      type="number"
+      min="0"
+      step="0.01"
+      value={form.height_cm}
+      onChange={handleFieldChange}
+      disabled={submitting}
+      placeholder="Ex : 150"
+      className="w-full h-12 rounded-xl border border-border bg-background px-4"
+    />
+  </div>
+</div>
+
+<label className="flex items-start gap-3 p-4 rounded-xl border border-border cursor-pointer">
+  <input
+    name="requires_pallet"
+    type="checkbox"
+    checked={form.requires_pallet}
+    onChange={handleFieldChange}
+    disabled={submitting}
+    className="mt-1"
+  />
+
+  <div>
+    <p className="font-semibold">
+      Expédition sur palette obligatoire
+    </p>
+
+    <p className="text-sm text-muted-foreground">
+      À activer pour les pompes à chaleur et les produits
+      nécessitant un transport Fret / Palette.
+    </p>
+  </div>
+</label>
 
               <div>
                 <label className="block text-sm font-semibold mb-2">
