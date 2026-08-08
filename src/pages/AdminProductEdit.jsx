@@ -430,10 +430,10 @@ export default function AdminProductEdit() {
          description,
 price,
 weight_kg,
-sale_price,
-sale_start,
-sale_end,
-is_on_sale,
+length_cm,
+width_cm,
+height_cm,
+requires_pallet,
 stock,
               
                 sale_price,
@@ -663,22 +663,6 @@ height_cm:
 
 requires_pallet:
   Boolean(product.requires_pallet),
-
-                  
-
-sale_price:
-  product.sale_price === null
-    ? ""
-    : String(product.sale_price),
-
-sale_start:
-  product.sale_start || "",
-
-sale_end:
-  product.sale_end || "",
-
-is_on_sale:
-  Boolean(product.is_on_sale),
 
   sale_price:
   product.sale_price === null ||
@@ -1562,20 +1546,6 @@ sale_end:
 
 is_on_sale:
   Boolean(form.is_on_sale),
-
-sale_price:
-  form.sale_price === ""
-    ? null
-    : Number(form.sale_price),
-
-sale_start:
-  form.sale_start || null,
-
-sale_end:
-  form.sale_end || null,
-
-is_on_sale:
-  form.is_on_sale,
 
           stock:
             calculatedProductStock,
