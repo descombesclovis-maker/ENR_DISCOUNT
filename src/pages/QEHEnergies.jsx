@@ -1069,16 +1069,15 @@ export default function QEHEnergies() {
           </p>
 
           <h2 className="mt-3 font-display text-3xl font-black text-[#020711] sm:text-4xl">
-            Construisons le réseau solaire local
+            Vérifions votre accès à l’énergie solaire locale
           </h2>
 
           <p className="mt-4 leading-relaxed text-slate-600">
-            Inscrivez votre installation ou votre besoin. QEH énergies étudiera les possibilités et vous contactera directement.
+            Laissez-nous vos coordonnées et votre besoin. QEH énergies étudiera les possibilités disponibles autour de votre adresse et vous contactera directement.
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <RegistrationForm type="producer" />
+        <div className="mx-auto max-w-2xl">
           <RegistrationForm type="consumer" />
         </div>
       </section>

@@ -5,6 +5,7 @@ import React, {
 
 import {
   motion,
+  useReducedMotion,
 } from "framer-motion";
 
 import {
@@ -17,11 +18,8 @@ import {
   ArrowUpRight,
   BadgeEuro,
   LoaderCircle,
-  MapPin,
   PackageCheck,
   ShieldCheck,
-  Sun,
-  Zap,
 } from "lucide-react";
 
 import {
@@ -203,6 +201,9 @@ function getAvailability(
 }
 
 export default function Home() {
+  const shouldReduceMotion =
+    useReducedMotion();
+
   const [
     featuredProducts,
     setFeaturedProducts,
@@ -400,151 +401,189 @@ is_on_sale:
     >
       <section className="relative overflow-hidden bg-[#020714]">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-44 -left-44 w-[430px] h-[430px] rounded-full bg-[#0b5ca8]/20 blur-3xl" />
+          <motion.div
+            className="absolute -top-44 -left-44 w-[430px] h-[430px] rounded-full bg-[#0b5ca8]/25 blur-3xl"
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    x: [0, 42, 0],
+                    y: [0, 24, 0],
+                    scale: [1, 1.08, 1],
+                  }
+            }
+            transition={{
+              duration: 11,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
 
-          <div className="absolute -bottom-52 -right-40 w-[480px] h-[480px] rounded-full bg-[#ff5a00]/15 blur-3xl" />
+          <motion.div
+            className="absolute -bottom-52 -right-40 w-[480px] h-[480px] rounded-full bg-[#ff5a00]/20 blur-3xl"
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    x: [0, -36, 0],
+                    y: [0, -22, 0],
+                    scale: [1, 1.1, 1],
+                  }
+            }
+            transition={{
+              duration: 13,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
 
           <div className="absolute inset-0 bg-[linear-gradient(rgba(11,92,168,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(11,92,168,0.08)_1px,transparent_1px)] bg-[size:48px_48px]" />
+
+          {!shouldReduceMotion && (
+            <motion.div
+              className="absolute -inset-y-20 w-44 rotate-12 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent blur-sm"
+              initial={{
+                left: "-20%",
+              }}
+              animate={{
+                left: "120%",
+              }}
+              transition={{
+                duration: 5.5,
+                repeat: Infinity,
+                repeatDelay: 3,
+                ease: "easeInOut",
+              }}
+            />
+          )}
         </div>
 
         <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-20 lg:py-24">
           <div className="max-w-5xl mx-auto text-center">
-            <div className="inline-flex max-w-full rounded-3xl border border-[#0b5ca8]/60 bg-[#010611]/80 p-3 sm:p-5 shadow-[0_30px_100px_rgba(0,0,0,0.48)]">
+            <motion.div
+              initial={
+                shouldReduceMotion
+                  ? false
+                  : {
+                      opacity: 0,
+                      y: 18,
+                      scale: 0.97,
+                    }
+              }
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+              }}
+              whileHover={
+                shouldReduceMotion
+                  ? undefined
+                  : {
+                      scale: 1.012,
+                    }
+              }
+              transition={{
+                duration: 0.7,
+                ease: "easeOut",
+              }}
+              className="inline-flex max-w-full rounded-3xl border border-[#0b5ca8]/60 bg-[#010611]/80 p-3 sm:p-5 shadow-[0_30px_100px_rgba(0,0,0,0.48),0_0_45px_rgba(11,92,168,0.12)]"
+            >
               <img
                 src="/images/qeh-outlet-logo.jpg"
                 alt="QEH OUTLET — Déstockage, prix bas, qualité"
                 className="w-full max-w-[900px] h-auto object-contain"
               />
-            </div>
+            </motion.div>
 
-            <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <motion.div
+              initial={
+                shouldReduceMotion
+                  ? false
+                  : {
+                      opacity: 0,
+                      y: 16,
+                    }
+              }
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                duration: 0.55,
+                delay: shouldReduceMotion
+                  ? 0
+                  : 0.3,
+              }}
+              className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3"
+            >
               <Link
                 to="/produits"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 min-h-12 px-8 rounded-full bg-[#ff5a00] text-white font-bold shadow-[0_12px_35px_rgba(255,90,0,0.25)] hover:bg-[#e95000] transition-colors"
+                className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 min-h-12 px-8 rounded-full bg-[#ff5a00] text-white font-bold shadow-[0_12px_35px_rgba(255,90,0,0.25)] hover:-translate-y-0.5 hover:bg-[#e95000] hover:shadow-[0_16px_42px_rgba(255,90,0,0.38)] active:translate-y-0 transition-all duration-300"
               >
                 Découvrir les produits
 
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
 
               <Link
                 to="/contact"
-                className="w-full sm:w-auto inline-flex items-center justify-center min-h-12 px-8 rounded-full border border-white/25 bg-white/5 text-white font-semibold hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20 transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center min-h-12 px-8 rounded-full border border-white/25 bg-white/5 text-white font-semibold hover:-translate-y-0.5 hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20 hover:shadow-[0_12px_32px_rgba(11,92,168,0.2)] active:translate-y-0 transition-all duration-300"
               >
                 Nous contacter
               </Link>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       <section className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 -mt-2 sm:-mt-7">
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 24,
-          }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
-          viewport={{
-            once: true,
-            amount: 0.25,
-          }}
-          transition={{
-            duration: 0.55,
-          }}
-        >
-          <Link
-            to="/qeh-energies"
-            aria-label="Découvrir QEH énergies"
-            className="group relative block overflow-hidden rounded-[2rem] border border-[#135f9d]/70 bg-[#020711] p-5 sm:p-7 lg:p-9 shadow-[0_24px_80px_rgba(2,7,20,0.32)]"
-          >
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute -left-24 -top-28 h-72 w-72 rounded-full bg-[#135f9d]/30 blur-3xl" />
-              <div className="absolute -bottom-32 right-0 h-72 w-72 rounded-full bg-[#63ae2b]/20 blur-3xl" />
-              <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_20%,rgba(255,255,255,0.08)_45%,transparent_70%)] bg-[length:220%_100%] transition-[background-position] duration-1000 group-hover:bg-[position:100%_0]" />
-            </div>
-
-            <div className="relative grid items-center gap-7 lg:grid-cols-[280px_1fr_auto]">
-              <div className="rounded-2xl border border-[#135f9d]/55 bg-black/35 p-3">
-                <img
-                  src="/images/qeh-energies-logo.png"
-                  alt="QEH énergies"
-                  className="h-auto w-full object-contain"
-                />
-              </div>
-
-              <div>
-                <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#79c53a]">
-                  <Sun className="h-4 w-4" />
-                  Énergie solaire locale
-                </div>
-
-                <h2 className="max-w-3xl font-display text-2xl font-black leading-tight text-white sm:text-3xl lg:text-4xl">
-                  Je veux payer mon électricité{" "}
-                  <motion.span
-                    className="relative inline-block text-[#79c53a]"
-                    animate={{
-                      opacity: [1, 0.68, 1],
-                      textShadow: [
-                        "0 0 0 rgba(121,197,58,0)",
-                        "0 0 22px rgba(121,197,58,0.75)",
-                        "0 0 0 rgba(121,197,58,0)",
-                      ],
-                    }}
-                    transition={{
-                      duration: 2.4,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    moins chère.
-                  </motion.span>
-                </h2>
-
-                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
-                  Localisez les producteurs solaires proches de chez vous et découvrez une solution d’énergie locale dans un rayon de 2 km.
-                </p>
-
-                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-300 sm:text-sm">
-                  <span className="inline-flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-[#79c53a]" />
-                    Recherche locale
-                  </span>
-
-                  <span className="inline-flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-[#79c53a]" />
-                    Circuit court de l’énergie
-                  </span>
-                </div>
-              </div>
-
-              <span className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#79c53a] px-6 font-black text-[#020711] transition-transform group-hover:scale-[1.03]">
-                Découvrir
-                <ArrowRight className="h-5 w-5" />
-              </span>
-            </div>
-          </Link>
-        </motion.div>
-      </section>
-
-      <section className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 mt-6 sm:mt-8">
         <div className="grid md:grid-cols-3 gap-4 rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_20px_65px_rgba(2,7,20,0.12)]">
           {advantages.map(
-            (advantage) => {
+            (
+              advantage,
+              index
+            ) => {
               const Icon =
                 advantage.icon;
 
               return (
-                <article
+                <motion.article
                   key={
                     advantage.title
                   }
-                  className="flex items-start gap-4 rounded-2xl p-4 sm:p-5 hover:bg-slate-50 transition-colors"
+                  initial={
+                    shouldReduceMotion
+                      ? false
+                      : {
+                          opacity: 0,
+                          y: 22,
+                        }
+                  }
+                  whileInView={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  viewport={{
+                    once: true,
+                    amount: 0.35,
+                  }}
+                  whileHover={
+                    shouldReduceMotion
+                      ? undefined
+                      : {
+                          y: -4,
+                        }
+                  }
+                  transition={{
+                    duration: 0.45,
+                    delay:
+                      shouldReduceMotion
+                        ? 0
+                        : index * 0.1,
+                  }}
+                  className="group flex items-start gap-4 rounded-2xl p-4 sm:p-5 hover:bg-slate-50 transition-colors"
                 >
-                  <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#0b5ca8]/10 text-[#0b5ca8] grid place-items-center">
+                  <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#0b5ca8]/10 text-[#0b5ca8] grid place-items-center transition-all duration-300 group-hover:bg-[#0b5ca8] group-hover:text-white group-hover:shadow-[0_10px_25px_rgba(11,92,168,0.25)]">
                     <Icon className="w-6 h-6" />
                   </div>
 
@@ -561,7 +600,7 @@ is_on_sale:
                       }
                     </p>
                   </div>
-                </article>
+                </motion.article>
               );
             }
           )}
@@ -569,7 +608,28 @@ is_on_sale:
       </section>
 
       <section className="max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
-        <div className="flex items-end justify-between gap-5 mb-9">
+        <motion.div
+          initial={
+            shouldReduceMotion
+              ? false
+              : {
+                  opacity: 0,
+                  y: 18,
+                }
+          }
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          viewport={{
+            once: true,
+            amount: 0.5,
+          }}
+          transition={{
+            duration: 0.5,
+          }}
+          className="flex items-end justify-between gap-5 mb-9"
+        >
           <div>
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ff5a00] mb-3">
               Sélection QEH OUTLET
@@ -588,7 +648,7 @@ is_on_sale:
 
             <ArrowUpRight className="w-4 h-4" />
           </Link>
-        </div>
+        </motion.div>
 
         {loading && (
           <div className="rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center">
@@ -640,17 +700,41 @@ is_on_sale:
                   product,
                   index
                 ) => (
-                  <Link
+                  <motion.div
                     key={
                       product.id
                     }
-                    to={`/produits/${product.slug}`}
-                    className="group flex flex-col rounded-3xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1.5 hover:border-[#0b5ca8]/50 hover:shadow-[0_22px_55px_rgba(2,7,20,0.13)] transition-all duration-300"
-                    style={{
-                      animationDelay:
-                        `${index * 60}ms`,
+                    initial={
+                      shouldReduceMotion
+                        ? false
+                        : {
+                            opacity: 0,
+                            y: 28,
+                          }
+                    }
+                    whileInView={{
+                      opacity: 1,
+                      y: 0,
                     }}
+                    viewport={{
+                      once: true,
+                      amount: 0.16,
+                    }}
+                    transition={{
+                      duration: 0.48,
+                      delay:
+                        shouldReduceMotion
+                          ? 0
+                          : index * 0.08,
+                    }}
+                    className="h-full"
                   >
+                    <Link
+                      to={`/produits/${product.slug}`}
+                      className="group relative flex h-full flex-col rounded-3xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1.5 hover:border-[#0b5ca8]/50 hover:shadow-[0_22px_55px_rgba(2,7,20,0.13)] transition-all duration-300"
+                    >
+                      <span className="pointer-events-none absolute inset-x-8 top-0 z-20 h-px bg-gradient-to-r from-transparent via-[#0b5ca8]/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
                     <div className="relative aspect-square overflow-hidden bg-white grid place-items-center p-6">
                       <img
                         src={
@@ -747,7 +831,8 @@ product.sale_price ? (
                         </span>
                       </div>
                     </div>
-                  </Link>
+                    </Link>
+                  </motion.div>
                 )
               )}
             </div>

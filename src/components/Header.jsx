@@ -221,7 +221,25 @@ export const Header = () => {
               <img
                 src="/images/qeh-outlet-logo.jpg"
                 alt="QEH OUTLET"
-                className="h-11 sm:h-14 w-auto max-w-[150px] sm:max-w-[220px] object-contain"
+                className="h-11 sm:h-14 w-auto max-w-[135px] sm:max-w-[175px] object-contain"
+              />
+            </span>
+          </Link>
+
+          <span className="hidden sm:block h-10 w-px shrink-0 bg-white/20" />
+
+          <Link
+            to="/qeh-energies"
+            data-testid="qeh-energies-logo-link"
+            aria-label="Accéder au site QEH énergies"
+            title="Découvrir QEH énergies"
+            className="group hidden sm:flex items-center shrink-0"
+          >
+            <span className="flex items-center overflow-hidden rounded-xl border border-[#69b72d]/40 bg-[#020711] shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-all duration-300 group-hover:border-[#82d246] group-hover:shadow-[0_10px_30px_rgba(105,183,45,0.18)]">
+              <img
+                src="/images/qeh-energies-logo.png"
+                alt="QEH énergies"
+                className="h-11 sm:h-14 w-auto max-w-[105px] sm:max-w-[145px] object-contain"
               />
             </span>
           </Link>
@@ -477,6 +495,19 @@ export const Header = () => {
         <div className="lg:hidden border-t border-white/10 bg-[#030a18] px-5 py-5">
 
           <nav className="flex flex-col gap-2">
+
+            <Link
+              to="/qeh-energies"
+              onClick={closeMobileMenu}
+              aria-label="Accéder au site QEH énergies"
+              className="sm:hidden mb-2 flex items-center justify-center rounded-2xl border border-[#69b72d]/40 bg-[#69b72d]/10 p-3"
+            >
+              <img
+                src="/images/qeh-energies-logo.png"
+                alt="QEH énergies"
+                className="h-16 w-auto max-w-full object-contain"
+              />
+            </Link>
 
             {links.map((link) => (
 
