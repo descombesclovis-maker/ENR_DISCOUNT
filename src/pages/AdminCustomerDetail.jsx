@@ -17,10 +17,12 @@ export default function AdminCustomerDetail() {
 
   const [customer, setCustomer] = useState(null);
 
-  useEffect(() => {
-    loadCustomer();
-  }, [id]);
+  
+   useEffect(() => {
+  loadCustomer();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [customerId]);
   async function loadCustomer() {
 
     const { data } = await supabase
