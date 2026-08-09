@@ -830,45 +830,30 @@ export default function QEHEnergies() {
               />
 
               {REGISTERED_ZONES.map((zone) => (
-                <React.Fragment key={zone.id}>
-                  <Circle
-                    center={[
-                      zone.latitude,
-                      zone.longitude,
-                    ]}
-                    radius={SEARCH_RADIUS_METERS}
-                    pathOptions={{
-                      color: "#69b72d",
-                      fillColor: "#69b72d",
-                      fillOpacity: 0.1,
-                      weight: 2,
-                    }}
-                  />
-
-                  <CircleMarker
-                    center={[
-                      zone.latitude,
-                      zone.longitude,
-                    ]}
-                    radius={11}
-                    pathOptions={{
-                      color: "#ffffff",
-                      fillColor: "#69b72d",
-                      fillOpacity: 1,
-                      weight: 3,
-                    }}
-                  >
-                    <Popup>
-                      <strong>{zone.public_name}</strong>
-                      <br />
-                      {zone.address}
-                      <br />
-                      {zone.postal_code} {zone.city}
-                      <br />
-                      Rayon local : 2 km
-                    </Popup>
-                  </CircleMarker>
-                </React.Fragment>
+                <Circle
+                  key={zone.id}
+                  center={[
+                    zone.latitude,
+                    zone.longitude,
+                  ]}
+                  radius={SEARCH_RADIUS_METERS}
+                  pathOptions={{
+                    color: "#59a923",
+                    fillColor: "#69b72d",
+                    fillOpacity: 0.22,
+                    weight: 2,
+                  }}
+                >
+                  <Popup>
+                    <strong>{zone.public_name}</strong>
+                    <br />
+                    {zone.address}
+                    <br />
+                    {zone.postal_code} {zone.city}
+                    <br />
+                    Zone locale : rayon de 2 km
+                  </Popup>
+                </Circle>
               ))}
 
               {searchCenter ? (
