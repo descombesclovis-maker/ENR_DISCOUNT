@@ -35,8 +35,6 @@ import CustomerOrderDetail from "./pages/CustomerOrderDetail";
 import CustomerLogin from "./pages/CustomerLogin";
 import CustomerRegister from "./pages/CustomerRegister";
 import CustomerAccount from "./pages/CustomerAccount";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -48,12 +46,13 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminMessages from "./pages/AdminMessages";
 import AdminSettings from "./pages/AdminSettings";
+import QEHEnergies from "./pages/QEHEnergies";
+import AdminCustomerDetail from "./pages/AdminCustomerDetail";
 
 function StoreLayout() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-
       <main className="flex-1">
         <Outlet />
       </main>
@@ -89,6 +88,11 @@ function App() {
                     <Route
                       path="/"
                       element={<Home />}
+                    />
+
+                  <Route
+                      path="/qeh-energies"
+                      element={<QEHEnergies />}
                     />
 
                     <Route
@@ -132,18 +136,10 @@ function App() {
                     />
 
                     <Route
-                    path="/mot-de-passe-oublie"
-                    element={<ForgotPassword />}
-                    />
-
-                    <Route
                       path="/inscription"
                       element={<CustomerRegister />}
                     />
-                  <Route
-                    path="/reinitialiser-mot-de-passe"
-                    element={<ResetPassword />}
-                  />
+
                     <Route
                       path="/mon-compte"
                       element={<CustomerAccount />}
@@ -174,15 +170,15 @@ function App() {
                       path="/admin"
                       element={<AdminDashboard />}
                     />
-                    <Route
-                      path="/politique-de-confidentialite"
-                      element={<PrivacyPolicy />}
-                    />
+<Route
+  path="/politique-de-confidentialite"
+  element={<PrivacyPolicy />}
+/>
 
-                    <Route
-                      path="/conditions-generales"
-                      element={<Terms />}
-                    />
+<Route
+  path="/conditions-generales"
+  element={<Terms />}
+/>
                     <Route
                       path="/admin/produits"
                       element={<AdminProducts />}
@@ -208,19 +204,23 @@ function App() {
                       element={<AdminOrders />}
                     />
                     <Route
-                    path="/admin/clients"
-                    element={<AdminCustomers />}
-                    />
+  path="/admin/clients"
+  element={<AdminCustomers />}
+/>
+<Route
+  path="/admin/clients/:id"
+  element={<AdminCustomerDetail />}
+/>
 
-                <Route
-                  path="/admin/messages"
-                  element={<AdminMessages />}
-                />
+<Route
+  path="/admin/messages"
+  element={<AdminMessages />}
+/>
 
-                <Route
-                 path="/admin/parametres"
-                 element={<AdminSettings />}
-                />
+<Route
+  path="/admin/parametres"
+  element={<AdminSettings />}
+/>
 
                   </Route>
 

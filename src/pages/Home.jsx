@@ -4,6 +4,10 @@ import React, {
 } from "react";
 
 import {
+  motion,
+} from "framer-motion";
+
+import {
   Link,
 } from "react-router-dom";
 
@@ -13,8 +17,11 @@ import {
   ArrowUpRight,
   BadgeEuro,
   LoaderCircle,
+  MapPin,
   PackageCheck,
   ShieldCheck,
+  Sun,
+  Zap,
 } from "lucide-react";
 
 import {
@@ -432,6 +439,98 @@ is_on_sale:
       </section>
 
       <section className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 -mt-2 sm:-mt-7">
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 24,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          viewport={{
+            once: true,
+            amount: 0.25,
+          }}
+          transition={{
+            duration: 0.55,
+          }}
+        >
+          <Link
+            to="/qeh-energies"
+            aria-label="Découvrir QEH énergies"
+            className="group relative block overflow-hidden rounded-[2rem] border border-[#135f9d]/70 bg-[#020711] p-5 sm:p-7 lg:p-9 shadow-[0_24px_80px_rgba(2,7,20,0.32)]"
+          >
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -left-24 -top-28 h-72 w-72 rounded-full bg-[#135f9d]/30 blur-3xl" />
+              <div className="absolute -bottom-32 right-0 h-72 w-72 rounded-full bg-[#63ae2b]/20 blur-3xl" />
+              <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_20%,rgba(255,255,255,0.08)_45%,transparent_70%)] bg-[length:220%_100%] transition-[background-position] duration-1000 group-hover:bg-[position:100%_0]" />
+            </div>
+
+            <div className="relative grid items-center gap-7 lg:grid-cols-[280px_1fr_auto]">
+              <div className="rounded-2xl border border-[#135f9d]/55 bg-black/35 p-3">
+                <img
+                  src="/images/qeh-energies-logo.png"
+                  alt="QEH énergies"
+                  className="h-auto w-full object-contain"
+                />
+              </div>
+
+              <div>
+                <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#79c53a]">
+                  <Sun className="h-4 w-4" />
+                  Énergie solaire locale
+                </div>
+
+                <h2 className="max-w-3xl font-display text-2xl font-black leading-tight text-white sm:text-3xl lg:text-4xl">
+                  Je veux payer mon électricité{" "}
+                  <motion.span
+                    className="relative inline-block text-[#79c53a]"
+                    animate={{
+                      opacity: [1, 0.68, 1],
+                      textShadow: [
+                        "0 0 0 rgba(121,197,58,0)",
+                        "0 0 22px rgba(121,197,58,0.75)",
+                        "0 0 0 rgba(121,197,58,0)",
+                      ],
+                    }}
+                    transition={{
+                      duration: 2.4,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    moins chère.
+                  </motion.span>
+                </h2>
+
+                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
+                  Localisez les producteurs solaires proches de chez vous et découvrez une solution d’énergie locale dans un rayon de 2 km.
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-300 sm:text-sm">
+                  <span className="inline-flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-[#79c53a]" />
+                    Recherche locale
+                  </span>
+
+                  <span className="inline-flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-[#79c53a]" />
+                    Circuit court de l’énergie
+                  </span>
+                </div>
+              </div>
+
+              <span className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#79c53a] px-6 font-black text-[#020711] transition-transform group-hover:scale-[1.03]">
+                Découvrir
+                <ArrowRight className="h-5 w-5" />
+              </span>
+            </div>
+          </Link>
+        </motion.div>
+      </section>
+
+      <section className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 mt-6 sm:mt-8">
         <div className="grid md:grid-cols-3 gap-4 rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_20px_65px_rgba(2,7,20,0.12)]">
           {advantages.map(
             (advantage) => {
