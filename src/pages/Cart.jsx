@@ -1,11 +1,6 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import {
-  Link,
-} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import {
   ArrowLeft,
@@ -24,164 +19,320 @@ import {
 
 import { toast } from "sonner";
 
-import {
-  useCart,
-} from "../context/CartContext";
+import { useCart } from "../context/CartContext";
 
-import {
-  formatPrice,
-} from "../lib/api";
+import { formatPrice } from "../lib/api";
 
-import {
-  supabase,
-} from "../lib/supabase";
+import { supabase } from "../lib/supabase";
+
+const INITIAL_DESTINATION = {
+  name: "",
+  company: "",
+  email: "",
+  phone: "",
+  type: "particulier",
+  country: "FR",
+  addressLine1: "",
+  addressLine2: "",
+  postalCode: "",
+  city: "",
+};
+
+async function getFunctionErrorMessage(error, fallback) {
+  try {
+    if (error?.context && typeof error.context.json === "function") {
+      const responseBody = await error.context.json();
+
+      return responseBody?.error || responseBody?.message || fallback;
+    }
+  } catch (parsingError) {
+    console.error(
+      "Impossible de lire la réponse de la fonction :",
+      parsingError,
+    );
+  }
+
+  return error?.message || fallback;
+}
+
+function createShippingPackages(items, requiresFreight) {
+  const itemsToShip = requiresFreight
+    ? items.filter((item) => item.requires_pallet === true)
+    : items;
+
+  const packages = [];
+
+  for (const item of itemsToShip) {
+    const dimensions = {
+      weight: Number(item.weight_kg),
+      length: Number(item.length_cm),
+      width: Number(item.width_cm),
+      height: Number(item.height_cm),
+    };
+
+    if (
+      Object.values(dimensions).some(
+        (value) => !Number.isFinite(value) || value <= 0,
+      )
+    ) {
+      throw new Error(
+        `Les dimensions de livraison de « ${item.name} » sont incomplètes.`,
+      );
+    }
+
+    for (let quantity = 0; quantity < Number(item.quantity); quantity += 1) {
+      packages.push(dimensions);
+    }
+  }
+
+  if (packages.length === 0) {
+    throw new Error("Aucun colis ne peut être calculé pour ce panier.");
+  }
+
+  if (packages.length > 20) {
+    throw new Error(
+      "Ce panier dépasse 20 unités de transport. Contactez-nous pour un devis personnalisé.",
+    );
+  }
+
+  return packages;
+}
 
 export default function Cart() {
-const {
-  items,
-  updateQuantity,
-  removeItem,
-  total,
-  savings,
-} = useCart();
+  const { items, updateQuantity, removeItem, total } = useCart();
 
-const [shippingCarrier, setShippingCarrier] =
-  useState("colissimo");
+  const [destination, setDestination] = useState(INITIAL_DESTINATION);
+  const [shippingOffers, setShippingOffers] = useState([]);
+  const [selectedOfferId, setSelectedOfferId] = useState("");
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteMessage, setQuoteMessage] = useState("");
+  const [requiresManualQuote, setRequiresManualQuote] = useState(false);
 
-  const requiresFreight =
-  items.some(
-    (item) =>
-      item.requires_pallet === true
+  const requiresFreight = items.some((item) => item.requires_pallet === true);
+
+  const selectedShippingOffer = useMemo(
+    () => shippingOffers.find((offer) => offer.id === selectedOfferId) || null,
+    [shippingOffers, selectedOfferId],
   );
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(false);
+  const shippingAmount = Number(selectedShippingOffer?.priceIncludingTax || 0);
+
+  const orderTotal = Number(total || 0) + shippingAmount;
+
+  const savings = useMemo(
+    () =>
+      items.reduce((sum, item) => {
+        if (!item.is_on_sale || !item.sale_price) {
+          return sum;
+        }
+
+        return (
+          sum +
+          (Number(item.price) - Number(item.sale_price)) * Number(item.quantity)
+        );
+      }, 0),
+    [items],
+  );
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.title =
-      "Mon panier | QEH OUTLET";
+    document.title = "Mon panier | QEH OUTLET";
   }, []);
 
-  const handleCheckout =
-    async () => {
-      if (
-        items.length === 0
-      ) {
-        toast.error(
-          "Votre panier est vide."
-        );
+  useEffect(() => {
+    setShippingOffers([]);
+    setSelectedOfferId("");
+    setQuoteMessage("");
+    setRequiresManualQuote(false);
+  }, [items]);
 
+  const handleDestinationChange = (field, value) => {
+    setDestination((currentDestination) => ({
+      ...currentDestination,
+      [field]: value,
+    }));
+    setShippingOffers([]);
+    setSelectedOfferId("");
+    setQuoteMessage("");
+    setRequiresManualQuote(false);
+  };
+
+  const validateDestination = () => {
+    if (!destination.name.trim()) {
+      throw new Error("Indiquez le nom du destinataire.");
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(destination.email.trim())) {
+      throw new Error("Indiquez une adresse e-mail valide.");
+    }
+
+    if (!destination.phone.trim()) {
+      throw new Error("Indiquez le téléphone du destinataire.");
+    }
+
+    if (!destination.addressLine1.trim()) {
+      throw new Error("Indiquez l’adresse de livraison.");
+    }
+
+    if (!destination.postalCode.trim()) {
+      throw new Error("Indiquez le code postal de livraison.");
+    }
+
+    if (!destination.city.trim()) {
+      throw new Error("Indiquez la ville de livraison.");
+    }
+
+    if (destination.type === "entreprise" && !destination.company.trim()) {
+      throw new Error("Indiquez le nom de l’entreprise.");
+    }
+  };
+
+  const handleCalculateShipping = async () => {
+    setQuoteLoading(true);
+    setShippingOffers([]);
+    setSelectedOfferId("");
+    setQuoteMessage("");
+    setRequiresManualQuote(false);
+
+    try {
+      validateDestination();
+
+      const packages = createShippingPackages(items, requiresFreight);
+
+      const { data, error } = await supabase.functions.invoke(
+        "boxtal-shipping-rates",
+        {
+          body: {
+            destinationCountry: destination.country,
+            destinationPostalCode: destination.postalCode,
+            destinationCity: destination.city,
+            destinationAddress: destination.addressLine1,
+            destinationType: destination.type,
+            shipmentType: requiresFreight ? "palette" : "colis",
+            packages,
+            declaredValue: Math.max(Number(total || 0), 1),
+            contentCode: "10120",
+          },
+        },
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.requiresManualQuote) {
+        setRequiresManualQuote(true);
+        setQuoteMessage(
+          data?.message || "Cette livraison nécessite un devis personnalisé.",
+        );
         return;
       }
 
-      setLoading(true);
+      const availableOffers = Array.isArray(data?.checkoutOffers)
+        ? data.checkoutOffers
+        : [];
 
-      try {
-        const checkoutItems =
-          items.map(
-            (item) => ({
-              product_id:
-                item.database_product_id ||
-                item.product_id,
-
-              variant_id:
-                item.variant_id ||
-                null,
-
-              quantity:
-                item.quantity,
-            })
-          );
-
-        const {
-          data,
-          error,
-        } =
-          await supabase.functions.invoke(
-            "create-checkout-session",
-            {
-              body: {
-                items:
-                  checkoutItems,
-
-                  shipping_carrier:
-                  requiresFreight
-                  ? "freight"
-                  : shippingCarrier,
-
-                origin_url:
-                  window.location.origin,
-              },
-            }
-          );
-
-        if (error) {
-          throw error;
-        }
-
-        if (!data?.url) {
-          throw new Error(
-            data?.error ||
-              "Stripe n’a retourné aucune adresse de paiement."
-          );
-        }
-
-        window.location.assign(
-          data.url
+      if (availableOffers.length === 0) {
+        throw new Error(
+          "Aucune offre de livraison n’est disponible pour cette adresse.",
         );
-      } catch (error) {
-        console.error(
-          "Erreur de création du paiement :",
-          error
-        );
-
-        let message =
-          "Impossible de démarrer le paiement.";
-
-        try {
-          if (
-            error?.context &&
-            typeof error.context
-              .json ===
-              "function"
-          ) {
-            const responseBody =
-              await error.context.json();
-
-            message =
-              responseBody?.error ||
-              responseBody?.message ||
-              message;
-          } else if (
-            error?.message
-          ) {
-            message =
-              error.message;
-          }
-        } catch (
-          parsingError
-        ) {
-          console.error(
-            "Impossible de lire la réponse de la fonction :",
-            parsingError
-          );
-        }
-
-        toast.error(message);
-        setLoading(false);
       }
-    };
 
-  if (
-    items.length === 0
-  ) {
+      setShippingOffers(availableOffers);
+      setSelectedOfferId(availableOffers[0].id);
+      setQuoteMessage(data?.message || "Sélectionnez votre transporteur.");
+    } catch (error) {
+      const message = await getFunctionErrorMessage(
+        error,
+        "Impossible de calculer la livraison.",
+      );
+
+      toast.error(message);
+      setQuoteMessage(message);
+    } finally {
+      setQuoteLoading(false);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (items.length === 0) {
+      toast.error("Votre panier est vide.");
+
+      return;
+    }
+
+    try {
+      validateDestination();
+    } catch (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    if (requiresManualQuote || !selectedShippingOffer) {
+      toast.error(
+        requiresManualQuote
+          ? "Cette commande nécessite un devis de livraison."
+          : "Calculez et sélectionnez la livraison avant de payer.",
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const checkoutItems = items.map((item) => ({
+        product_id: item.database_product_id || item.product_id,
+
+        variant_id: item.variant_id || null,
+
+        quantity: item.quantity,
+      }));
+
+      const { data, error } = await supabase.functions.invoke(
+        "create-checkout-session",
+        {
+          body: {
+            items: checkoutItems,
+
+            shipping_offer_id: selectedShippingOffer.id,
+
+            shipping_destination: {
+              ...destination,
+            },
+
+            origin_url: window.location.origin,
+          },
+        },
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data?.url) {
+        throw new Error(
+          data?.error || "Stripe n’a retourné aucune adresse de paiement.",
+        );
+      }
+
+      window.location.assign(data.url);
+    } catch (error) {
+      console.error("Erreur de création du paiement :", error);
+
+      const message = await getFunctionErrorMessage(
+        error,
+        "Impossible de démarrer le paiement.",
+      );
+
+      toast.error(message);
+      setLoading(false);
+    }
+  };
+
+  if (items.length === 0) {
     return (
-      <div
-        data-testid="cart-empty"
-        className="min-h-[70vh] bg-white"
-      >
+      <div data-testid="cart-empty" className="min-h-[70vh] bg-white">
         <section className="relative overflow-hidden bg-[#020714]">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute -top-32 -left-28 w-80 h-80 rounded-full bg-[#0b5ca8]/20 blur-3xl" />
@@ -212,7 +363,6 @@ const [shippingCarrier, setShippingCarrier] =
               className="inline-flex items-center justify-center gap-2 min-h-12 px-8 mt-8 rounded-full bg-[#ff5a00] text-white font-bold hover:bg-[#e95000] transition-colors shadow-[0_12px_35px_rgba(255,90,0,0.25)]"
             >
               Voir les produits
-
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -222,10 +372,7 @@ const [shippingCarrier, setShippingCarrier] =
   }
 
   return (
-    <div
-      data-testid="cart-page"
-      className="min-h-screen bg-slate-50"
-    >
+    <div data-testid="cart-page" className="min-h-screen bg-slate-50">
       <section className="relative overflow-hidden bg-[#020714]">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-40 -left-40 w-[420px] h-[420px] rounded-full bg-[#0b5ca8]/20 blur-3xl" />
@@ -280,196 +427,146 @@ const [shippingCarrier, setShippingCarrier] =
       <main className="max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
         <div className="grid xl:grid-cols-[1fr_390px] gap-8 lg:gap-10 items-start">
           <section className="space-y-4">
-            {items.map(
-              (item) => {
-                const itemId =
-                  item.cart_item_id;
-console.log(item);
-                return (
-                  <article
-                    key={itemId}
-                    data-testid={`cart-item-${itemId}`}
-                    className="group rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm hover:border-[#0b5ca8]/40 hover:shadow-[0_16px_45px_rgba(2,7,20,0.08)] transition-all"
-                  >
-                    <div className="flex flex-col sm:flex-row gap-5">
-                      <Link
-                        to={
-                          item.slug
-                            ? `/produits/${item.slug}`
-                            : "/produits"
-                        }
-                        className="w-full sm:w-36 h-48 sm:h-36 shrink-0 rounded-2xl overflow-hidden border border-slate-200 bg-white grid place-items-center"
-                      >
-                        {item.image ? (
-                          <img
-                            src={
-                              item.image
+            {items.map((item) => {
+              const itemId = item.cart_item_id;
+              return (
+                <article
+                  key={itemId}
+                  data-testid={`cart-item-${itemId}`}
+                  className="group rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm hover:border-[#0b5ca8]/40 hover:shadow-[0_16px_45px_rgba(2,7,20,0.08)] transition-all"
+                >
+                  <div className="flex flex-col sm:flex-row gap-5">
+                    <Link
+                      to={item.slug ? `/produits/${item.slug}` : "/produits"}
+                      className="w-full sm:w-36 h-48 sm:h-36 shrink-0 rounded-2xl overflow-hidden border border-slate-200 bg-white grid place-items-center"
+                    >
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+
+                            event.currentTarget.src =
+                              "/images/product-placeholder.png";
+                          }}
+                        />
+                      ) : (
+                        <ShoppingBag className="w-9 h-9 text-slate-300" />
+                      )}
+                    </Link>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <Link
+                            to={
+                              item.slug ? `/produits/${item.slug}` : "/produits"
                             }
-                            alt={
-                              item.name
-                            }
-                            className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                            onError={(
-                              event
-                            ) => {
-                              event.currentTarget.onerror =
-                                null;
-
-                              event.currentTarget.src =
-                                "/images/product-placeholder.png";
-                            }}
-                          />
-                        ) : (
-                          <ShoppingBag className="w-9 h-9 text-slate-300" />
-                        )}
-                      </Link>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <Link
-                              to={
-                                item.slug
-                                  ? `/produits/${item.slug}`
-                                  : "/produits"
-                              }
-                              className="font-display font-bold text-lg text-slate-950 hover:text-[#0b5ca8] transition-colors"
-                            >
-                              {item.name}
-                            </Link>
-
-                            {item.brand && (
-                              <p className="text-sm text-slate-500 mt-1">
-                                {item.brand}
-                              </p>
-                            )}
-
-                            {item.selectedVariant && (
-                              <div className="inline-flex items-center min-h-8 px-3 mt-3 rounded-full border border-[#0b5ca8]/20 bg-[#0b5ca8]/5 text-[#0b5ca8] text-xs font-bold">
-                                {item.selectedVariant
-                                  .label ||
-                                  item.selectedVariant
-                                    .name ||
-                                  item.selectedVariant
-                                    .reference}
-                              </div>
-                            )}
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              removeItem(
-                                itemId
-                              )
-                            }
-                            className="w-10 h-10 shrink-0 rounded-full border border-red-200 bg-red-50 text-red-600 grid place-items-center hover:bg-red-600 hover:text-white transition-colors"
-                            aria-label="Supprimer le produit"
-                            title="Supprimer le produit"
+                            className="font-display font-bold text-lg text-slate-950 hover:text-[#0b5ca8] transition-colors"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            {item.name}
+                          </Link>
+
+                          {item.brand && (
+                            <p className="text-sm text-slate-500 mt-1">
+                              {item.brand}
+                            </p>
+                          )}
+
+                          {item.selectedVariant && (
+                            <div className="inline-flex items-center min-h-8 px-3 mt-3 rounded-full border border-[#0b5ca8]/20 bg-[#0b5ca8]/5 text-[#0b5ca8] text-xs font-bold">
+                              {item.selectedVariant.label ||
+                                item.selectedVariant.name ||
+                                item.selectedVariant.reference}
+                            </div>
+                          )}
                         </div>
 
-                        <div className="mt-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
-                          <div>
-                           {item.is_on_sale &&
-item.sale_price ? (
+                        <button
+                          type="button"
+                          onClick={() => removeItem(itemId)}
+                          className="w-10 h-10 shrink-0 rounded-full border border-red-200 bg-red-50 text-red-600 grid place-items-center hover:bg-red-600 hover:text-white transition-colors"
+                          aria-label="Supprimer le produit"
+                          title="Supprimer le produit"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
 
-  <div>
-
-    <p className="text-sm text-slate-400 line-through">
-
-      {formatPrice(item.price)}
-
-    </p>
-
-    <p className="font-display font-black text-xl text-[#ff5a00]">
-
-      {formatPrice(item.sale_price)}
-
-    </p>
-
-  </div>
-
-) : (
-
-  <p className="font-display font-black text-xl text-slate-950">
-
-    {formatPrice(item.price)}
-
-  </p>
-
-)} 
-                          </div>
-
-                          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-4">
-                            <div className="flex items-center h-11 rounded-full border border-slate-200 bg-slate-50">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  updateQuantity(
-                                    itemId,
-                                    item.quantity -
-                                      1
-                                  )
-                                }
-                                disabled={
-                                  item.quantity <=
-                                  1
-                                }
-                                className="w-11 h-11 grid place-items-center text-slate-600 hover:text-[#ff5a00] disabled:opacity-30 transition-colors"
-                                aria-label="Diminuer la quantité"
-                              >
-                                <Minus className="w-4 h-4" />
-                              </button>
-
-                              <span className="w-10 text-center text-sm font-black text-slate-950">
-                                {item.quantity}
-                              </span>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  updateQuantity(
-                                    itemId,
-                                    item.quantity +
-                                      1
-                                  )
-                                }
-                                disabled={
-                                  item.stock > 0 &&
-                                  item.quantity >=
-                                    item.stock
-                                }
-                                className="w-11 h-11 grid place-items-center text-slate-600 hover:text-[#0b5ca8] disabled:opacity-30 transition-colors"
-                                aria-label="Augmenter la quantité"
-                              >
-                                <Plus className="w-4 h-4" />
-                              </button>
-                            </div>
-
-                            <div className="text-right min-w-[120px]">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Total
+                      <div className="mt-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+                        <div>
+                          {item.is_on_sale && item.sale_price ? (
+                            <div>
+                              <p className="text-sm text-slate-400 line-through">
+                                {formatPrice(item.price)}
                               </p>
 
-                              <p className="font-display font-bold">
-  {formatPrice(
-    (item.is_on_sale && item.sale_price
-      ? item.sale_price
-      : item.price) * item.quantity
-  )}
-</p>
+                              <p className="font-display font-black text-xl text-[#ff5a00]">
+                                {formatPrice(item.sale_price)}
+                              </p>
                             </div>
+                          ) : (
+                            <p className="font-display font-black text-xl text-slate-950">
+                              {formatPrice(item.price)}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-4">
+                          <div className="flex items-center h-11 rounded-full border border-slate-200 bg-slate-50">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateQuantity(itemId, item.quantity - 1)
+                              }
+                              disabled={item.quantity <= 1}
+                              className="w-11 h-11 grid place-items-center text-slate-600 hover:text-[#ff5a00] disabled:opacity-30 transition-colors"
+                              aria-label="Diminuer la quantité"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+
+                            <span className="w-10 text-center text-sm font-black text-slate-950">
+                              {item.quantity}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateQuantity(itemId, item.quantity + 1)
+                              }
+                              disabled={
+                                item.stock > 0 && item.quantity >= item.stock
+                              }
+                              className="w-11 h-11 grid place-items-center text-slate-600 hover:text-[#0b5ca8] disabled:opacity-30 transition-colors"
+                              aria-label="Augmenter la quantité"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="text-right min-w-[120px]">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                              Total
+                            </p>
+
+                            <p className="font-display font-bold">
+                              {formatPrice(
+                                (item.is_on_sale && item.sale_price
+                                  ? item.sale_price
+                                  : item.price) * item.quantity,
+                              )}
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </article>
-                );
-              }
-            )}
+                  </div>
+                </article>
+              );
+            })}
 
             <div className="grid sm:grid-cols-3 gap-4 pt-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 flex items-start gap-3">
@@ -531,178 +628,213 @@ item.sale_price ? (
               <div className="p-6">
                 <div className="space-y-4">
                   <div className="flex justify-between gap-4 text-sm">
-                    <span className="text-slate-500">
-                      Sous-total
-                    </span>
+                    <span className="text-slate-500">Sous-total</span>
 
                     <span className="font-bold text-slate-950">
-                      {formatPrice(
-                        total
+                      {formatPrice(total)}
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-bold text-slate-950">
+                          Adresse de livraison
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Le tarif est calculé en direct par Boxtal.
+                        </p>
+                      </div>
+                      <Truck className="w-5 h-5 text-[#0b5ca8]" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <select
+                        value={destination.type}
+                        onChange={(event) =>
+                          handleDestinationChange("type", event.target.value)
+                        }
+                        className="col-span-2 h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#0b5ca8]"
+                      >
+                        <option value="particulier">Particulier</option>
+                        <option value="entreprise">Entreprise</option>
+                      </select>
+
+                      <input
+                        value={destination.name}
+                        onChange={(event) =>
+                          handleDestinationChange("name", event.target.value)
+                        }
+                        placeholder="Nom et prénom *"
+                        className="col-span-2 h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-[#0b5ca8]"
+                      />
+
+                      {destination.type === "entreprise" && (
+                        <input
+                          value={destination.company}
+                          onChange={(event) =>
+                            handleDestinationChange(
+                              "company",
+                              event.target.value,
+                            )
+                          }
+                          placeholder="Nom de l’entreprise *"
+                          className="col-span-2 h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-[#0b5ca8]"
+                        />
                       )}
-                    </span>
+
+                      <input
+                        type="email"
+                        value={destination.email}
+                        onChange={(event) =>
+                          handleDestinationChange("email", event.target.value)
+                        }
+                        placeholder="E-mail *"
+                        className="col-span-2 h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-[#0b5ca8]"
+                      />
+
+                      <input
+                        type="tel"
+                        value={destination.phone}
+                        onChange={(event) =>
+                          handleDestinationChange("phone", event.target.value)
+                        }
+                        placeholder="Téléphone *"
+                        className="col-span-2 h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-[#0b5ca8]"
+                      />
+
+                      <input
+                        value={destination.addressLine1}
+                        onChange={(event) =>
+                          handleDestinationChange(
+                            "addressLine1",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Adresse *"
+                        className="col-span-2 h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-[#0b5ca8]"
+                      />
+
+                      <input
+                        value={destination.addressLine2}
+                        onChange={(event) =>
+                          handleDestinationChange(
+                            "addressLine2",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Complément d’adresse"
+                        className="col-span-2 h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-[#0b5ca8]"
+                      />
+
+                      <input
+                        value={destination.postalCode}
+                        onChange={(event) =>
+                          handleDestinationChange(
+                            "postalCode",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Code postal *"
+                        className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-[#0b5ca8]"
+                      />
+
+                      <input
+                        value={destination.city}
+                        onChange={(event) =>
+                          handleDestinationChange("city", event.target.value)
+                        }
+                        placeholder="Ville *"
+                        className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-[#0b5ca8]"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleCalculateShipping}
+                      disabled={quoteLoading}
+                      className="w-full min-h-11 rounded-xl border border-[#0b5ca8] bg-[#0b5ca8]/5 px-4 text-sm font-bold text-[#0b5ca8] hover:bg-[#0b5ca8] hover:text-white disabled:opacity-60 transition-colors"
+                    >
+                      {quoteLoading
+                        ? "Calcul en cours…"
+                        : "Calculer la livraison"}
+                    </button>
+
+                    {quoteMessage && (
+                      <p
+                        className={`rounded-xl border p-3 text-sm ${
+                          requiresManualQuote
+                            ? "border-orange-200 bg-orange-50 text-orange-800"
+                            : "border-blue-200 bg-blue-50 text-blue-800"
+                        }`}
+                      >
+                        {quoteMessage}
+                      </p>
+                    )}
+
+                    {shippingOffers.map((offer) => (
+                      <button
+                        key={offer.id}
+                        type="button"
+                        onClick={() => setSelectedOfferId(offer.id)}
+                        className={`w-full rounded-xl border p-4 text-left transition ${
+                          selectedOfferId === offer.id
+                            ? "border-[#0b5ca8] bg-blue-50"
+                            : "border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-bold text-slate-950">
+                              {offer.carrierName}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-1">
+                              {offer.serviceName}
+                            </p>
+                            {offer.deliveryDate && (
+                              <p className="text-xs text-slate-500 mt-1">
+                                Livraison estimée : {offer.deliveryDate}
+                              </p>
+                            )}
+                          </div>
+                          <span className="font-black text-[#ff5a00] whitespace-nowrap">
+                            {formatPrice(offer.priceIncludingTax)}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
                   </div>
 
                   <div className="flex justify-between gap-4 text-sm">
-                    <span className="text-slate-500">
-                      Livraison
-                    </span>
-
-   <div className="space-y-3">
-  <p className="font-semibold text-gray-900">
-    Mode de livraison
-  </p>
-
-  {requiresFreight ? (
-    <div className="w-full rounded-xl border border-[#ff5a00] bg-orange-50 p-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="font-bold text-slate-950">
-            Transport Fret / Palette
-          </p>
-
-          <p className="text-sm text-gray-500">
-            Livraison obligatoire sur palette
-          </p>
-
-          <p className="text-xs font-semibold text-[#ff5a00] mt-2">
-            Frais de transport calculés pour les produits lourds
-          </p>
-        </div>
-
-        <Truck className="w-6 h-6 text-[#ff5a00]" />
-      </div>
-    </div>
-  ) : (
-    <>
-      <button
-        type="button"
-        onClick={() =>
-          setShippingCarrier("colissimo")
-        }
-        className={`w-full rounded-xl border p-4 text-left transition ${
-          shippingCarrier === "colissimo"
-            ? "border-[#0b5ca8] bg-blue-50"
-            : "border-gray-200 hover:border-gray-300"
-        }`}
-      >
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="font-bold">
-              Colissimo
-            </p>
-
-            <p className="text-sm text-gray-500">
-              Livraison standard
-            </p>
-          </div>
-
-          <div
-            className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-              shippingCarrier === "colissimo"
-                ? "border-[#0b5ca8]"
-                : "border-gray-300"
-            }`}
-          >
-            {shippingCarrier === "colissimo" && (
-              <div className="h-2.5 w-2.5 rounded-full bg-[#0b5ca8]" />
-            )}
-          </div>
-        </div>
-      </button>
-
-      <button
-        type="button"
-        onClick={() =>
-          setShippingCarrier("chronopost")
-        }
-        className={`w-full rounded-xl border p-4 text-left transition ${
-          shippingCarrier === "chronopost"
-            ? "border-[#0b5ca8] bg-blue-50"
-            : "border-gray-200 hover:border-gray-300"
-        }`}
-      >
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="font-bold">
-              Chronopost
-            </p>
-
-            <p className="text-sm text-gray-500">
-              Livraison express
-            </p>
-          </div>
-
-          <div
-            className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-              shippingCarrier === "chronopost"
-                ? "border-[#0b5ca8]"
-                : "border-gray-300"
-            }`}
-          >
-            {shippingCarrier === "chronopost" && (
-              <div className="h-2.5 w-2.5 rounded-full bg-[#0b5ca8]" />
-            )}
-          </div>
-        </div>
-      </button>
-
-      {total >= 100 && (
-        <p className="text-sm font-semibold text-green-600">
-          Livraison offerte dès 100 € d'achat
-        </p>
-      )}
-    </>
-  )}
-</div>
-                  </div>
-
-                  <div className="flex justify-between gap-4 text-sm">
-                    <span className="text-slate-500">
-                      Nombre d’articles
-                    </span>
+                    <span className="text-slate-500">Nombre d’articles</span>
 
                     <span className="font-bold text-slate-950">
                       {items.reduce(
-                        (
-                          quantityTotal,
-                          item
-                        ) =>
-                          quantityTotal +
-                          item.quantity,
-                        0
+                        (quantityTotal, item) => quantityTotal + item.quantity,
+                        0,
                       )}
                     </span>
                   </div>
                 </div>
-{savings > 0 && (
+                {savings > 0 && (
+                  <div className="flex justify-between gap-4 text-sm">
+                    <span className="text-green-600 font-bold">Économies</span>
 
-<div className="flex justify-between gap-4 text-sm">
-
-<span className="text-green-600 font-bold">
-
-Économies
-
-</span>
-
-<span className="font-black text-green-600">
-
-- {formatPrice(savings)}
-
-</span>
-
-</div>
-
-)}
+                    <span className="font-black text-green-600">
+                      - {formatPrice(savings)}
+                    </span>
+                  </div>
+                )}
                 <div className="h-px bg-slate-200 my-6" />
 
                 <div className="flex items-end justify-between gap-4">
                   <div>
                     <p className="text-sm font-bold text-slate-950">
-                      Total produits
+                      Total de la commande
                     </p>
 
                     <p className="text-xs text-slate-500 mt-1">
-                      Hors frais de livraison
+                      Produits et livraison inclus
                     </p>
                   </div>
 
@@ -710,19 +842,18 @@ item.sale_price ? (
                     className="font-display font-black text-3xl text-[#ff5a00]"
                     data-testid="cart-total"
                   >
-                    {formatPrice(
-                      total
-                    )}
+                    {formatPrice(orderTotal)}
                   </span>
                 </div>
 
                 <button
                   type="button"
-                  onClick={
-                    handleCheckout
-                  }
+                  onClick={handleCheckout}
                   disabled={
-                    loading
+                    loading ||
+                    quoteLoading ||
+                    requiresManualQuote ||
+                    !selectedShippingOffer
                   }
                   data-testid="checkout-button"
                   className="w-full inline-flex items-center justify-center gap-2 min-h-12 mt-7 rounded-full bg-[#ff5a00] text-white font-bold hover:bg-[#e95000] transition-colors disabled:opacity-60 shadow-[0_12px_35px_rgba(255,90,0,0.22)]"
@@ -731,6 +862,16 @@ item.sale_price ? (
                     <>
                       <LoaderCircle className="w-5 h-5 animate-spin" />
                       Redirection…
+                    </>
+                  ) : requiresManualQuote ? (
+                    <>
+                      <Truck className="w-5 h-5" />
+                      Livraison sur devis
+                    </>
+                  ) : !selectedShippingOffer ? (
+                    <>
+                      <Truck className="w-5 h-5" />
+                      Calculez la livraison
                     </>
                   ) : (
                     <>
