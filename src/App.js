@@ -1,17 +1,17 @@
 import React from "react";
 import "./App.css";
+import "./qeh-partner.css";
 
 import {
   BrowserRouter,
   Routes,
   Route,
   Outlet,
+  Navigate,
 } from "react-router-dom";
 
 import { Toaster } from "sonner";
 
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Terms from "./pages/Terms";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -20,6 +20,8 @@ import { CustomerAuthProvider } from "./context/CustomerAuthContext";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
+import QEHPartnerLayout from "./components/QEHPartnerLayout";
+import QEHEnergiesLayout from "./components/QEHEnergiesLayout";
 
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -30,8 +32,20 @@ import Contact from "./pages/Contact";
 import SupabaseTest from "./pages/SupabaseTest";
 import Wishlist from "./pages/Wishlist";
 import Tracking from "./pages/Tracking";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
+
+import QEHEnergiesCarte from "./pages/QEHEnergiesCarte";
+import QEHEnergiesFonctionnement from "./pages/QEHEnergiesFonctionnement";
+import QEHEnergiesParticiper from "./pages/QEHEnergiesParticiper";
+
+import QEHPartner from "./pages/QEHPartner";
+import QEHPartnerProduction from "./pages/QEHPartnerProduction";
+import QEHPartnerMaterielPro from "./pages/QEHPartnerMaterielPro";
+import QEHPartnerFranchise from "./pages/QEHPartnerFranchise";
 
 import CustomerOrderDetail from "./pages/CustomerOrderDetail";
+import CustomerOrders from "./pages/CustomerOrders";
 import CustomerLogin from "./pages/CustomerLogin";
 import CustomerRegister from "./pages/CustomerRegister";
 import CustomerAccount from "./pages/CustomerAccount";
@@ -44,15 +58,15 @@ import AdminProductEdit from "./pages/AdminProductEdit";
 import AdminCategories from "./pages/AdminCategories";
 import AdminOrders from "./pages/AdminOrders";
 import AdminCustomers from "./pages/AdminCustomers";
+import AdminCustomerDetail from "./pages/AdminCustomerDetail";
 import AdminMessages from "./pages/AdminMessages";
 import AdminSettings from "./pages/AdminSettings";
-import QEHEnergies from "./pages/QEHEnergies";
-import AdminCustomerDetail from "./pages/AdminCustomerDetail";
 
 function StoreLayout() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Header />
+
       <main className="flex-1">
         <Outlet />
       </main>
@@ -65,34 +79,25 @@ function StoreLayout() {
 function App() {
   return (
     <div className="App">
-
       <AuthProvider>
-
         <CustomerAuthProvider>
-
           <CartProvider>
-
             <WishlistProvider>
-
               <BrowserRouter>
-
                 <Toaster
                   position="top-center"
                   richColors
                 />
 
                 <Routes>
+                  {/* ===================================================== */}
+                  {/* BOUTIQUE QEH OUTLET                                  */}
+                  {/* ===================================================== */}
 
                   <Route element={<StoreLayout />}>
-
                     <Route
                       path="/"
                       element={<Home />}
-                    />
-
-                  <Route
-                      path="/qeh-energies"
-                      element={<QEHEnergies />}
                     />
 
                     <Route
@@ -144,20 +149,99 @@ function App() {
                       path="/mon-compte"
                       element={<CustomerAccount />}
                     />
-                  <Route
-                    path="/mes-commandes"
-                    element={<CustomerOrders />}
-                  />
-                  <Route
-                    path="/compte/commandes/:id"
+
+                    <Route
+                      path="/mes-commandes"
+                      element={<CustomerOrders />}
+                    />
+
+                    <Route
+                      path="/compte/commandes/:id"
                       element={<CustomerOrderDetail />}
-/>
+                    />
+
                     <Route
                       path="/test-supabase"
                       element={<SupabaseTest />}
                     />
 
+                    <Route
+                      path="/politique-de-confidentialite"
+                      element={<PrivacyPolicy />}
+                    />
+
+                    <Route
+                      path="/conditions-generales"
+                      element={<Terms />}
+                    />
                   </Route>
+
+                  {/* ===================================================== */}
+                  {/* SITE QEH ÉNERGIES                                    */}
+                  {/* ===================================================== */}
+
+                  <Route
+                    path="/qeh-energies"
+                    element={<QEHEnergiesLayout />}
+                  >
+                    <Route
+                      index
+                      element={
+                        <Navigate
+                          to="/qeh-energies/carte-solaire"
+                          replace
+                        />
+                      }
+                    />
+
+                    <Route
+                      path="carte-solaire"
+                      element={<QEHEnergiesCarte />}
+                    />
+
+                    <Route
+                      path="comment-ca-marche"
+                      element={<QEHEnergiesFonctionnement />}
+                    />
+
+                    <Route
+                      path="participer"
+                      element={<QEHEnergiesParticiper />}
+                    />
+                  </Route>
+
+                  {/* ===================================================== */}
+                  {/* SITE QEH PARTNER                                     */}
+                  {/* ===================================================== */}
+
+                  <Route
+                    path="/qeh-partner"
+                    element={<QEHPartnerLayout />}
+                  >
+                    <Route
+                      index
+                      element={<QEHPartner />}
+                    />
+
+                    <Route
+                      path="production"
+                      element={<QEHPartnerProduction />}
+                    />
+
+                    <Route
+                      path="materiel-pro"
+                      element={<QEHPartnerMaterielPro />}
+                    />
+
+                    <Route
+                      path="franchise"
+                      element={<QEHPartnerFranchise />}
+                    />
+                  </Route>
+
+                  {/* ===================================================== */}
+                  {/* ADMINISTRATION                                       */}
+                  {/* ===================================================== */}
 
                   <Route
                     path="/admin/login"
@@ -165,20 +249,11 @@ function App() {
                   />
 
                   <Route element={<ProtectedRoute />}>
-
                     <Route
                       path="/admin"
                       element={<AdminDashboard />}
                     />
-<Route
-  path="/politique-de-confidentialite"
-  element={<PrivacyPolicy />}
-/>
 
-<Route
-  path="/conditions-generales"
-  element={<Terms />}
-/>
                     <Route
                       path="/admin/produits"
                       element={<AdminProducts />}
@@ -203,42 +278,35 @@ function App() {
                       path="/admin/commandes"
                       element={<AdminOrders />}
                     />
+
                     <Route
-  path="/admin/clients"
-  element={<AdminCustomers />}
-/>
-<Route
-  path="/admin/clients/:id"
-  element={<AdminCustomerDetail />}
-/>
+                      path="/admin/clients"
+                      element={<AdminCustomers />}
+                    />
 
-<Route
-  path="/admin/messages"
-  element={<AdminMessages />}
-/>
+                    <Route
+                      path="/admin/clients/:id"
+                      element={<AdminCustomerDetail />}
+                    />
 
-<Route
-  path="/admin/parametres"
-  element={<AdminSettings />}
-/>
+                    <Route
+                      path="/admin/messages"
+                      element={<AdminMessages />}
+                    />
 
+                    <Route
+                      path="/admin/parametres"
+                      element={<AdminSettings />}
+                    />
                   </Route>
-
                 </Routes>
-
               </BrowserRouter>
-
             </WishlistProvider>
-
           </CartProvider>
-
         </CustomerAuthProvider>
-
       </AuthProvider>
-
     </div>
   );
 }
 
 export default App;
-import CustomerOrders from "./pages/CustomerOrders";

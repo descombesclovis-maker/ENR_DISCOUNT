@@ -611,31 +611,46 @@ export default function QEHEnergies() {
         role="banner"
         className="sticky top-0 z-[1000] border-b border-[#17649e]/35 bg-[#020711]/95 text-white shadow-[0_12px_40px_rgba(2,7,17,0.24)] backdrop-blur-xl"
       >
-        <div className="mx-auto flex min-h-[76px] max-w-7xl items-center justify-between gap-5 px-5 sm:px-8">
-          <div className="flex min-w-0 items-center gap-3 sm:gap-5">
-            <a
-              href="#qeh-energies-top"
-              aria-label="Accueil QEH énergies"
-              className="shrink-0"
+        <div className="mx-auto flex min-h-[76px] max-w-7xl flex-wrap items-center justify-between gap-3 px-3 py-3 sm:flex-nowrap sm:gap-5 sm:px-8">
+          <div className="flex w-full min-w-0 items-center gap-1.5 sm:w-auto sm:gap-2">
+            <Link
+              to="/qeh-energies"
+              aria-label="QEH Énergies, univers sélectionné"
+              aria-current="page"
+              className="flex h-11 w-[92px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#69b72d] bg-[#020711] p-1 shadow-[0_8px_24px_rgba(105,183,45,0.18)] transition hover:-translate-y-0.5 sm:h-14 sm:w-[150px]"
             >
               <img
                 src="/images/qeh-energies-logo.png"
-                alt="QEH énergies"
-                className="h-12 w-auto max-w-[150px] object-contain sm:h-14 sm:max-w-[190px]"
+                alt="QEH Énergies"
+                className="h-full w-full object-contain"
               />
-            </a>
+            </Link>
 
-            <span className="hidden h-10 w-px bg-white/20 sm:block" />
+            <span className="block h-7 w-px shrink-0 bg-white/20 sm:h-9" />
 
             <Link
               to="/"
-              aria-label="Revenir sur QEH OUTLET"
-              className="hidden shrink-0 rounded-xl border border-white/10 bg-white/5 p-1.5 transition hover:border-[#17649e] sm:block"
+              aria-label="Accéder à QEH OUTLET"
+              className="flex h-9 w-[55px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#ff5a00]/35 bg-[#020711] p-1 opacity-75 transition hover:-translate-y-0.5 hover:border-[#ff5a00] hover:opacity-100 sm:h-11 sm:w-[88px]"
             >
               <img
                 src="/images/qeh-outlet-logo.jpg"
                 alt="QEH OUTLET"
-                className="h-9 w-auto max-w-[140px] object-contain"
+                className="h-full w-full object-contain"
+              />
+            </Link>
+
+            <span className="block h-7 w-px shrink-0 bg-white/20 sm:h-9" />
+
+            <Link
+              to="/qeh-partner"
+              aria-label="Accéder à QEH PARTNER"
+              className="flex h-9 w-[55px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#c99532]/35 bg-[#020711] p-1 opacity-75 transition hover:-translate-y-0.5 hover:border-[#f2cf79] hover:opacity-100 sm:h-11 sm:w-[88px]"
+            >
+              <img
+                src="/images/qeh-partner-logo-gold.png"
+                alt="QEH PARTNER"
+                className="h-full w-full object-contain"
               />
             </Link>
           </div>

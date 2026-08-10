@@ -211,38 +211,50 @@ export const Header = () => {
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <CatalogSearchMenu />
 
-          <Link
-            to="/"
-            data-testid="logo-link"
-            aria-label="Retour à l’accueil QEH OUTLET"
-            className="group flex items-center shrink-0"
-          >
-            <span className="flex items-center overflow-hidden rounded-xl border border-[#0b5ca8]/50 bg-[#020714] shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-all duration-300 group-hover:border-[#ff5a00]/80 group-hover:shadow-[0_10px_30px_rgba(255,90,0,0.12)]">
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <Link
+              to="/"
+              aria-label="QEH OUTLET, univers sélectionné"
+              aria-current="page"
+              className="group flex h-11 w-[96px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#ff5a00] bg-[#020711] p-1 shadow-[0_8px_24px_rgba(255,90,0,0.16)] transition hover:-translate-y-0.5 sm:h-14 sm:w-[145px] xl:w-[165px]"
+            >
               <img
                 src="/images/qeh-outlet-logo.jpg"
                 alt="QEH OUTLET"
-                className="h-11 sm:h-14 w-auto max-w-[135px] sm:max-w-[175px] object-contain"
+                className="h-full w-full object-contain"
               />
-            </span>
-          </Link>
+            </Link>
 
-          <span className="hidden sm:block h-10 w-px shrink-0 bg-white/20" />
+            <span className="hidden h-9 w-px shrink-0 bg-white/20 sm:block" />
 
-          <Link
-            to="/qeh-energies"
-            data-testid="qeh-energies-logo-link"
-            aria-label="Accéder au site QEH énergies"
-            title="Découvrir QEH énergies"
-            className="group hidden sm:flex items-center shrink-0"
-          >
-            <span className="flex items-center overflow-hidden rounded-xl border border-[#69b72d]/40 bg-[#020711] shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-all duration-300 group-hover:border-[#82d246] group-hover:shadow-[0_10px_30px_rgba(105,183,45,0.18)]">
+            <Link
+              to="/qeh-energies"
+              aria-label="Accéder à QEH Énergies"
+              title="QEH Énergies"
+              className="group hidden h-10 w-[78px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#69b72d]/35 bg-[#020711] p-1 opacity-75 transition hover:-translate-y-0.5 hover:border-[#82d246] hover:opacity-100 sm:flex xl:h-12 xl:w-[105px]"
+            >
               <img
                 src="/images/qeh-energies-logo.png"
-                alt="QEH énergies"
-                className="h-11 sm:h-14 w-auto max-w-[105px] sm:max-w-[145px] object-contain"
+                alt="QEH Énergies"
+                className="h-full w-full object-contain"
               />
-            </span>
-          </Link>
+            </Link>
+
+            <span className="hidden h-9 w-px shrink-0 bg-white/20 sm:block" />
+
+            <Link
+              to="/qeh-partner"
+              aria-label="Accéder à QEH PARTNER"
+              title="QEH PARTNER"
+              className="group hidden h-10 w-[78px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#c99532]/35 bg-[#020711] p-1 opacity-75 transition hover:-translate-y-0.5 hover:border-[#f2cf79] hover:opacity-100 sm:flex xl:h-12 xl:w-[105px]"
+            >
+              <img
+                src="/images/qeh-partner-logo-gold.png"
+                alt="QEH PARTNER"
+                className="h-full w-full object-contain"
+              />
+            </Link>
+          </div>
         </div>
 
         <nav className="hidden lg:flex items-center gap-8">
@@ -496,18 +508,47 @@ export const Header = () => {
 
           <nav className="flex flex-col gap-2">
 
-            <Link
-              to="/qeh-energies"
-              onClick={closeMobileMenu}
-              aria-label="Accéder au site QEH énergies"
-              className="sm:hidden mb-2 flex items-center justify-center rounded-2xl border border-[#69b72d]/40 bg-[#69b72d]/10 p-3"
-            >
-              <img
-                src="/images/qeh-energies-logo.png"
-                alt="QEH énergies"
-                className="h-16 w-auto max-w-full object-contain"
-              />
-            </Link>
+            <div className="mb-3 grid grid-cols-3 gap-2 sm:hidden">
+              <Link
+                to="/"
+                onClick={closeMobileMenu}
+                aria-current="page"
+                aria-label="QEH OUTLET, univers sélectionné"
+                className="flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[#ff5a00] bg-[#020711] p-1"
+              >
+                <img
+                  src="/images/qeh-outlet-logo.jpg"
+                  alt="QEH OUTLET"
+                  className="h-full w-full object-contain"
+                />
+              </Link>
+
+              <Link
+                to="/qeh-energies"
+                onClick={closeMobileMenu}
+                aria-label="Accéder à QEH Énergies"
+                className="flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[#69b72d]/40 bg-[#020711] p-1"
+              >
+                <img
+                  src="/images/qeh-energies-logo.png"
+                  alt="QEH Énergies"
+                  className="h-full w-full object-contain"
+                />
+              </Link>
+
+              <Link
+                to="/qeh-partner"
+                onClick={closeMobileMenu}
+                aria-label="Accéder à QEH PARTNER"
+                className="flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[#c99532]/40 bg-[#020711] p-1"
+              >
+                <img
+                  src="/images/qeh-partner-logo-gold.png"
+                  alt="QEH PARTNER"
+                  className="h-full w-full object-contain"
+                />
+              </Link>
+            </div>
 
             {links.map((link) => (
 
