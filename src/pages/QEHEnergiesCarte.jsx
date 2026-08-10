@@ -23,11 +23,8 @@ import {
 import "leaflet/dist/leaflet.css";
 import { supabase } from "../lib/supabase";
 
-
 const SEARCH_RADIUS_METERS = 2000;
-
-const DEFAULT_CENTER = [46.752, 4.531];
-const DEFAULT_ZOOM = 9;
+const DEFAULT_CENTER = [47.184494, 4.27971];
 
 const REGISTERED_ZONES = [
   {
@@ -50,38 +47,6 @@ const REGISTERED_ZONES = [
     longitude: 4.286179,
     is_registered_zone: true,
   },
-  {
-    id: "brazey-rue-du-meix",
-    public_name: "Zone solaire du Meix",
-    address: "11 rue du Meix",
-    postal_code: "21430",
-    city: "Brazey-en-Morvan",
-    latitude: 47.173303,
-    longitude: 4.290483,
-    is_registered_zone: true,
-  },
-  {
-    id: "chevagny-rue-des-ecoles",
-    public_name: "Zone solaire de Chevagny-les-Chevrières",
-    address: "111 rue des Écoles",
-    postal_code: "71960",
-    city: "Chevagny-les-Chevrières",
-    latitude: 46.330676,
-    longitude: 4.772321,
-    is_registered_zone: true,
-  },
-
-  {
-  id: "ige-route-d-aze",
-  public_name: "Zone solaire d’Igé",
-  address: "408 route d’Azé",
-  postal_code: "71960",
-  city: "Igé",
-  latitude: 46.404686,
-  longitude: 4.746148,
-  is_registered_zone: true,
-},
-
 ];
 
 function degreesToRadians(value) {

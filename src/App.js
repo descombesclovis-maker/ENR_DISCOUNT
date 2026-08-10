@@ -20,8 +20,11 @@ import { CustomerAuthProvider } from "./context/CustomerAuthContext";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminCentralLayout from "./components/AdminCentralLayout";
 import QEHPartnerLayout from "./components/QEHPartnerLayout";
 import QEHEnergiesLayout from "./components/QEHEnergiesLayout";
+import SiteAnalyticsTracker from "./components/SiteAnalyticsTracker";
+import MaintenanceGate from "./components/MaintenanceGate";
 
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -60,19 +63,30 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminCustomerDetail from "./pages/AdminCustomerDetail";
 import AdminMessages from "./pages/AdminMessages";
-import AdminSettings from "./pages/AdminSettings";
+import AdminSettings from "./pages/AdminSettingsPremium";
+
+import AdminEnergiesDemandes from "./pages/AdminEnergiesDemandes";
+import AdminEnergiesProducteurs from "./pages/AdminEnergiesProducteurs";
+import AdminEnergiesCarte from "./pages/AdminEnergiesCarte";
+
+import AdminPartnerFranchises from "./pages/AdminPartnerFranchises";
+import AdminPartnerProduction from "./pages/AdminPartnerProduction";
+import AdminPartnerProduits from "./pages/AdminPartnerProduits";
+import AdminPartnerCommandes from "./pages/AdminPartnerCommandes";
 
 function StoreLayout() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <MaintenanceGate>
+      <div className="min-h-screen flex flex-col">
+        <Header />
 
-      <main className="flex-1">
-        <Outlet />
-      </main>
+        <main className="flex-1">
+          <Outlet />
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </MaintenanceGate>
   );
 }
 
@@ -84,6 +98,8 @@ function App() {
           <CartProvider>
             <WishlistProvider>
               <BrowserRouter>
+                <SiteAnalyticsTracker />
+
                 <Toaster
                   position="top-center"
                   richColors
@@ -91,7 +107,7 @@ function App() {
 
                 <Routes>
                   {/* ===================================================== */}
-                  {/* BOUTIQUE QEH OUTLET                                  */}
+                  {/* BOUTIQUE QEH OUTLET                                   */}
                   {/* ===================================================== */}
 
                   <Route element={<StoreLayout />}>
@@ -177,12 +193,16 @@ function App() {
                   </Route>
 
                   {/* ===================================================== */}
-                  {/* SITE QEH ÉNERGIES                                    */}
+                  {/* QEH ÉNERGIES                                         */}
                   {/* ===================================================== */}
 
                   <Route
                     path="/qeh-energies"
-                    element={<QEHEnergiesLayout />}
+                    element={
+                      <MaintenanceGate>
+                        <QEHEnergiesLayout />
+                      </MaintenanceGate>
+                    }
                   >
                     <Route
                       index
@@ -211,12 +231,16 @@ function App() {
                   </Route>
 
                   {/* ===================================================== */}
-                  {/* SITE QEH PARTNER                                     */}
+                  {/* QEH PARTNER                                          */}
                   {/* ===================================================== */}
 
                   <Route
                     path="/qeh-partner"
-                    element={<QEHPartnerLayout />}
+                    element={
+                      <MaintenanceGate>
+                        <QEHPartnerLayout />
+                      </MaintenanceGate>
+                    }
                   >
                     <Route
                       index
@@ -240,7 +264,7 @@ function App() {
                   </Route>
 
                   {/* ===================================================== */}
-                  {/* ADMINISTRATION                                       */}
+                  {/* CONNEXION ADMINISTRATEUR                              */}
                   {/* ===================================================== */}
 
                   <Route
@@ -248,57 +272,118 @@ function App() {
                     element={<AdminLogin />}
                   />
 
+                  {/* ===================================================== */}
+                  {/* ADMINISTRATION PROTÉGÉE                               */}
+                  {/* ===================================================== */}
+
                   <Route element={<ProtectedRoute />}>
-                    <Route
-                      path="/admin"
-                      element={<AdminDashboard />}
-                    />
+                    <Route element={<AdminCentralLayout />}>
+                      <Route
+                        path="/admin"
+                        element={<AdminDashboard />}
+                      />
 
-                    <Route
-                      path="/admin/produits"
-                      element={<AdminProducts />}
-                    />
+                      {/* QEH OUTLET */}
 
-                    <Route
-                      path="/admin/produits/nouveau"
-                      element={<AdminProductNew />}
-                    />
+                      <Route
+                        path="/admin/produits"
+                        element={<AdminProducts />}
+                      />
 
-                    <Route
-                      path="/admin/produits/:productId/modifier"
-                      element={<AdminProductEdit />}
-                    />
+                      <Route
+                        path="/admin/produits/nouveau"
+                        element={<AdminProductNew />}
+                      />
 
-                    <Route
-                      path="/admin/categories"
-                      element={<AdminCategories />}
-                    />
+                      <Route
+                        path="/admin/produits/:productId/modifier"
+                        element={<AdminProductEdit />}
+                      />
 
-                    <Route
-                      path="/admin/commandes"
-                      element={<AdminOrders />}
-                    />
+                      <Route
+                        path="/admin/categories"
+                        element={<AdminCategories />}
+                      />
 
-                    <Route
-                      path="/admin/clients"
-                      element={<AdminCustomers />}
-                    />
+                      <Route
+                        path="/admin/commandes"
+                        element={<AdminOrders />}
+                      />
 
-                    <Route
-                      path="/admin/clients/:id"
-                      element={<AdminCustomerDetail />}
-                    />
+                      <Route
+                        path="/admin/clients"
+                        element={<AdminCustomers />}
+                      />
 
-                    <Route
-                      path="/admin/messages"
-                      element={<AdminMessages />}
-                    />
+                      <Route
+                        path="/admin/clients/:id"
+                        element={<AdminCustomerDetail />}
+                      />
 
-                    <Route
-                      path="/admin/parametres"
-                      element={<AdminSettings />}
-                    />
+                      {/* QEH ÉNERGIES */}
+
+                      <Route
+                        path="/admin/energies/demandes"
+                        element={<AdminEnergiesDemandes />}
+                      />
+
+                      <Route
+                        path="/admin/energies/producteurs"
+                        element={<AdminEnergiesProducteurs />}
+                      />
+
+                      <Route
+                        path="/admin/energies/carte"
+                        element={<AdminEnergiesCarte />}
+                      />
+
+                      {/* QEH PARTNER */}
+
+                      <Route
+                        path="/admin/partner/franchises"
+                        element={<AdminPartnerFranchises />}
+                      />
+
+                      <Route
+                        path="/admin/partner/production"
+                        element={<AdminPartnerProduction />}
+                      />
+
+                      <Route
+                        path="/admin/partner/produits"
+                        element={<AdminPartnerProduits />}
+                      />
+
+                      <Route
+                        path="/admin/partner/commandes"
+                        element={<AdminPartnerCommandes />}
+                      />
+
+                      {/* OUTILS CENTRAUX */}
+
+                      <Route
+                        path="/admin/messages"
+                        element={<AdminMessages />}
+                      />
+
+                      <Route
+                        path="/admin/parametres"
+                        element={<AdminSettings />}
+                      />
+                    </Route>
                   </Route>
+
+                  {/* PAGE INTROUVABLE */}
+
+                  <Route
+                    path="*"
+                    element={
+                      <Navigate
+                        to="/"
+                        replace
+                      />
+                    }
+                  />
                 </Routes>
               </BrowserRouter>
             </WishlistProvider>
