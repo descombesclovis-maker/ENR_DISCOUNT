@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   Link,
@@ -22,17 +25,21 @@ import {
   Settings,
   ShoppingCart,
   Sun,
+  UserCheck,
   UsersRound,
   X,
 } from "lucide-react";
 
-import { supabase } from "../lib/supabase";
+import {
+  supabase,
+} from "../lib/supabase";
 
 const groups = [
   {
     id: "outlet",
     label: "QEH OUTLET",
     color: "#ff5a00",
+
     links: [
       {
         to: "/admin/produits",
@@ -56,10 +63,12 @@ const groups = [
       },
     ],
   },
+
   {
     id: "energies",
     label: "QEH ÉNERGIES",
     color: "#69b72d",
+
     links: [
       {
         to: "/admin/energies/demandes",
@@ -78,10 +87,12 @@ const groups = [
       },
     ],
   },
+
   {
     id: "partner",
     label: "QEH PARTNER",
     color: "#c99532",
+
     links: [
       {
         to: "/admin/partner/franchises",
@@ -92,6 +103,11 @@ const groups = [
         to: "/admin/partner/production",
         label: "Production",
         icon: Factory,
+      },
+      {
+        to: "/admin/partner/professionnels",
+        label: "Demandes comptes Pro",
+        icon: UserCheck,
       },
       {
         to: "/admin/partner/produits",
@@ -121,15 +137,21 @@ function BrandMark() {
   );
 }
 
-function SidebarContent({ onNavigate }) {
-  const navigate = useNavigate();
+function SidebarContent({
+  onNavigate,
+}) {
+  const navigate =
+    useNavigate();
 
   async function handleLogout() {
     await supabase.auth.signOut();
 
-    navigate("/admin/login", {
-      replace: true,
-    });
+    navigate(
+      "/admin/login",
+      {
+        replace: true,
+      }
+    );
   }
 
   return (
@@ -159,7 +181,9 @@ function SidebarContent({ onNavigate }) {
           to="/admin"
           end
           onClick={onNavigate}
-          className={({ isActive }) =>
+          className={({
+            isActive,
+          }) =>
             `mb-5 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-black transition ${
               isActive
                 ? "bg-white text-[#020711] shadow-lg"
@@ -173,76 +197,100 @@ function SidebarContent({ onNavigate }) {
         </NavLink>
 
         <div className="space-y-5">
-          {groups.map((group) => (
-            <section key={group.id}>
-              <div className="mb-2 flex items-center gap-2 px-3">
-                <span
-                  className="h-2 w-2 rounded-full shadow-[0_0_12px_currentColor]"
-                  style={{
-                    color: group.color,
-                    backgroundColor: group.color,
-                  }}
-                />
+          {groups.map(
+            (group) => (
+              <section
+                key={group.id}
+              >
+                <div className="mb-2 flex items-center gap-2 px-3">
+                  <span
+                    className="h-2 w-2 rounded-full shadow-[0_0_12px_currentColor]"
+                    style={{
+                      color:
+                        group.color,
 
-                <p
-                  className="text-[10px] font-black uppercase tracking-[0.18em]"
-                  style={{
-                    color: group.color,
-                  }}
-                >
-                  {group.label}
-                </p>
-              </div>
+                      backgroundColor:
+                        group.color,
+                    }}
+                  />
 
-              <div className="space-y-1">
-                {group.links.map((item) => {
-                  const Icon = item.icon;
+                  <p
+                    className="text-[10px] font-black uppercase tracking-[0.18em]"
+                    style={{
+                      color:
+                        group.color,
+                    }}
+                  >
+                    {group.label}
+                  </p>
+                </div>
 
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={onNavigate}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
-                          isActive
-                            ? "bg-white/12 text-white"
-                            : "text-slate-400 hover:bg-white/[0.07] hover:text-slate-200"
-                        }`
-                      }
-                    >
-                      {({ isActive }) => (
-                        <>
-                          <Icon
-                            className="h-4 w-4"
-                            style={{
-                              color: isActive
-                                ? group.color
-                                : undefined,
-                            }}
-                          />
+                <div className="space-y-1">
+                  {group.links.map(
+                    (item) => {
+                      const Icon =
+                        item.icon;
 
-                          <span className="flex-1">
-                            {item.label}
-                          </span>
+                      return (
+                        <NavLink
+                          key={
+                            item.to
+                          }
+                          to={
+                            item.to
+                          }
+                          onClick={
+                            onNavigate
+                          }
+                          className={({
+                            isActive,
+                          }) =>
+                            `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
+                              isActive
+                                ? "bg-white/12 text-white"
+                                : "text-slate-400 hover:bg-white/[0.07] hover:text-slate-200"
+                            }`
+                          }
+                        >
+                          {({
+                            isActive,
+                          }) => (
+                            <>
+                              <Icon
+                                className="h-4 w-4"
+                                style={{
+                                  color:
+                                    isActive
+                                      ? group.color
+                                      : undefined,
+                                }}
+                              />
 
-                          {isActive ? (
-                            <span
-                              className="h-1.5 w-1.5 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  group.color,
-                              }}
-                            />
-                          ) : null}
-                        </>
-                      )}
-                    </NavLink>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+                              <span className="flex-1">
+                                {
+                                  item.label
+                                }
+                              </span>
+
+                              {isActive ? (
+                                <span
+                                  className="h-1.5 w-1.5 rounded-full"
+                                  style={{
+                                    backgroundColor:
+                                      group.color,
+                                  }}
+                                />
+                              ) : null}
+                            </>
+                          )}
+                        </NavLink>
+                      );
+                    }
+                  )}
+                </div>
+              </section>
+            )
+          )}
         </div>
       </nav>
 
@@ -260,7 +308,9 @@ function SidebarContent({ onNavigate }) {
         <NavLink
           to="/admin/parametres"
           onClick={onNavigate}
-          className={({ isActive }) =>
+          className={({
+            isActive,
+          }) =>
             `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
               isActive
                 ? "bg-white/12 text-white"
@@ -275,7 +325,9 @@ function SidebarContent({ onNavigate }) {
 
         <button
           type="button"
-          onClick={handleLogout}
+          onClick={
+            handleLogout
+          }
           className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-red-500/10 hover:text-red-300"
         >
           <LogOut className="h-4 w-4" />
@@ -288,14 +340,19 @@ function SidebarContent({ onNavigate }) {
 }
 
 export default function AdminCentralLayout() {
-  const [mobileOpen, setMobileOpen] =
-    useState(false);
+  const [
+    mobileOpen,
+    setMobileOpen,
+  ] = useState(false);
 
-  const location = useLocation();
+  const location =
+    useLocation();
 
   useEffect(() => {
     setMobileOpen(false);
-  }, [location.pathname]);
+  }, [
+    location.pathname,
+  ]);
 
   return (
     <div className="min-h-screen bg-[#f2f5f9]">
@@ -318,7 +375,10 @@ export default function AdminCentralLayout() {
         <button
           type="button"
           onClick={() =>
-            setMobileOpen((current) => !current)
+            setMobileOpen(
+              (current) =>
+                !current
+            )
           }
           className="grid h-11 w-11 place-items-center rounded-xl border border-slate-200 text-[#020711]"
           aria-label={
@@ -340,14 +400,20 @@ export default function AdminCentralLayout() {
           <button
             type="button"
             className="fixed inset-0 z-[70] bg-black/55 lg:hidden"
-            onClick={() => setMobileOpen(false)}
+            onClick={() =>
+              setMobileOpen(
+                false
+              )
+            }
             aria-label="Fermer le menu"
           />
 
           <aside className="fixed inset-y-0 left-0 z-[80] w-[286px] bg-[#050b16] shadow-2xl lg:hidden">
             <SidebarContent
               onNavigate={() =>
-                setMobileOpen(false)
+                setMobileOpen(
+                  false
+                )
               }
             />
           </aside>

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
+import { useCustomerAuth } from "../context/CustomerAuthContext";
+import { useProfessionalAuth } from "../context/ProfessionalAuthContext";
+import { usePartnerCart } from "../context/PartnerCartContext";
 
 const navigation = [
   { to: "/qeh-partner", label: "Accueil", end: true },
@@ -12,6 +15,15 @@ const navigation = [
 export default function QEHPartnerLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useCustomerAuth();
+  const { isProfessional, professionalAccount } = useProfessionalAuth();
+  const { count } = usePartnerCart();
+
+  async function handleLogout() {
+    await signOut();
+    navigate("/qeh-partner/connexion-pro");
+  }
 
   useEffect(() => {
     setMenuOpen(false);
@@ -87,6 +99,40 @@ export default function QEHPartnerLayout() {
           </nav>
 
           <div className="qehp-header__actions">
+            {isProfessional ? (
+              <>
+                <Link
+                  to="/qeh-partner/panier-pro"
+                  className="qehp-pro-account qehp-pro-account--cart"
+                  aria-label={`Panier professionnel, ${count} article(s)`}
+                >
+                  <ShoppingCart />
+                  <span>{count}</span>
+                </Link>
+
+                <div className="qehp-pro-account qehp-pro-account--identity">
+                  <User />
+                  <span>
+                    <small>Connecté en tant que professionnel</small>
+                    <strong>{professionalAccount?.company_name}</strong>
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="qehp-pro-account qehp-pro-account--logout"
+                  aria-label="Déconnexion professionnelle"
+                >
+                  <LogOut />
+                </button>
+              </>
+            ) : (
+              <Link to="/qeh-partner/connexion-pro" className="qehp-pro-login-link">
+                <User /> Connexion Pro
+              </Link>
+            )}
+
             <button
               type="button"
               className="qehp-menu-button"
@@ -113,6 +159,21 @@ export default function QEHPartnerLayout() {
                 {item.label}
               </NavLink>
             ))}
+
+            {isProfessional ? (
+              <>
+                <Link to="/qeh-partner/panier-pro" className="qehp-mobile-nav__network">
+                  <ShoppingCart /> Panier professionnel ({count})
+                </Link>
+                <button type="button" onClick={handleLogout} className="qehp-mobile-nav__network">
+                  <LogOut /> Déconnexion professionnelle
+                </button>
+              </>
+            ) : (
+              <Link to="/qeh-partner/connexion-pro" className="qehp-mobile-nav__network">
+                <User /> Connexion professionnelle
+              </Link>
+            )}
 
             <Link to="/" className="qehp-mobile-nav__network">
               Accéder à QEH OUTLET

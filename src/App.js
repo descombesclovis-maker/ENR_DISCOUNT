@@ -1,30 +1,53 @@
 import React from "react";
+
 import "./App.css";
 import "./qeh-partner.css";
+import "./professional-space.css";
 
 import {
   BrowserRouter,
-  Routes,
-  Route,
-  Outlet,
   Navigate,
+  Outlet,
+  Route,
+  Routes,
 } from "react-router-dom";
 
 import { Toaster } from "sonner";
 
-import { CartProvider } from "./context/CartContext";
-import { WishlistProvider } from "./context/WishlistContext";
-import { AuthProvider } from "./context/AuthContext";
-import { CustomerAuthProvider } from "./context/CustomerAuthContext";
+import {
+  AuthProvider,
+} from "./context/AuthContext";
+
+import {
+  CartProvider,
+} from "./context/CartContext";
+
+import {
+  CustomerAuthProvider,
+} from "./context/CustomerAuthContext";
+
+import {
+  WishlistProvider,
+} from "./context/WishlistContext";
+
+import {
+  ProfessionalAuthProvider,
+} from "./context/ProfessionalAuthContext";
+
+import {
+  PartnerCartProvider,
+} from "./context/PartnerCartContext";
 
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminCentralLayout from "./components/AdminCentralLayout";
 import QEHPartnerLayout from "./components/QEHPartnerLayout";
 import QEHEnergiesLayout from "./components/QEHEnergiesLayout";
 import SiteAnalyticsTracker from "./components/SiteAnalyticsTracker";
 import MaintenanceGate from "./components/MaintenanceGate";
+import ProfessionalRoute from "./components/ProfessionalRoute";
 
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -46,12 +69,21 @@ import QEHPartner from "./pages/QEHPartner";
 import QEHPartnerProduction from "./pages/QEHPartnerProduction";
 import QEHPartnerMaterielPro from "./pages/QEHPartnerMaterielPro";
 import QEHPartnerFranchise from "./pages/QEHPartnerFranchise";
+import QEHPartnerCart from "./pages/QEHPartnerCart";
+
 
 import CustomerOrderDetail from "./pages/CustomerOrderDetail";
 import CustomerOrders from "./pages/CustomerOrders";
 import CustomerLogin from "./pages/CustomerLogin";
 import CustomerRegister from "./pages/CustomerRegister";
 import CustomerAccount from "./pages/CustomerAccount";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+
+import ProfessionalLogin from "./pages/ProfessionalLogin";
+import ProfessionalRegister from "./pages/ProfessionalRegister";
+import ProfessionalForgotPassword from "./pages/ProfessionalForgotPassword";
+import ProfessionalResetPassword from "./pages/ProfessionalResetPassword";
 
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -73,6 +105,7 @@ import AdminPartnerFranchises from "./pages/AdminPartnerFranchises";
 import AdminPartnerProduction from "./pages/AdminPartnerProduction";
 import AdminPartnerProduits from "./pages/AdminPartnerProduits";
 import AdminPartnerCommandes from "./pages/AdminPartnerCommandes";
+import AdminPartnerProfessionals from "./pages/AdminPartnerProfessionals";
 
 function StoreLayout() {
   return (
@@ -95,299 +128,459 @@ function App() {
     <div className="App">
       <AuthProvider>
         <CustomerAuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <BrowserRouter>
-                <SiteAnalyticsTracker />
+          <ProfessionalAuthProvider>
+            <PartnerCartProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <BrowserRouter>
+                    <SiteAnalyticsTracker />
 
-                <Toaster
-                  position="top-center"
-                  richColors
-                />
-
-                <Routes>
-                  {/* ===================================================== */}
-                  {/* BOUTIQUE QEH OUTLET                                   */}
-                  {/* ===================================================== */}
-
-                  <Route element={<StoreLayout />}>
-                    <Route
-                      path="/"
-                      element={<Home />}
+                    <Toaster
+                      position="top-center"
+                      richColors
                     />
 
-                    <Route
-                      path="/produits"
-                      element={<Products />}
-                    />
-
-                    <Route
-                      path="/produits/:slug"
-                      element={<ProductDetail />}
-                    />
-
-                    <Route
-                      path="/favoris"
-                      element={<Wishlist />}
-                    />
-
-                    <Route
-                      path="/suivi-commande"
-                      element={<Tracking />}
-                    />
-
-                    <Route
-                      path="/panier"
-                      element={<Cart />}
-                    />
-
-                    <Route
-                      path="/commande/succes"
-                      element={<CheckoutSuccess />}
-                    />
-
-                    <Route
-                      path="/contact"
-                      element={<Contact />}
-                    />
-
-                    <Route
-                      path="/connexion"
-                      element={<CustomerLogin />}
-                    />
-
-                    <Route
-                      path="/inscription"
-                      element={<CustomerRegister />}
-                    />
-
-                    <Route
-                      path="/mon-compte"
-                      element={<CustomerAccount />}
-                    />
-
-                    <Route
-                      path="/mes-commandes"
-                      element={<CustomerOrders />}
-                    />
-
-                    <Route
-                      path="/compte/commandes/:id"
-                      element={<CustomerOrderDetail />}
-                    />
-
-                    <Route
-                      path="/test-supabase"
-                      element={<SupabaseTest />}
-                    />
-
-                    <Route
-                      path="/politique-de-confidentialite"
-                      element={<PrivacyPolicy />}
-                    />
-
-                    <Route
-                      path="/conditions-generales"
-                      element={<Terms />}
-                    />
-                  </Route>
-
-                  {/* ===================================================== */}
-                  {/* QEH ÉNERGIES                                         */}
-                  {/* ===================================================== */}
-
-                  <Route
-                    path="/qeh-energies"
-                    element={
-                      <MaintenanceGate>
-                        <QEHEnergiesLayout />
-                      </MaintenanceGate>
-                    }
-                  >
-                    <Route
-                      index
-                      element={
-                        <Navigate
-                          to="/qeh-energies/carte-solaire"
-                          replace
-                        />
-                      }
-                    />
-
-                    <Route
-                      path="carte-solaire"
-                      element={<QEHEnergiesCarte />}
-                    />
-
-                    <Route
-                      path="comment-ca-marche"
-                      element={<QEHEnergiesFonctionnement />}
-                    />
-
-                    <Route
-                      path="participer"
-                      element={<QEHEnergiesParticiper />}
-                    />
-                  </Route>
-
-                  {/* ===================================================== */}
-                  {/* QEH PARTNER                                          */}
-                  {/* ===================================================== */}
-
-                  <Route
-                    path="/qeh-partner"
-                    element={
-                      <MaintenanceGate>
-                        <QEHPartnerLayout />
-                      </MaintenanceGate>
-                    }
-                  >
-                    <Route
-                      index
-                      element={<QEHPartner />}
-                    />
-
-                    <Route
-                      path="production"
-                      element={<QEHPartnerProduction />}
-                    />
-
-                    <Route
-                      path="materiel-pro"
-                      element={<QEHPartnerMaterielPro />}
-                    />
-
-                    <Route
-                      path="franchise"
-                      element={<QEHPartnerFranchise />}
-                    />
-                  </Route>
-
-                  {/* ===================================================== */}
-                  {/* CONNEXION ADMINISTRATEUR                              */}
-                  {/* ===================================================== */}
-
-                  <Route
-                    path="/admin/login"
-                    element={<AdminLogin />}
-                  />
-
-                  {/* ===================================================== */}
-                  {/* ADMINISTRATION PROTÉGÉE                               */}
-                  {/* ===================================================== */}
-
-                  <Route element={<ProtectedRoute />}>
-                    <Route element={<AdminCentralLayout />}>
-                      <Route
-                        path="/admin"
-                        element={<AdminDashboard />}
-                      />
-
+                    <Routes>
                       {/* QEH OUTLET */}
 
                       <Route
-                        path="/admin/produits"
-                        element={<AdminProducts />}
-                      />
+                        element={
+                          <StoreLayout />
+                        }
+                      >
+                        <Route
+                          path="/"
+                          element={
+                            <Home />
+                          }
+                        />
 
-                      <Route
-                        path="/admin/produits/nouveau"
-                        element={<AdminProductNew />}
-                      />
+                        <Route
+                          path="/produits"
+                          element={
+                            <Products />
+                          }
+                        />
 
-                      <Route
-                        path="/admin/produits/:productId/modifier"
-                        element={<AdminProductEdit />}
-                      />
+                        <Route
+                          path="/produits/:slug"
+                          element={
+                            <ProductDetail />
+                          }
+                        />
 
-                      <Route
-                        path="/admin/categories"
-                        element={<AdminCategories />}
-                      />
+                        <Route
+                          path="/favoris"
+                          element={
+                            <Wishlist />
+                          }
+                        />
 
-                      <Route
-                        path="/admin/commandes"
-                        element={<AdminOrders />}
-                      />
+                        <Route
+                          path="/suivi-commande"
+                          element={
+                            <Tracking />
+                          }
+                        />
 
-                      <Route
-                        path="/admin/clients"
-                        element={<AdminCustomers />}
-                      />
+                        <Route
+                          path="/panier"
+                          element={
+                            <Cart />
+                          }
+                        />
 
-                      <Route
-                        path="/admin/clients/:id"
-                        element={<AdminCustomerDetail />}
-                      />
+                        <Route
+                          path="/commande/succes"
+                          element={
+                            <CheckoutSuccess />
+                          }
+                        />
+
+                        <Route
+                          path="/contact"
+                          element={
+                            <Contact />
+                          }
+                        />
+
+                        <Route
+                          path="/connexion"
+                          element={
+                            <CustomerLogin />
+                          }
+                        />
+
+                        <Route
+                          path="/mot-de-passe-oublie"
+                          element={
+                            <ForgotPassword />
+                          }
+                        />
+
+                        <Route
+                          path="/reinitialiser-mot-de-passe"
+                          element={
+                            <ResetPassword />
+                          }
+                        />
+
+                        <Route
+                          path="/inscription"
+                          element={
+                            <CustomerRegister />
+                          }
+                        />
+
+                        <Route
+                          path="/mon-compte"
+                          element={
+                            <CustomerAccount />
+                          }
+                        />
+
+                        <Route
+                          path="/mes-commandes"
+                          element={
+                            <CustomerOrders />
+                          }
+                        />
+
+                        <Route
+                          path="/compte/commandes/:id"
+                          element={
+                            <CustomerOrderDetail />
+                          }
+                        />
+
+                        <Route
+                          path="/test-supabase"
+                          element={
+                            <SupabaseTest />
+                          }
+                        />
+
+                        <Route
+                          path="/politique-de-confidentialite"
+                          element={
+                            <PrivacyPolicy />
+                          }
+                        />
+
+                        <Route
+                          path="/conditions-generales"
+                          element={
+                            <Terms />
+                          }
+                        />
+                      </Route>
 
                       {/* QEH ÉNERGIES */}
 
                       <Route
-                        path="/admin/energies/demandes"
-                        element={<AdminEnergiesDemandes />}
-                      />
+                        path="/qeh-energies"
+                        element={
+                          <MaintenanceGate>
+                            <QEHEnergiesLayout />
+                          </MaintenanceGate>
+                        }
+                      >
+                        <Route
+                          index
+                          element={
+                            <Navigate
+                              to="/qeh-energies/carte-solaire"
+                              replace
+                            />
+                          }
+                        />
+
+                        <Route
+                          path="carte-solaire"
+                          element={
+                            <QEHEnergiesCarte />
+                          }
+                        />
+
+                        <Route
+                          path="comment-ca-marche"
+                          element={
+                            <QEHEnergiesFonctionnement />
+                          }
+                        />
+
+                        <Route
+                          path="participer"
+                          element={
+                            <QEHEnergiesParticiper />
+                          }
+                        />
+                      </Route>
+
+                      {/* INSCRIPTION PROFESSIONNELLE */}
+                      {/* Route directe placée avant la redirection générale */}
 
                       <Route
-                        path="/admin/energies/producteurs"
-                        element={<AdminEnergiesProducteurs />}
-                      />
-
-                      <Route
-                        path="/admin/energies/carte"
-                        element={<AdminEnergiesCarte />}
+                        path="/qeh-partner/inscription-pro"
+                        element={
+                          <MaintenanceGate>
+                            <ProfessionalRegister />
+                          </MaintenanceGate>
+                        }
                       />
 
                       {/* QEH PARTNER */}
 
                       <Route
-                        path="/admin/partner/franchises"
-                        element={<AdminPartnerFranchises />}
-                      />
+                        path="/qeh-partner"
+                        element={
+                          <MaintenanceGate>
+                            <QEHPartnerLayout />
+                          </MaintenanceGate>
+                        }
+                      >
+                        <Route
+                          index
+                          element={
+                            <QEHPartner />
+                          }
+                        />
+
+                        <Route
+                          path="production"
+                          element={
+                            <QEHPartnerProduction />
+                          }
+                        />
+
+                        <Route
+                          path="connexion-pro"
+                          element={
+                            <ProfessionalLogin />
+                          }
+                        />
+
+                        <Route
+                          path="mot-de-passe-oublie"
+                          element={
+                            <ProfessionalForgotPassword />
+                          }
+                        />
+
+                        <Route
+                          path="reinitialiser-mot-de-passe"
+                          element={
+                            <ProfessionalResetPassword />
+                          }
+                        />
+
+                        <Route
+                          element={
+                            <ProfessionalRoute />
+                          }
+                        >
+                          <Route
+                            path="materiel-pro"
+                            element={
+                              <QEHPartnerMaterielPro />
+                            }
+                          />
+
+                          <Route
+                            path="panier-pro"
+                            element={
+                              <QEHPartnerCart />
+                            }
+                          />
+                        </Route>
+
+                        <Route
+                          path="franchise"
+                          element={
+                            <QEHPartnerFranchise />
+                          }
+                        />
+                      </Route>
+
+                      {/* CONNEXION ADMINISTRATEUR */}
 
                       <Route
-                        path="/admin/partner/production"
-                        element={<AdminPartnerProduction />}
+                        path="/admin/login"
+                        element={
+                          <AdminLogin />
+                        }
                       />
+
+                      {/* ADMINISTRATION */}
 
                       <Route
-                        path="/admin/partner/produits"
-                        element={<AdminPartnerProduits />}
-                      />
+                        element={
+                          <ProtectedRoute />
+                        }
+                      >
+                        <Route
+                          element={
+                            <AdminCentralLayout />
+                          }
+                        >
+                          <Route
+                            path="/admin"
+                            element={
+                              <AdminDashboard />
+                            }
+                          />
+
+                          {/* QEH OUTLET */}
+
+                          <Route
+                            path="/admin/produits"
+                            element={
+                              <AdminProducts />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/produits/nouveau"
+                            element={
+                              <AdminProductNew />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/produits/:productId/modifier"
+                            element={
+                              <AdminProductEdit />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/categories"
+                            element={
+                              <AdminCategories />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/commandes"
+                            element={
+                              <AdminOrders />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/clients"
+                            element={
+                              <AdminCustomers />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/clients/:id"
+                            element={
+                              <AdminCustomerDetail />
+                            }
+                          />
+
+                          {/* QEH ÉNERGIES */}
+
+                          <Route
+                            path="/admin/energies/demandes"
+                            element={
+                              <AdminEnergiesDemandes />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/energies/producteurs"
+                            element={
+                              <AdminEnergiesProducteurs />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/energies/carte"
+                            element={
+                              <AdminEnergiesCarte />
+                            }
+                          />
+
+                          {/* QEH PARTNER */}
+
+                          <Route
+                            path="/admin/partner/franchises"
+                            element={
+                              <AdminPartnerFranchises />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/partner/production"
+                            element={
+                              <AdminPartnerProduction />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/partner/professionnels"
+                            element={
+                              <AdminPartnerProfessionals />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/partner/produits"
+                            element={
+                              <AdminPartnerProduits />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/partner/commandes"
+                            element={
+                              <AdminPartnerCommandes />
+                            }
+                          />
+
+                          <Route
+  path="/admin/partner/professionnels"
+  element={<AdminPartnerProfessionals />}
+/>
+
+                          {/* OUTILS CENTRAUX */}
+
+                          <Route
+                            path="/admin/messages"
+                            element={
+                              <AdminMessages />
+                            }
+                          />
+
+                          <Route
+                            path="/admin/parametres"
+                            element={
+                              <AdminSettings />
+                            }
+                          />
+                        </Route>
+                      </Route>
+
+                      {/* PAGE INTROUVABLE */}
 
                       <Route
-                        path="/admin/partner/commandes"
-                        element={<AdminPartnerCommandes />}
+                        path="*"
+                        element={
+                          <Navigate
+                            to="/"
+                            replace
+                          />
+                        }
                       />
-
-                      {/* OUTILS CENTRAUX */}
-
-                      <Route
-                        path="/admin/messages"
-                        element={<AdminMessages />}
-                      />
-
-                      <Route
-                        path="/admin/parametres"
-                        element={<AdminSettings />}
-                      />
-                    </Route>
-                  </Route>
-
-                  {/* PAGE INTROUVABLE */}
-
-                  <Route
-                    path="*"
-                    element={
-                      <Navigate
-                        to="/"
-                        replace
-                      />
-                    }
-                  />
-                </Routes>
-              </BrowserRouter>
-            </WishlistProvider>
-          </CartProvider>
+                    </Routes>
+                  </BrowserRouter>
+                </WishlistProvider>
+              </CartProvider>
+            </PartnerCartProvider>
+          </ProfessionalAuthProvider>
         </CustomerAuthProvider>
       </AuthProvider>
     </div>

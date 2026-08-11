@@ -359,7 +359,7 @@ export const Header = () => {
               className="hidden lg:inline-flex items-center gap-2 h-11 px-5 rounded-full bg-[#ff5a00] text-white font-semibold hover:bg-[#ff6d1f] transition-colors"
             >
               <User className="w-5 h-5" />
-              Connexion
+              Connexion particulier
             </Link>
 
           ) : (
@@ -382,8 +382,8 @@ export const Header = () => {
 
                 <User className="w-5 h-5" />
 
-                <span className="max-w-[150px] truncate">
-                  {customerDisplayName}
+                <span className="max-w-[210px] truncate">
+                  Connecté en tant que particulier
                 </span>
 
                 <ChevronDown
@@ -591,7 +591,7 @@ export const Header = () => {
 
                 <User className="w-5 h-5"/>
 
-                Connexion
+                Connexion particulier
 
               </Link>
 
@@ -607,7 +607,7 @@ export const Header = () => {
 
                   <User className="w-5 h-5"/>
 
-                  Mon compte
+                  Connecté en tant que particulier
 
                 </Link>
 

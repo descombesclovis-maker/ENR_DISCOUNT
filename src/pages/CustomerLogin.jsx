@@ -98,13 +98,13 @@ export default function CustomerLogin() {
 
             <h1 className="mt-8 text-3xl font-black">
 
-              Bienvenue
+              Espace particulier
 
             </h1>
 
             <p className="mt-3 text-gray-500">
 
-              Connectez-vous pour suivre vos commandes,
+              Connectez-vous en tant que particulier pour suivre vos commandes,
               enregistrer votre adresse
               et finaliser vos achats.
 
@@ -204,7 +204,7 @@ export default function CustomerLogin() {
                 "Connexion..."
               ) : (
                 <>
-                  Se connecter
+                  Se connecter en tant que particulier
                   <ArrowRight className="w-5 h-5"/>
                 </>
               )}
@@ -243,6 +243,21 @@ export default function CustomerLogin() {
 
             </button>
 
+            <div className="relative overflow-hidden rounded-2xl border border-[#d9b45d]/45 bg-gradient-to-br from-[#07111f] to-[#020711] p-5 text-center text-white shadow-[0_16px_35px_rgba(2,7,17,0.2)]">
+              <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#d9b45d]/20 blur-2xl" />
+              <p className="relative text-sm text-white/65">
+                Vous achetez pour votre entreprise ?
+              </p>
+
+              <Link
+                to="/qeh-partner/connexion-pro"
+                className="relative mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#d9b45d] px-5 font-black text-[#f2cf79] transition hover:-translate-y-0.5 hover:bg-[#d9b45d] hover:text-[#020711]"
+              >
+                Vous connecter en tant que pro
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
 
            
                         <div className="border-t border-gray-200 pt-7 mt-7 text-center">
@@ -269,7 +284,7 @@ export default function CustomerLogin() {
         </div>
 
         <p className="text-center text-sm text-white/55 mt-6">
-          Connexion sécurisée à votre espace client QEH OUTLET
+          Connexion sécurisée à votre espace particulier QEH OUTLET
         </p>
       </div>
     </div>
