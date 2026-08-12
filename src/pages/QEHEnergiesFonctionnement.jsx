@@ -55,8 +55,8 @@ export default function QEHEnergiesFonctionnement() {
     <div data-testid="qeh-energies-fonctionnement-page">
       <section className="relative overflow-hidden bg-[#020711] py-16 text-white sm:py-24">
         <img
-          src="/images/qeh-energies/realisations/qeh-grande-toiture.webp"
-          alt="Grande toiture photovoltaïque réalisée par Quali Éco Habitat"
+          src="/images/qeh-energies/realisations/realisation-08.webp"
+          alt="Bâtiments locaux équipés de plusieurs installations photovoltaïques"
           className="absolute inset-0 h-full w-full object-cover opacity-25"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#020711]/70 via-[#020711]/75 to-[#020711]" />
@@ -110,8 +110,8 @@ export default function QEHEnergiesFonctionnement() {
         eyebrow="Une énergie ancrée dans le territoire"
         title="Producteurs et consommateurs, à quelques kilomètres seulement."
         description="La carte QEH rapproche les projets solaires et les foyers locaux. Visualisez les zones existantes puis demandez l’étude de votre adresse."
-        image="/images/qeh-energies/realisations/qeh-bac-acier.webp"
-        imageAlt="Installation photovoltaïque sur un bâtiment local"
+        image="/images/qeh-energies/hero/reseau-solaire-local-4k.webp"
+        imageAlt="Panneaux photovoltaïques sous un grand ciel bleu"
         reverse
         links={[
           { to: "/qeh-energies/carte-solaire", label: "Explorer la carte" },
