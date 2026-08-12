@@ -1,654 +1,154 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
-import {
-  Link,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
-
+import React, { useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   Heart,
   LogOut,
-  Menu,
   PackageSearch,
   ShoppingBag,
   User,
-  X,
 } from "lucide-react";
-
-import {
-  useCart,
-} from "../context/CartContext";
-
-import {
-  useWishlist,
-} from "../context/WishlistContext";
-
-import {
-  useCustomerAuth,
-} from "../context/CustomerAuthContext";
-
+import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
+import { useCustomerAuth } from "../context/CustomerAuthContext";
 import CatalogSearchMenu from "./CatalogSearchMenu";
+import QEHUniversalHeader from "./QEHUniversalHeader";
 
 const links = [
-  {
-    to: "/",
-    label: "Accueil",
-  },
-  {
-    to: "/produits",
-    label: "Produits",
-  },
-  {
-    to: "/contact",
-    label: "Contact",
-  },
+  { to: "/produits", label: "Produits" },
+  { to: "/suivi-commande", label: "Suivi de commande" },
+  { to: "/contact", label: "Contact" },
 ];
 
 export const Header = () => {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
+  const { count: cartCount } = useCart();
+  const { count: wishlistCount } = useWishlist();
+  const { isAuthenticated, profile, user, signOut } = useCustomerAuth();
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef(null);
 
-  const location =
-    useLocation();
-
-  const {
-    count: cartCount,
-  } = useCart();
-
-  const {
-    count: wishlistCount,
-  } = useWishlist();
-
-  const {
-    isAuthenticated,
-    profile,
-    user,
-    signOut,
-  } = useCustomerAuth();
-
-  const [
-    mobileMenuOpen,
-    setMobileMenuOpen,
-  ] = useState(false);
-
-  const [
-    accountMenuOpen,
-    setAccountMenuOpen,
-  ] = useState(false);
-
-  const accountMenuRef =
-    useRef(null);
-
-  const isLinkActive = (
-    path
-  ) => {
-    if (path === "/") {
-      return (
-        location.pathname === "/"
-      );
-    }
-
-    return location.pathname.startsWith(
-      path
-    );
-  };
-
-  const closeMobileMenu =
-    () => {
-      setMobileMenuOpen(false);
-    };
-
-  const closeAccountMenu =
-    () => {
+  const handleLogout = async () => {
+    try {
+      await signOut();
       setAccountMenuOpen(false);
-    };
-
-  const handleLogout =
-    async () => {
-      try {
-        await signOut();
-
-        closeAccountMenu();
-        closeMobileMenu();
-
-        navigate("/");
-      } catch (error) {
-        console.error(
-          "Erreur lors de la déconnexion client :",
-          error
-        );
-      }
-    };
-
-  useEffect(() => {
-    closeMobileMenu();
-    closeAccountMenu();
-  }, [
-    location.pathname,
-    location.search,
-  ]);
-
-  useEffect(() => {
-    const handleOutsideClick =
-      (event) => {
-        if (
-          accountMenuRef.current &&
-          !accountMenuRef.current.contains(
-            event.target
-          )
-        ) {
-          closeAccountMenu();
-        }
-      };
-
-    const handleEscapeKey =
-      (event) => {
-        if (
-          event.key === "Escape"
-        ) {
-          closeAccountMenu();
-          closeMobileMenu();
-        }
-      };
-
-    document.addEventListener(
-      "mousedown",
-      handleOutsideClick
-    );
-
-    document.addEventListener(
-      "keydown",
-      handleEscapeKey
-    );
-
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleOutsideClick
-      );
-
-      document.removeEventListener(
-        "keydown",
-        handleEscapeKey
-      );
-    };
-  }, []);
-
-  const customerFirstName =
-    profile?.first_name?.trim() ||
-    user?.user_metadata
-      ?.first_name?.trim() ||
-    "";
-
-  const customerLastName =
-    profile?.last_name?.trim() ||
-    user?.user_metadata
-      ?.last_name?.trim() ||
-    "";
+      navigate("/");
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion client :", error);
+    }
+  };
 
   const customerDisplayName =
     [
-      customerFirstName,
-      customerLastName,
+      profile?.first_name?.trim() || user?.user_metadata?.first_name?.trim(),
+      profile?.last_name?.trim() || user?.user_metadata?.last_name?.trim(),
     ]
       .filter(Boolean)
       .join(" ") ||
     user?.email ||
     "Client";
 
-  return (
-    <header
-      data-testid="site-header"
-      className="sticky top-0 z-50 border-b border-[#0b5ca8]/30 bg-[#030a18]/95 text-white shadow-[0_10px_35px_rgba(0,0,0,0.18)] backdrop-blur-xl"
+  const accountControl = !isAuthenticated ? (
+    <Link
+      to="/connexion"
+      title="Connexion à l’espace particulier"
+      className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[#ff5a00] px-3 font-bold text-white shadow-[0_10px_28px_rgba(255,90,0,0.24)] transition hover:bg-[#ff6d1a] sm:px-5"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 min-h-20 py-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <CatalogSearchMenu />
+      <User className="h-5 w-5" />
+      <span className="hidden sm:inline">Connexion particulier</span>
+    </Link>
+  ) : (
+    <div ref={accountMenuRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setAccountMenuOpen((current) => !current)}
+        title="Compte particulier"
+        className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 font-bold hover:border-[#ff5a00] sm:px-4"
+      >
+        <User className="h-5 w-5" />
+        <span className="hidden max-w-44 truncate sm:inline">{customerDisplayName}</span>
+        <ChevronDown className={`hidden h-4 w-4 transition sm:block ${accountMenuOpen ? "rotate-180" : ""}`} />
+      </button>
 
-          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-            <Link
-              to="/"
-              aria-label="QEH OUTLET, univers sélectionné"
-              aria-current="page"
-              className="group flex h-11 w-[96px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#ff5a00] bg-[#020711] p-1 shadow-[0_8px_24px_rgba(255,90,0,0.16)] transition hover:-translate-y-0.5 sm:h-14 sm:w-[145px] xl:w-[165px]"
-            >
-              <img
-                src="/images/qeh-outlet-logo.jpg"
-                alt="QEH OUTLET"
-                className="h-full w-full object-contain"
-              />
-            </Link>
-
-            <span className="hidden h-9 w-px shrink-0 bg-white/20 sm:block" />
-
-            <Link
-              to="/qeh-energies"
-              aria-label="Accéder à QEH Énergies"
-              title="QEH Énergies"
-              className="group hidden h-10 w-[78px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#69b72d]/35 bg-[#020711] p-1 opacity-75 transition hover:-translate-y-0.5 hover:border-[#82d246] hover:opacity-100 sm:flex xl:h-12 xl:w-[105px]"
-            >
-              <img
-                src="/images/qeh-energies-logo.png"
-                alt="QEH Énergies"
-                className="h-full w-full object-contain"
-              />
-            </Link>
-
-            <span className="hidden h-9 w-px shrink-0 bg-white/20 sm:block" />
-
-            <Link
-              to="/qeh-partner"
-              aria-label="Accéder à QEH PARTNER"
-              title="QEH PARTNER"
-              className="group hidden h-10 w-[78px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#c99532]/35 bg-[#020711] p-1 opacity-75 transition hover:-translate-y-0.5 hover:border-[#f2cf79] hover:opacity-100 sm:flex xl:h-12 xl:w-[105px]"
-            >
-              <img
-                src="/images/qeh-partner-logo-gold.png"
-                alt="QEH PARTNER"
-                className="h-full w-full object-contain"
-              />
-            </Link>
+      {accountMenuOpen ? (
+        <div className="absolute right-0 top-14 z-20 w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-2xl">
+          <div className="border-b border-slate-200 px-5 py-4">
+            <p className="font-black">Connecté en tant que particulier</p>
+            <p className="truncate text-sm text-slate-500">{user?.email}</p>
           </div>
+          <Link to="/mon-compte" className="flex gap-3 px-5 py-4 hover:bg-slate-100">
+            <User className="h-5 w-5" /> Mon compte
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full gap-3 px-5 py-4 text-left text-red-600 hover:bg-red-50"
+          >
+            <LogOut className="h-5 w-5" /> Déconnexion
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+
+  return (
+    <QEHUniversalHeader
+      activeBrand="outlet"
+      menuLabel="le menu QEH OUTLET"
+      directLinks={links}
+      utilityLeft={<CatalogSearchMenu />}
+      utilityRight={accountControl}
+    >
+      <div className="grid gap-5 lg:grid-cols-[1fr_auto]">
+        <div className="hidden lg:block">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#ff7a32]">
+            Services QEH OUTLET
+          </p>
+          <p className="mt-1 text-sm text-white/50">
+            Recherche, suivi, panier et espace particulier.
+          </p>
         </div>
 
-        <nav className="hidden lg:flex items-center gap-8">
-          {links.map(
-            (link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                data-testid={`nav-${link.label.toLowerCase()}`}
-                className={`relative py-2 text-sm font-semibold transition-colors ${
-                  isLinkActive(
-                    link.to
-                  )
-                    ? "text-[#ff5a00]"
-                    : "text-white/75 hover:text-white"
-                }`}
-              >
-                {link.label}
-
-                {isLinkActive(
-                  link.to
-                ) && (
-                  <span className="absolute left-0 right-0 -bottom-1 h-0.5 rounded-full bg-[#ff5a00]" />
-                )}
-              </Link>
-            )
-          )}
-        </nav>
-
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <Link
             to="/suivi-commande"
-            data-testid="tracking-link"
             title="Suivre une commande"
-            aria-label="Suivre une commande"
-            className={`hidden xl:inline-flex items-center justify-center gap-2 h-11 px-4 rounded-full border text-sm font-semibold transition-colors ${
-              location.pathname ===
-              "/suivi-commande"
-                ? "border-[#ff5a00] bg-[#ff5a00] text-white"
-                : "border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20"
-            }`}
+            className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 font-semibold hover:border-[#0b5ca8]"
           >
-            <PackageSearch className="w-5 h-5" />
-
-            <span>
-              Suivi
-            </span>
+            <PackageSearch className="h-5 w-5" />
+            <span className="hidden sm:inline">Suivi</span>
           </Link>
 
           <Link
             to="/favoris"
-            data-testid="wishlist-link"
             title="Mes favoris"
-            aria-label="Mes favoris"
-            className={`relative w-11 h-11 rounded-full border grid place-items-center transition-colors ${
-              location.pathname ===
-              "/favoris"
-                ? "border-[#ff5a00] bg-[#ff5a00] text-white"
-                : "border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20"
-            }`}
+            className="relative grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/5 hover:border-[#ff5a00]"
           >
-            <Heart className="w-5 h-5" />
-
-            {wishlistCount > 0 && (
-              <span
-                data-testid="wishlist-count"
-                className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#ff5a00] text-white text-[11px] font-bold grid place-items-center"
-              >
+            <Heart className="h-5 w-5" />
+            {wishlistCount > 0 ? (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#ff5a00] px-1 text-[11px] font-bold">
                 {wishlistCount}
               </span>
-            )}
+            ) : null}
           </Link>
 
           <Link
             to="/panier"
-            data-testid="cart-link"
             title="Mon panier"
-            aria-label="Mon panier"
-            className={`relative w-11 h-11 rounded-full border grid place-items-center transition-colors ${
-              location.pathname ===
-              "/panier"
-                ? "border-[#ff5a00] bg-[#ff5a00] text-white"
-                : "border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20"
-            }`}
+            className="relative grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/5 hover:border-[#ff5a00]"
           >
-            <ShoppingBag className="w-5 h-5" />
-
-            {cartCount > 0 && (
-              <span
-                data-testid="cart-count"
-                className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#ff5a00] text-white text-[11px] font-bold grid place-items-center"
-              >
+            <ShoppingBag className="h-5 w-5" />
+            {cartCount > 0 ? (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#ff5a00] px-1 text-[11px] font-bold">
                 {cartCount}
               </span>
-            )}
+            ) : null}
           </Link>
-                    {!isAuthenticated ? (
-
-            <Link
-              to="/connexion"
-              data-testid="customer-login-link"
-              className="hidden lg:inline-flex items-center gap-2 h-11 px-5 rounded-full bg-[#ff5a00] text-white font-semibold hover:bg-[#ff6d1f] transition-colors"
-            >
-              <User className="w-5 h-5" />
-              Connexion particulier
-            </Link>
-
-          ) : (
-
-            <div
-              ref={accountMenuRef}
-              className="relative hidden lg:block"
-            >
-
-              <button
-                type="button"
-                onClick={() =>
-                  setAccountMenuOpen(
-                    (currentValue) =>
-                      !currentValue
-                  )
-                }
-                className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20 transition-colors"
-              >
-
-                <User className="w-5 h-5" />
-
-                <span className="max-w-[210px] truncate">
-                  Connecté en tant que particulier
-                </span>
-
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform ${
-                    accountMenuOpen
-                      ? "rotate-180"
-                      : ""
-                  }`}
-                />
-
-              </button>
-
-              {accountMenuOpen && (
-
-                <div className="absolute right-0 top-14 w-72 rounded-2xl border border-border bg-card text-foreground shadow-2xl overflow-hidden">
-
-                  <div className="px-5 py-4 border-b border-border">
-
-                    <p className="font-display font-bold text-lg">
-                      {customerDisplayName}
-                    </p>
-
-                    <p className="text-sm text-muted-foreground">
-                      {user?.email}
-                    </p>
-
-                  </div>
-
-                  <Link
-                    to="/mon-compte"
-                    onClick={closeAccountMenu}
-                    className="flex items-center gap-3 px-5 py-4 hover:bg-secondary transition-colors"
-                  >
-
-                    <User className="w-5 h-5" />
-
-                    Mon compte
-
-                  </Link>
-
-                  <Link
-                    to="/favoris"
-                    onClick={closeAccountMenu}
-                    className="flex items-center gap-3 px-5 py-4 hover:bg-secondary transition-colors"
-                  >
-
-                    <Heart className="w-5 h-5" />
-
-                    Mes favoris
-
-                  </Link>
-
-                  <Link
-                    to="/suivi-commande"
-                    onClick={closeAccountMenu}
-                    className="flex items-center gap-3 px-5 py-4 hover:bg-secondary transition-colors"
-                  >
-
-                    <PackageSearch className="w-5 h-5" />
-
-                    Suivi de commande
-
-                  </Link>
-
-                  <div className="border-t border-border" />
-
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-red-50 hover:text-red-600 transition-colors"
-                  >
-
-                    <LogOut className="w-5 h-5" />
-
-                    Déconnexion
-
-                  </button>
-
-                </div>
-
-              )}
-
-            </div>
-
-          )}
-
-          <button
-            type="button"
-            onClick={() =>
-              setMobileMenuOpen(
-                (currentValue) =>
-                  !currentValue
-              )
-            }
-            data-testid="mobile-menu-toggle"
-            aria-label={
-              mobileMenuOpen
-                ? "Fermer le menu"
-                : "Ouvrir le menu"
-            }
-            className="lg:hidden w-11 h-11 rounded-full border border-white/20 bg-white/5 text-white grid place-items-center hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20 transition-colors"
-          >
-
-            {mobileMenuOpen ? (
-
-              <X className="w-5 h-5" />
-
-            ) : (
-
-              <Menu className="w-5 h-5" />
-
-            )}
-
-          </button>
 
         </div>
-
       </div>
-            {mobileMenuOpen && (
-
-        <div className="lg:hidden border-t border-white/10 bg-[#030a18] px-5 py-5">
-
-          <nav className="flex flex-col gap-2">
-
-            <div className="mb-3 grid grid-cols-3 gap-2 sm:hidden">
-              <Link
-                to="/"
-                onClick={closeMobileMenu}
-                aria-current="page"
-                aria-label="QEH OUTLET, univers sélectionné"
-                className="flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[#ff5a00] bg-[#020711] p-1"
-              >
-                <img
-                  src="/images/qeh-outlet-logo.jpg"
-                  alt="QEH OUTLET"
-                  className="h-full w-full object-contain"
-                />
-              </Link>
-
-              <Link
-                to="/qeh-energies"
-                onClick={closeMobileMenu}
-                aria-label="Accéder à QEH Énergies"
-                className="flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[#69b72d]/40 bg-[#020711] p-1"
-              >
-                <img
-                  src="/images/qeh-energies-logo.png"
-                  alt="QEH Énergies"
-                  className="h-full w-full object-contain"
-                />
-              </Link>
-
-              <Link
-                to="/qeh-partner"
-                onClick={closeMobileMenu}
-                aria-label="Accéder à QEH PARTNER"
-                className="flex h-16 items-center justify-center overflow-hidden rounded-xl border border-[#c99532]/40 bg-[#020711] p-1"
-              >
-                <img
-                  src="/images/qeh-partner-logo-gold.png"
-                  alt="QEH PARTNER"
-                  className="h-full w-full object-contain"
-                />
-              </Link>
-            </div>
-
-            {links.map((link) => (
-
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={closeMobileMenu}
-                className={`min-h-11 flex items-center rounded-xl px-4 text-base font-semibold transition-colors ${
-                  isLinkActive(link.to)
-                    ? "bg-[#ff5a00] text-white"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                {link.label}
-              </Link>
-
-            ))}
-
-            <div className="h-px bg-white/10 my-2" />
-
-            <Link
-              to="/suivi-commande"
-              onClick={closeMobileMenu}
-              className="min-h-11 flex items-center gap-3 rounded-xl px-4 text-white hover:bg-white/10"
-            >
-
-              <PackageSearch className="w-5 h-5"/>
-
-              Suivi de commande
-
-            </Link>
-
-            {!isAuthenticated ? (
-
-              <Link
-                to="/connexion"
-                onClick={closeMobileMenu}
-                className="min-h-11 flex items-center justify-center gap-3 rounded-xl bg-[#ff5a00] text-white font-bold"
-              >
-
-                <User className="w-5 h-5"/>
-
-                Connexion particulier
-
-              </Link>
-
-            ) : (
-
-              <>
-
-                <Link
-                  to="/mon-compte"
-                  onClick={closeMobileMenu}
-                  className="min-h-11 flex items-center gap-3 rounded-xl px-4 text-white hover:bg-white/10"
-                >
-
-                  <User className="w-5 h-5"/>
-
-                  Connecté en tant que particulier
-
-                </Link>
-
-                <Link
-                  to="/favoris"
-                  onClick={closeMobileMenu}
-                  className="min-h-11 flex items-center gap-3 rounded-xl px-4 text-white hover:bg-white/10"
-                >
-
-                  <Heart className="w-5 h-5"/>
-
-                  Mes favoris
-
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="min-h-11 flex items-center gap-3 rounded-xl px-4 text-left text-red-400 hover:bg-red-500/10"
-                >
-
-                  <LogOut className="w-5 h-5"/>
-
-                  Déconnexion
-
-                </button>
-
-              </>
-
-            )}
-
-          </nav>
-
-        </div>
-
-      )}
-
-    </header>
-
+    </QEHUniversalHeader>
   );
-
 };
 
 export default Header;

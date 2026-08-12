@@ -1,46 +1,27 @@
 import React from "react";
-
 import "./App.css";
 import "./qeh-partner.css";
 import "./professional-space.css";
 
 import {
   BrowserRouter,
-  Navigate,
-  Outlet,
-  Route,
   Routes,
+  Route,
+  Outlet,
+  Navigate,
 } from "react-router-dom";
 
 import { Toaster } from "sonner";
 
-import {
-  AuthProvider,
-} from "./context/AuthContext";
-
-import {
-  CartProvider,
-} from "./context/CartContext";
-
-import {
-  CustomerAuthProvider,
-} from "./context/CustomerAuthContext";
-
-import {
-  WishlistProvider,
-} from "./context/WishlistContext";
-
-import {
-  ProfessionalAuthProvider,
-} from "./context/ProfessionalAuthContext";
-
-import {
-  PartnerCartProvider,
-} from "./context/PartnerCartContext";
+import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
+import { AuthProvider } from "./context/AuthContext";
+import { CustomerAuthProvider } from "./context/CustomerAuthContext";
+import { ProfessionalAuthProvider } from "./context/ProfessionalAuthContext";
+import { PartnerCartProvider } from "./context/PartnerCartContext";
 
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
-
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminCentralLayout from "./components/AdminCentralLayout";
 import QEHPartnerLayout from "./components/QEHPartnerLayout";
@@ -61,6 +42,7 @@ import Tracking from "./pages/Tracking";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 
+import QEHEnergiesAccueil from "./pages/QEHEnergiesAccueil";
 import QEHEnergiesCarte from "./pages/QEHEnergiesCarte";
 import QEHEnergiesFonctionnement from "./pages/QEHEnergiesFonctionnement";
 import QEHEnergiesParticiper from "./pages/QEHEnergiesParticiper";
@@ -69,8 +51,6 @@ import QEHPartner from "./pages/QEHPartner";
 import QEHPartnerProduction from "./pages/QEHPartnerProduction";
 import QEHPartnerMaterielPro from "./pages/QEHPartnerMaterielPro";
 import QEHPartnerFranchise from "./pages/QEHPartnerFranchise";
-import QEHPartnerCart from "./pages/QEHPartnerCart";
-
 
 import CustomerOrderDetail from "./pages/CustomerOrderDetail";
 import CustomerOrders from "./pages/CustomerOrders";
@@ -79,11 +59,11 @@ import CustomerRegister from "./pages/CustomerRegister";
 import CustomerAccount from "./pages/CustomerAccount";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-
 import ProfessionalLogin from "./pages/ProfessionalLogin";
 import ProfessionalRegister from "./pages/ProfessionalRegister";
 import ProfessionalForgotPassword from "./pages/ProfessionalForgotPassword";
 import ProfessionalResetPassword from "./pages/ProfessionalResetPassword";
+import QEHPartnerCart from "./pages/QEHPartnerCart";
 
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -141,141 +121,105 @@ function App() {
                     />
 
                     <Routes>
-                      {/* QEH OUTLET */}
+                      {/* ================================================= */}
+                      {/* BOUTIQUE QEH OUTLET                               */}
+                      {/* ================================================= */}
 
-                      <Route
-                        element={
-                          <StoreLayout />
-                        }
-                      >
+                      <Route element={<StoreLayout />}>
                         <Route
                           path="/"
-                          element={
-                            <Home />
-                          }
+                          element={<Home />}
                         />
 
                         <Route
                           path="/produits"
-                          element={
-                            <Products />
-                          }
+                          element={<Products />}
                         />
 
                         <Route
                           path="/produits/:slug"
-                          element={
-                            <ProductDetail />
-                          }
+                          element={<ProductDetail />}
                         />
 
                         <Route
                           path="/favoris"
-                          element={
-                            <Wishlist />
-                          }
+                          element={<Wishlist />}
                         />
 
                         <Route
                           path="/suivi-commande"
-                          element={
-                            <Tracking />
-                          }
+                          element={<Tracking />}
                         />
 
                         <Route
                           path="/panier"
-                          element={
-                            <Cart />
-                          }
+                          element={<Cart />}
                         />
 
                         <Route
                           path="/commande/succes"
-                          element={
-                            <CheckoutSuccess />
-                          }
+                          element={<CheckoutSuccess />}
                         />
 
                         <Route
                           path="/contact"
-                          element={
-                            <Contact />
-                          }
+                          element={<Contact />}
                         />
 
                         <Route
                           path="/connexion"
-                          element={
-                            <CustomerLogin />
-                          }
+                          element={<CustomerLogin />}
                         />
 
                         <Route
                           path="/mot-de-passe-oublie"
-                          element={
-                            <ForgotPassword />
-                          }
+                          element={<ForgotPassword />}
                         />
 
                         <Route
                           path="/reinitialiser-mot-de-passe"
-                          element={
-                            <ResetPassword />
-                          }
+                          element={<ResetPassword />}
                         />
 
                         <Route
                           path="/inscription"
-                          element={
-                            <CustomerRegister />
-                          }
+                          element={<CustomerRegister />}
                         />
 
                         <Route
                           path="/mon-compte"
-                          element={
-                            <CustomerAccount />
-                          }
+                          element={<CustomerAccount />}
                         />
 
                         <Route
                           path="/mes-commandes"
-                          element={
-                            <CustomerOrders />
-                          }
+                          element={<CustomerOrders />}
                         />
 
                         <Route
                           path="/compte/commandes/:id"
-                          element={
-                            <CustomerOrderDetail />
-                          }
+                          element={<CustomerOrderDetail />}
                         />
 
                         <Route
                           path="/test-supabase"
-                          element={
-                            <SupabaseTest />
-                          }
+                          element={<SupabaseTest />}
                         />
 
                         <Route
                           path="/politique-de-confidentialite"
-                          element={
-                            <PrivacyPolicy />
-                          }
+                          element={<PrivacyPolicy />}
                         />
 
                         <Route
                           path="/conditions-generales"
-                          element={
-                            <Terms />
-                          }
+                          element={<Terms />}
                         />
                       </Route>
 
-                      {/* QEH ÉNERGIES */}
+                      {/* ================================================= */}
+                      {/* QEH ÉNERGIES                                     */}
+                      {/* ================================================= */}
 
                       <Route
                         path="/qeh-energies"
@@ -287,38 +231,28 @@ function App() {
                       >
                         <Route
                           index
-                          element={
-                            <Navigate
-                              to="/qeh-energies/carte-solaire"
-                              replace
-                            />
-                          }
+                          element={<QEHEnergiesAccueil />}
                         />
 
                         <Route
                           path="carte-solaire"
-                          element={
-                            <QEHEnergiesCarte />
-                          }
+                          element={<QEHEnergiesCarte />}
                         />
 
                         <Route
                           path="comment-ca-marche"
-                          element={
-                            <QEHEnergiesFonctionnement />
-                          }
+                          element={<QEHEnergiesFonctionnement />}
                         />
 
                         <Route
                           path="participer"
-                          element={
-                            <QEHEnergiesParticiper />
-                          }
+                          element={<QEHEnergiesParticiper />}
                         />
                       </Route>
 
-                      {/* INSCRIPTION PROFESSIONNELLE */}
-                      {/* Route directe placée avant la redirection générale */}
+                      {/* ================================================= */}
+                      {/* QEH PARTNER                                      */}
+                      {/* ================================================= */}
 
                       <Route
                         path="/qeh-partner/inscription-pro"
@@ -328,8 +262,6 @@ function App() {
                           </MaintenanceGate>
                         }
                       />
-
-                      {/* QEH PARTNER */}
 
                       <Route
                         path="/qeh-partner"
@@ -341,225 +273,158 @@ function App() {
                       >
                         <Route
                           index
-                          element={
-                            <QEHPartner />
-                          }
+                          element={<QEHPartner />}
                         />
 
                         <Route
                           path="production"
-                          element={
-                            <QEHPartnerProduction />
-                          }
+                          element={<QEHPartnerProduction />}
                         />
 
                         <Route
                           path="connexion-pro"
-                          element={
-                            <ProfessionalLogin />
-                          }
+                          element={<ProfessionalLogin />}
                         />
 
                         <Route
                           path="mot-de-passe-oublie"
-                          element={
-                            <ProfessionalForgotPassword />
-                          }
+                          element={<ProfessionalForgotPassword />}
                         />
 
                         <Route
                           path="reinitialiser-mot-de-passe"
-                          element={
-                            <ProfessionalResetPassword />
-                          }
+                          element={<ProfessionalResetPassword />}
                         />
 
-                        <Route
-                          element={
-                            <ProfessionalRoute />
-                          }
-                        >
+                        <Route element={<ProfessionalRoute />}>
                           <Route
                             path="materiel-pro"
-                            element={
-                              <QEHPartnerMaterielPro />
-                            }
+                            element={<QEHPartnerMaterielPro />}
                           />
 
                           <Route
                             path="panier-pro"
-                            element={
-                              <QEHPartnerCart />
-                            }
+                            element={<QEHPartnerCart />}
                           />
                         </Route>
 
                         <Route
                           path="franchise"
-                          element={
-                            <QEHPartnerFranchise />
-                          }
+                          element={<QEHPartnerFranchise />}
                         />
                       </Route>
 
-                      {/* CONNEXION ADMINISTRATEUR */}
+                      {/* ================================================= */}
+                      {/* CONNEXION ADMINISTRATEUR                         */}
+                      {/* ================================================= */}
 
                       <Route
                         path="/admin/login"
-                        element={
-                          <AdminLogin />
-                        }
+                        element={<AdminLogin />}
                       />
 
-                      {/* ADMINISTRATION */}
+                      {/* ================================================= */}
+                      {/* ADMINISTRATION PROTÉGÉE                          */}
+                      {/* ================================================= */}
 
-                      <Route
-                        element={
-                          <ProtectedRoute />
-                        }
-                      >
-                        <Route
-                          element={
-                            <AdminCentralLayout />
-                          }
-                        >
+                      <Route element={<ProtectedRoute />}>
+                        <Route element={<AdminCentralLayout />}>
                           <Route
                             path="/admin"
-                            element={
-                              <AdminDashboard />
-                            }
+                            element={<AdminDashboard />}
                           />
 
                           {/* QEH OUTLET */}
 
                           <Route
                             path="/admin/produits"
-                            element={
-                              <AdminProducts />
-                            }
+                            element={<AdminProducts />}
                           />
 
                           <Route
                             path="/admin/produits/nouveau"
-                            element={
-                              <AdminProductNew />
-                            }
+                            element={<AdminProductNew />}
                           />
 
                           <Route
                             path="/admin/produits/:productId/modifier"
-                            element={
-                              <AdminProductEdit />
-                            }
+                            element={<AdminProductEdit />}
                           />
 
                           <Route
                             path="/admin/categories"
-                            element={
-                              <AdminCategories />
-                            }
+                            element={<AdminCategories />}
                           />
 
                           <Route
                             path="/admin/commandes"
-                            element={
-                              <AdminOrders />
-                            }
+                            element={<AdminOrders />}
                           />
 
                           <Route
                             path="/admin/clients"
-                            element={
-                              <AdminCustomers />
-                            }
+                            element={<AdminCustomers />}
                           />
 
                           <Route
                             path="/admin/clients/:id"
-                            element={
-                              <AdminCustomerDetail />
-                            }
+                            element={<AdminCustomerDetail />}
                           />
 
                           {/* QEH ÉNERGIES */}
 
                           <Route
                             path="/admin/energies/demandes"
-                            element={
-                              <AdminEnergiesDemandes />
-                            }
+                            element={<AdminEnergiesDemandes />}
                           />
 
                           <Route
                             path="/admin/energies/producteurs"
-                            element={
-                              <AdminEnergiesProducteurs />
-                            }
+                            element={<AdminEnergiesProducteurs />}
                           />
 
                           <Route
                             path="/admin/energies/carte"
-                            element={
-                              <AdminEnergiesCarte />
-                            }
+                            element={<AdminEnergiesCarte />}
                           />
 
                           {/* QEH PARTNER */}
 
                           <Route
                             path="/admin/partner/franchises"
-                            element={
-                              <AdminPartnerFranchises />
-                            }
+                            element={<AdminPartnerFranchises />}
                           />
 
                           <Route
                             path="/admin/partner/production"
-                            element={
-                              <AdminPartnerProduction />
-                            }
+                            element={<AdminPartnerProduction />}
                           />
 
                           <Route
                             path="/admin/partner/professionnels"
-                            element={
-                              <AdminPartnerProfessionals />
-                            }
+                            element={<AdminPartnerProfessionals />}
                           />
 
                           <Route
                             path="/admin/partner/produits"
-                            element={
-                              <AdminPartnerProduits />
-                            }
+                            element={<AdminPartnerProduits />}
                           />
 
                           <Route
                             path="/admin/partner/commandes"
-                            element={
-                              <AdminPartnerCommandes />
-                            }
+                            element={<AdminPartnerCommandes />}
                           />
-
-                          <Route
-  path="/admin/partner/professionnels"
-  element={<AdminPartnerProfessionals />}
-/>
 
                           {/* OUTILS CENTRAUX */}
 
                           <Route
                             path="/admin/messages"
-                            element={
-                              <AdminMessages />
-                            }
+                            element={<AdminMessages />}
                           />
 
                           <Route
                             path="/admin/parametres"
-                            element={
-                              <AdminSettings />
-                            }
+                            element={<AdminSettings />}
                           />
                         </Route>
                       </Route>

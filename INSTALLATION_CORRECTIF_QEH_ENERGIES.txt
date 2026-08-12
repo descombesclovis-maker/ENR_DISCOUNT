@@ -1,0 +1,26 @@
+CORRECTIF QEH ENERGIES — PAGE D'ACCUEIL
+
+1. Fermez le serveur React avec Ctrl + C dans le terminal de VS Code.
+
+2. Ouvrez cette archive et copiez les deux dossiers "src" et "public"
+   à la racine du dossier "frontend" de votre projet.
+
+3. Acceptez "Remplacer le fichier" lorsque Windows le demande.
+
+Le fichier remplacé est :
+frontend/src/pages/QEHEnergiesAccueil.jsx
+
+Les photographies doivent être copiées dans :
+frontend/public/images/qeh-energies/realisations/
+
+4. Dans le terminal ouvert dans le dossier frontend, exécutez :
+npm start
+
+5. Rechargez la page avec Ctrl + F5.
+
+Vérification attendue :
+- les encadrés "2 km", "3 profils" et "1 carte" ont disparu ;
+- le bloc "Une expérience née sur le terrain" a disparu ;
+- une galerie de trois photographies apparaît après le grand bandeau ;
+- la mention "Photos issues de nos réalisations" est visible ;
+- les autres photographies apparaissent ensuite avec leur explication.

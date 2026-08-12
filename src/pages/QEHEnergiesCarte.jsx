@@ -310,16 +310,23 @@ export default function QEHEnergiesCarte() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.55, delay: 0.1 }}
-            className="rounded-3xl border border-[#17649e]/55 bg-black/30 p-5 shadow-[0_30px_100px_rgba(0,0,0,0.4)]"
+            className="group relative min-h-[330px] overflow-hidden rounded-3xl border border-[#17649e]/55 bg-black/30 shadow-[0_30px_100px_rgba(0,0,0,0.4)]"
           >
-            <div className="grid min-h-[280px] place-items-center rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_center,rgba(105,183,45,0.2),transparent_62%)]">
-              <div className="text-center">
-                <div className="relative mx-auto grid h-36 w-36 place-items-center rounded-full border border-[#82d246]/45 bg-[#69b72d]/15">
-                  <div className="absolute inset-4 rounded-full border border-[#82d246]/25" />
-                  <Sun className="h-14 w-14 text-[#82d246]" />
+            <img
+              src="/images/qeh-energies/realisations/qeh-maison-solaire.webp"
+              alt="Maison équipée d’une installation photovoltaïque"
+              className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020711] via-[#020711]/15 to-transparent" />
+            <div className="absolute inset-x-5 bottom-5 rounded-2xl border border-white/15 bg-[#020711]/80 p-5 backdrop-blur-md">
+              <div className="flex items-center gap-4">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#69b72d]/20 text-[#82d246]">
+                  <Sun className="h-6 w-6" />
                 </div>
-                <p className="mt-5 font-display text-2xl font-black">Rayon automatique</p>
-                <p className="mt-1 text-slate-300">2 000 mètres autour de l’adresse</p>
+                <div>
+                  <p className="font-display text-xl font-black">Rayon automatique</p>
+                  <p className="mt-1 text-sm text-slate-300">2 000 mètres autour de l’adresse recherchée</p>
+                </div>
               </div>
             </div>
           </motion.div>

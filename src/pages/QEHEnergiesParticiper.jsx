@@ -194,6 +194,15 @@ export default function QEHEnergiesParticiper() {
           viewport={{ once: true }}
           className="rounded-3xl bg-[#020711] p-6 text-white shadow-[0_24px_70px_rgba(2,7,20,0.2)] sm:p-8"
         >
+          <div className="relative -mx-6 -mt-6 mb-7 h-48 overflow-hidden rounded-t-3xl sm:-mx-8 sm:-mt-8">
+            <img
+              src="/images/qeh-energies/realisations/qeh-full-black.webp"
+              alt="Panneaux photovoltaïques full black installés sur une toiture"
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020711] via-transparent to-transparent" />
+          </div>
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#69b72d]/15 text-[#82d246]">
             <UserRound className="h-7 w-7" />
           </div>

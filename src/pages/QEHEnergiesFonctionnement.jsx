@@ -13,6 +13,7 @@ import {
   UsersRound,
   Zap,
 } from "lucide-react";
+import QEHContextBanner from "../components/QEHContextBanner";
 
 const steps = [
   {
@@ -53,6 +54,12 @@ export default function QEHEnergiesFonctionnement() {
   return (
     <div data-testid="qeh-energies-fonctionnement-page">
       <section className="relative overflow-hidden bg-[#020711] py-16 text-white sm:py-24">
+        <img
+          src="/images/qeh-energies/realisations/qeh-grande-toiture.webp"
+          alt="Grande toiture photovoltaïque réalisée par Quali Éco Habitat"
+          className="absolute inset-0 h-full w-full object-cover opacity-25"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020711]/70 via-[#020711]/75 to-[#020711]" />
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -left-32 top-0 h-96 w-96 rounded-full bg-[#17649e]/25 blur-3xl" />
           <div className="absolute -right-40 bottom-0 h-[430px] w-[430px] rounded-full bg-[#69b72d]/20 blur-3xl" />
@@ -97,6 +104,21 @@ export default function QEHEnergiesFonctionnement() {
           </div>
         </motion.div>
       </section>
+
+      <QEHContextBanner
+        theme="energies"
+        eyebrow="Une énergie ancrée dans le territoire"
+        title="Producteurs et consommateurs, à quelques kilomètres seulement."
+        description="La carte QEH rapproche les projets solaires et les foyers locaux. Visualisez les zones existantes puis demandez l’étude de votre adresse."
+        image="/images/qeh-energies/realisations/qeh-bac-acier.webp"
+        imageAlt="Installation photovoltaïque sur un bâtiment local"
+        reverse
+        links={[
+          { to: "/qeh-energies/carte-solaire", label: "Explorer la carte" },
+          { to: "/qeh-energies/participer", label: "Rejoindre le réseau local" },
+          { to: "/qeh-partner/production", label: "Devenir producteur" },
+        ]}
+      />
 
       <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
         <div className="mb-12 max-w-3xl">
