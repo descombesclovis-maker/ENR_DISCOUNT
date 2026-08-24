@@ -1,8 +1,14 @@
 import React, {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+
+import {
+  AnimatePresence,
+  motion,
+} from "framer-motion";
 
 import {
   Link,
@@ -38,12 +44,16 @@ import {
 } from "../context/WishlistContext";
 
 import {
-  priceLabel,
+  formatPrice,
 } from "../lib/api";
 
 import TechnicalSpecsTable, {
   parseTechnicalSpecifications,
 } from "../components/TechnicalSpecsTable";
+
+import ProductCustomOptions, {
+  AnimatedPriceDelta,
+} from "../components/ProductCustomOptions";
 
 const PRODUCT_CONDITIONS = {
   new_packaged: {
@@ -223,6 +233,24 @@ export default function ProductDetail() {
   ] = useState(0);
 
   const [
+    selectedCustomOptionIds,
+    setSelectedCustomOptionIds,
+  ] = useState([]);
+
+  const [
+    committedCustomOptionIds,
+    setCommittedCustomOptionIds,
+  ] = useState([]);
+
+  const [
+    priceEffects,
+    setPriceEffects,
+  ] = useState([]);
+
+  const optionEffectTimersRef =
+    useRef(new Map());
+
+  const [
     loading,
     setLoading,
   ] = useState(true);
@@ -233,6 +261,18 @@ export default function ProductDetail() {
   ] = useState("");
 
   useEffect(() => {
+    const activeTimers =
+      optionEffectTimersRef.current;
+
+    return () => {
+      activeTimers.forEach((timerId) =>
+        window.clearTimeout(timerId)
+      );
+      activeTimers.clear();
+    };
+  }, []);
+
+  useEffect(() => {
     let componentIsMounted =
       true;
 
@@ -240,6 +280,13 @@ export default function ProductDetail() {
       async () => {
         setLoading(true);
         setErrorMessage("");
+
+        optionEffectTimersRef.current.forEach(
+          (timerId) =>
+            window.clearTimeout(timerId)
+        );
+        optionEffectTimersRef.current.clear();
+        setPriceEffects([]);
 
         try {
           if (!slug) {
@@ -264,8 +311,6 @@ export default function ProductDetail() {
               sku,
               short_description,
               description,
-              price,
-
               price,
 weight_kg,
 length_cm,
@@ -328,6 +373,37 @@ product_condition,
             );
           }
 
+          const {
+            data: customOptionsData,
+            error: customOptionsError,
+          } = await supabase
+            .from(
+              "product_custom_options"
+            )
+            .select(`
+              id,
+              name,
+              description,
+              price_delta,
+              is_default_selected,
+              display_order
+            `)
+            .eq(
+              "product_id",
+              data.id
+            )
+            .eq("is_active", true)
+            .order("display_order", {
+              ascending: true,
+            })
+            .order("created_at", {
+              ascending: true,
+            });
+
+          if (customOptionsError) {
+            throw customOptionsError;
+          }
+
           const sortedImages =
             sortProductImages(
               data.product_images
@@ -336,6 +412,27 @@ product_condition,
           const sortedVariants =
             sortProductVariants(
               data.product_variants
+            );
+
+          const normalizedCustomOptions =
+            (customOptionsData || []).map(
+              (option) => ({
+                id: option.id,
+
+                name: option.name,
+
+                description:
+                  option.description || "",
+
+                priceDelta: Number(
+                  option.price_delta || 0
+                ),
+
+                isDefaultSelected:
+                  Boolean(
+                    option.is_default_selected
+                  ),
+              })
             );
 
           const normalizedProduct =
@@ -421,6 +518,9 @@ is_on_sale:
                 )
                   ? data.specifications
                   : [],
+
+              customOptions:
+                normalizedCustomOptions,
             };
 
           if (
@@ -436,6 +536,24 @@ is_on_sale:
           setImageIndex(0);
           setVariantIndex(0);
           setQuantity(1);
+
+          const defaultOptionIds =
+            normalizedCustomOptions
+              .filter(
+                (option) =>
+                  option.isDefaultSelected
+              )
+              .map(
+                (option) => option.id
+              );
+
+          setSelectedCustomOptionIds(
+            defaultOptionIds
+          );
+          setCommittedCustomOptionIds(
+            defaultOptionIds
+          );
+          setPriceEffects([]);
 
           document.title =
             `${normalizedProduct.name} | QEH OUTLET`;
@@ -503,6 +621,56 @@ product?.sale_price
   ? Number(product.sale_price)
   : Number(normalPrice);
 
+  const selectedCustomOptions =
+    useMemo(
+      () =>
+        (
+          product?.customOptions || []
+        ).filter((option) =>
+          selectedCustomOptionIds.includes(
+            option.id
+          )
+        ),
+      [
+        product?.customOptions,
+        selectedCustomOptionIds,
+      ]
+    );
+
+  const committedCustomOptions =
+    useMemo(
+      () =>
+        (
+          product?.customOptions || []
+        ).filter((option) =>
+          committedCustomOptionIds.includes(
+            option.id
+          )
+        ),
+      [
+        product?.customOptions,
+        committedCustomOptionIds,
+      ]
+    );
+
+  const committedOptionsTotal =
+    useMemo(
+      () =>
+        committedCustomOptions.reduce(
+          (total, option) =>
+            total +
+            Number(
+              option.priceDelta || 0
+            ),
+          0
+        ),
+      [committedCustomOptions]
+    );
+
+  const displayedConfiguredPrice =
+    displayedPrice +
+    committedOptionsTotal;
+
   const displayedStock =
     selectedVariant?.stock !==
       null &&
@@ -537,6 +705,13 @@ product?.sale_price
         product?.on_demand,
       ]
     );
+
+  const productCanBeAdded =
+    displayedStock > 0 ||
+    Boolean(product?.on_demand);
+
+  const optionAnimationIsRunning =
+    priceEffects.length > 0;
 
   const productCondition =
     PRODUCT_CONDITIONS[
@@ -651,19 +826,6 @@ product?.sale_price
       [product?.description]
     );
 
-  const displayedProduct =
-    product
-      ? {
-          ...product,
-
-          price:
-            displayedPrice,
-
-          stock:
-            displayedStock,
-        }
-      : null;
-
   const productIsFavorite =
     product
       ? isFavorite(
@@ -691,13 +853,16 @@ product?.sale_price
           currentQuantity
         ) => {
           if (
-            displayedStock <= 0
+            displayedStock <= 0 &&
+            !product?.on_demand
           ) {
             return currentQuantity;
           }
 
           return Math.min(
-            displayedStock,
+            displayedStock > 0
+              ? displayedStock
+              : 99,
             currentQuantity + 1
           );
         }
@@ -709,6 +874,125 @@ product?.sale_price
       setVariantIndex(index);
       setQuantity(1);
       setImageIndex(0);
+    };
+
+  const handleCustomOptionToggle =
+    (option) => {
+      const optionId = option?.id;
+
+      if (!optionId) {
+        return;
+      }
+
+      const runningTimer =
+        optionEffectTimersRef.current.get(
+          optionId
+        );
+
+      if (runningTimer) {
+        window.clearTimeout(runningTimer);
+        optionEffectTimersRef.current.delete(
+          optionId
+        );
+
+        setPriceEffects(
+          (currentEffects) =>
+            currentEffects.filter(
+              (effect) =>
+                effect.optionId !== optionId
+            )
+        );
+
+        setSelectedCustomOptionIds(
+          (currentSelection) =>
+            currentSelection.includes(
+              optionId
+            )
+              ? currentSelection.filter(
+                  (selectedId) =>
+                    selectedId !== optionId
+                )
+              : [
+                  ...currentSelection,
+                  optionId,
+                ]
+        );
+
+        return;
+      }
+
+      const isSelecting =
+        !selectedCustomOptionIds.includes(
+          optionId
+        );
+
+      setSelectedCustomOptionIds(
+        (currentSelection) =>
+          isSelecting
+            ? [
+                ...currentSelection,
+                optionId,
+              ]
+            : currentSelection.filter(
+                (selectedId) =>
+                  selectedId !== optionId
+              )
+      );
+
+      const effectId =
+        `${optionId}-${Date.now()}`;
+
+      setPriceEffects(
+        (currentEffects) => [
+          ...currentEffects,
+          {
+            id: effectId,
+            optionId,
+            amount:
+              Number(
+                option.priceDelta || 0
+              ) *
+              (isSelecting ? 1 : -1),
+          },
+        ]
+      );
+
+      const timerId =
+        window.setTimeout(() => {
+          setCommittedCustomOptionIds(
+            (currentSelection) =>
+              isSelecting
+                ? currentSelection.includes(
+                    optionId
+                  )
+                  ? currentSelection
+                  : [
+                      ...currentSelection,
+                      optionId,
+                    ]
+                : currentSelection.filter(
+                    (selectedId) =>
+                      selectedId !== optionId
+                  )
+          );
+
+          setPriceEffects(
+            (currentEffects) =>
+              currentEffects.filter(
+                (effect) =>
+                  effect.id !== effectId
+              )
+          );
+
+          optionEffectTimersRef.current.delete(
+            optionId
+          );
+        }, 860);
+
+      optionEffectTimersRef.current.set(
+        optionId,
+        timerId
+      );
     };
 
   const handleFavorite =
@@ -762,11 +1046,17 @@ product?.sale_price
         return;
       }
 
-      if (
-        displayedStock <= 0
-      ) {
+      if (!productCanBeAdded) {
         toast.error(
           "Ce produit est actuellement indisponible."
+        );
+
+        return;
+      }
+
+      if (optionAnimationIsRunning) {
+        toast.message(
+          "Le prix est en cours de mise à jour."
         );
 
         return;
@@ -783,6 +1073,27 @@ product?.sale_price
           ? `${product.id}-${selectedVariant.id}`
           : product.id;
 
+      const optionsSignature =
+        selectedCustomOptions
+          .map((option) => option.id)
+          .sort()
+          .join("-");
+
+      const configuredCartItemId =
+        optionsSignature
+          ? `${cartItemId}-options-${optionsSignature}`
+          : cartItemId;
+
+      const selectedOptionsTotal =
+        selectedCustomOptions.reduce(
+          (total, option) =>
+            total +
+            Number(
+              option.priceDelta || 0
+            ),
+          0
+        );
+
       const cartImage =
         selectedVariant
           ?.image_url ||
@@ -791,6 +1102,9 @@ product?.sale_price
         "/images/product-placeholder.png";
 
       const cartProduct = {
+        cart_item_id:
+          configuredCartItemId,
+
         id:
           cartItemId,
 
@@ -820,51 +1134,68 @@ product?.sale_price
           displayedSku,
 
         price:
-  Number(normalPrice),
+          Number(normalPrice) +
+          selectedOptionsTotal,
 
-sale_price:
-  product.is_on_sale
-    ? Number(product.sale_price)
-    : null,
+        sale_price:
+          product.is_on_sale &&
+          product.sale_price
+            ? Number(product.sale_price) +
+              selectedOptionsTotal
+            : null,
 
-is_on_sale:
-  Boolean(product.is_on_sale),
+        is_on_sale:
+          Boolean(product.is_on_sale),
 
-sale_start:
-  product.sale_start,
+        sale_start:
+          product.sale_start,
 
-sale_end:
-  product.sale_end,
+        sale_end:
+          product.sale_end,
 
         stock:
-  displayedStock,
+          displayedStock,
 
-weight_kg:
-  Number(product.weight_kg || 0),
+        weight_kg:
+          Number(product.weight_kg || 0),
 
-length_cm:
-  Number(product.length_cm || 0),
+        length_cm:
+          Number(product.length_cm || 0),
 
-width_cm:
-  Number(product.width_cm || 0),
+        width_cm:
+          Number(product.width_cm || 0),
 
-height_cm:
-  Number(product.height_cm || 0),
+        height_cm:
+          Number(product.height_cm || 0),
 
-requires_pallet:
-  Boolean(product.requires_pallet),
+        requires_pallet:
+          Boolean(product.requires_pallet),
 
-product_condition:
-  product.product_condition,
+        product_condition:
+          product.product_condition,
 
-image:
-  cartImage,
+        image:
+          cartImage,
   
         images:
           galleryImages.map(
             (image) =>
               image.url
           ),
+
+        selected_options:
+          selectedCustomOptions.map(
+            (option) => ({
+              id: option.id,
+              name: option.name,
+              price_delta: Number(
+                option.priceDelta || 0
+              ),
+            })
+          ),
+
+        options_total:
+          selectedOptionsTotal,
 
         selectedVariant:
           selectedVariant
@@ -885,21 +1216,23 @@ image:
                   selectedVariant.sku,
 
                 price:
-  selectedVariant
-    ? Number(selectedVariant.price)
-    : Number(product.price),
+                  selectedVariant
+                    ? Number(
+                        selectedVariant.price
+                      )
+                    : Number(product.price),
 
-sale_price:
-  product.sale_price,
+                sale_price:
+                  product.sale_price,
 
-is_on_sale:
-  product.is_on_sale,
+                is_on_sale:
+                  product.is_on_sale,
 
-sale_start:
-  product.sale_start,
+                sale_start:
+                  product.sale_start,
 
-sale_end:
-  product.sale_end,
+                sale_end:
+                  product.sale_end,
 
                 stock:
                   displayedStock,
@@ -920,9 +1253,15 @@ sale_end:
         `${product.name} ajouté au panier`,
         {
           description:
-            selectedVariant
-              ? `${variantLabel} — Quantité : ${quantity}`
-              : `Quantité : ${quantity}`,
+            `${
+              selectedVariant
+                ? `${variantLabel} — `
+                : ""
+            }Quantité : ${quantity}${
+              selectedCustomOptions.length
+                ? ` — ${selectedCustomOptions.length} option(s)`
+                : ""
+            }`,
         }
       );
     };
@@ -1274,52 +1613,132 @@ product.sale_price && (
                 </div>
               )}
 
+              <ProductCustomOptions
+                options={
+                  product.customOptions || []
+                }
+                selectedOptionIds={
+                  selectedCustomOptionIds
+                }
+                onToggle={
+                  handleCustomOptionToggle
+                }
+              />
+
               <div className="mt-8 rounded-3xl bg-[#020714] p-6 text-white">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.18em] text-white/45">
-                      Prix 
+                      {selectedCustomOptions.length
+                        ? "Prix configuré"
+                        : "Prix"}
                     </p>
 
                     {product.is_on_sale &&
-product.sale_price ? (
+                    product.sale_price ? (
+                      <div>
+                        <p className="text-lg text-white/50 line-through">
+                          {formatPrice(
+                            Number(normalPrice) +
+                              committedOptionsTotal
+                          )}
+                        </p>
 
-<div>
+                        <div className="relative mt-1 inline-block">
+                          <AnimatePresence>
+                            {priceEffects.map(
+                              (effect) => (
+                                <AnimatedPriceDelta
+                                  key={effect.id}
+                                  amount={effect.amount}
+                                />
+                              )
+                            )}
+                          </AnimatePresence>
 
-<p className="text-lg text-white/50 line-through">
+                          <AnimatePresence
+                            mode="wait"
+                          >
+                            <motion.p
+                              key={
+                                displayedConfiguredPrice
+                              }
+                              initial={{
+                                scale: 1.08,
+                                color: "#86efac",
+                              }}
+                              animate={{
+                                scale: 1,
+                                color: "#ff7a33",
+                              }}
+                              exit={{
+                                opacity: 0,
+                              }}
+                              transition={{
+                                duration: 0.2,
+                              }}
+                              className="font-display text-4xl font-black"
+                            >
+                              {formatPrice(
+                                displayedConfiguredPrice
+                              )}
+                            </motion.p>
+                          </AnimatePresence>
+                        </div>
 
-{Number(product.price).toFixed(2)} €
+                        <p className="mt-2 text-sm text-green-400">
+                          Vous économisez{" "}
+                          {formatPrice(
+                            Number(normalPrice) -
+                              Number(
+                                product.sale_price
+                              )
+                          )}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="relative mt-2 inline-block">
+                        <AnimatePresence>
+                          {priceEffects.map(
+                            (effect) => (
+                              <AnimatedPriceDelta
+                                key={effect.id}
+                                amount={effect.amount}
+                              />
+                            )
+                          )}
+                        </AnimatePresence>
 
-</p>
-
-<p className="font-display font-black text-4xl text-[#ff7a33] mt-1">
-
-{Number(product.sale_price).toFixed(2)} €
-
-</p>
-
-<p className="text-sm text-green-400 mt-2">
-
-Vous économisez{" "}
-
-{(
-Number(product.price)-
-Number(product.sale_price)
-).toFixed(2)} €
-
-</p>
-
-</div>
-
-) : (
-
-<p className="font-display font-black text-3xl sm:text-4xl text-white mt-2">
-
-{priceLabel(displayedProduct)}
-
-</p>
-
-)}
+                        <AnimatePresence
+                          mode="wait"
+                        >
+                          <motion.p
+                            key={
+                              displayedConfiguredPrice
+                            }
+                            initial={{
+                              scale: 1.08,
+                              color: "#86efac",
+                            }}
+                            animate={{
+                              scale: 1,
+                              color: "#ffffff",
+                            }}
+                            exit={{
+                              opacity: 0,
+                            }}
+                            transition={{
+                              duration: 0.2,
+                            }}
+                            className="font-display text-3xl font-black sm:text-4xl"
+                          >
+                            {formatPrice(
+                              displayedConfiguredPrice
+                            )}
+                          </motion.p>
+                        </AnimatePresence>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -1366,10 +1785,13 @@ Number(product.sale_price)
                       increaseQuantity
                     }
                     disabled={
-                      displayedStock <=
-                        0 ||
-                      quantity >=
-                        displayedStock
+                      (!product.on_demand &&
+                        displayedStock <=
+                          0) ||
+                      (displayedStock > 0 &&
+                        quantity >=
+                          displayedStock) ||
+                      quantity >= 99
                     }
                     aria-label="Augmenter la quantité"
                     className="w-12 h-12 grid place-items-center text-slate-600 hover:text-[#0b5ca8] disabled:opacity-30 transition-colors"
@@ -1384,16 +1806,18 @@ Number(product.sale_price)
                     handleAddToCart
                   }
                   disabled={
-                    displayedStock <=
-                    0
+                    !productCanBeAdded ||
+                    optionAnimationIsRunning
                   }
                   className="flex-1 inline-flex items-center justify-center gap-2 min-h-12 px-7 rounded-full bg-[#ff5a00] text-white font-black hover:bg-[#e95000] disabled:opacity-50 transition-colors shadow-[0_12px_35px_rgba(255,90,0,0.22)]"
                 >
                   <ShoppingBag className="w-5 h-5" />
 
-                  {displayedStock > 0
-                    ? "Ajouter au panier"
-                    : "Indisponible"}
+                  {!productCanBeAdded
+                    ? "Indisponible"
+                    : optionAnimationIsRunning
+                      ? "Mise à jour du prix…"
+                      : "Ajouter au panier"}
                 </button>
               </div>
 

@@ -36,7 +36,6 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Contact from "./pages/Contact";
-import SupabaseTest from "./pages/SupabaseTest";
 import Wishlist from "./pages/Wishlist";
 import Tracking from "./pages/Tracking";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -199,11 +198,6 @@ function App() {
                         <Route
                           path="/compte/commandes/:id"
                           element={<CustomerOrderDetail />}
-                        />
-
-                        <Route
-                          path="/test-supabase"
-                          element={<SupabaseTest />}
                         />
 
                         <Route

@@ -209,13 +209,9 @@ export default function CustomerOrderDetail() {
 
   }, []);
 
-useEffect(() => {
-
-  loadOrders();
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-
-}, []);
+  useEffect(() => {
+    loadOrder();
+  }, [loadOrder]);
 
   if (authLoading) {
 

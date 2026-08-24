@@ -30,6 +30,8 @@ import {
   priceLabel,
 } from "../lib/api";
 
+import HomeSolarCarportPromotion from "../components/HomeSolarCarportPromotion";
+
 const PRODUCT_CONDITIONS = {
   new_packaged: {
     label:
@@ -606,6 +608,8 @@ is_on_sale:
           )}
         </div>
       </section>
+
+      <HomeSolarCarportPromotion />
 
       <section className="max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
         <motion.div

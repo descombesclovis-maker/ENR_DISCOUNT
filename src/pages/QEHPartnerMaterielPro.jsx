@@ -118,6 +118,12 @@ export default function QEHPartnerMaterielPro() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.12 }} className="qehp-pro-hero__panel">
+            <img
+              src="/images/editorial/qeh-partner-logistique.jpg"
+              alt="Entrepôt de matériel solaire réservé aux professionnels"
+              className="qehp-pro-hero__panel-image"
+            />
+            <div className="qehp-pro-hero__panel-overlay" />
             <PackagePlus />
             <span>Approvisionnement professionnel</span>
             <strong>Du colis à la palette</strong>

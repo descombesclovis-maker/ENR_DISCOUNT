@@ -10,6 +10,7 @@ import {
   LoaderCircle,
   Minus,
   PackageCheck,
+  PackagePlus,
   Plus,
   ShieldCheck,
   ShoppingBag,
@@ -287,6 +288,14 @@ export default function Cart() {
         variant_id: item.variant_id || null,
 
         quantity: item.quantity,
+
+        option_ids: Array.isArray(
+          item.selected_options
+        )
+          ? item.selected_options.map(
+              (option) => option.id
+            )
+          : [],
       }));
 
       const { data, error } = await supabase.functions.invoke(
@@ -480,6 +489,31 @@ export default function Cart() {
                               {item.selectedVariant.label ||
                                 item.selectedVariant.name ||
                                 item.selectedVariant.reference}
+                            </div>
+                          )}
+
+                          {item.selected_options?.length > 0 && (
+                            <div className="mt-3 rounded-xl border border-[#0b5ca8]/15 bg-blue-50/70 px-3 py-2.5">
+                              <p className="flex items-center gap-2 text-xs font-black text-[#0b5ca8]">
+                                <PackagePlus className="h-3.5 w-3.5" />
+                                Options sélectionnées
+                              </p>
+
+                              <div className="mt-2 space-y-1">
+                                {item.selected_options.map(
+                                  (option) => (
+                                    <p
+                                      key={option.id}
+                                      className="flex items-center justify-between gap-3 text-xs text-slate-600"
+                                    >
+                                      <span>{option.name}</span>
+                                      <span className="shrink-0 font-bold text-[#ff5a00]">
+                                        + {formatPrice(option.price_delta)}
+                                      </span>
+                                    </p>
+                                  )
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>

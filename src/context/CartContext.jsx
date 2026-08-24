@@ -11,6 +11,10 @@ const CartContext = createContext(null);
 const STORAGE_KEY = "enr_cart";
 
 function getCartItemId(product) {
+  if (product.cart_item_id) {
+    return product.cart_item_id;
+  }
+
   const databaseProductId =
     product.database_product_id ||
     product.product_id ||
@@ -24,7 +28,7 @@ function getCartItemId(product) {
 
   return variantId
     ? `${databaseProductId}-${variantId}`
-    : databaseProductId;
+    : `${databaseProductId}`;
 }
 
 function normalizeProduct(product, quantity) {
@@ -92,6 +96,22 @@ image:
 
     selectedVariant:
       product.selectedVariant || null,
+
+    selected_options:
+      Array.isArray(product.selected_options)
+        ? product.selected_options.map(
+            (option) => ({
+              id: option.id,
+              name: option.name,
+              price_delta: Number(
+                option.price_delta || 0
+              ),
+            })
+          )
+        : [],
+
+    options_total:
+      Number(product.options_total || 0),
 
     quantity: Math.max(
       1,
@@ -178,7 +198,8 @@ export function CartProvider({ children }) {
       setItems((currentItems) =>
         currentItems.filter(
           (item) =>
-            item.cart_item_id !== cartItemId
+            item.cart_item_id !==
+            cartItemId
         )
       );
     },
@@ -198,28 +219,40 @@ export function CartProvider({ children }) {
         return;
       }
 
-      setItems((currentItems) =>
-        currentItems.map((item) => {
-          if (
-            item.cart_item_id !== cartItemId
-          ) {
-            return item;
-          }
+      setItems((currentItems) => {
+        const itemToUpdate =
+          currentItems.find(
+            (item) =>
+              item.cart_item_id ===
+              cartItemId
+          );
 
-          const maximumQuantity =
-            item.stock > 0
-              ? item.stock
-              : nextQuantity;
+        if (!itemToUpdate) {
+          return currentItems;
+        }
 
-          return {
-            ...item,
-            quantity: Math.min(
-              nextQuantity,
-              maximumQuantity
-            ),
-          };
-        })
-      );
+        const maximumQuantity =
+          itemToUpdate.stock > 0
+            ? itemToUpdate.stock
+            : nextQuantity;
+
+        const safeQuantity =
+          Math.min(
+            nextQuantity,
+            maximumQuantity
+          );
+
+        return currentItems.map(
+          (item) =>
+            item.cart_item_id ===
+            cartItemId
+              ? {
+                  ...item,
+                  quantity: safeQuantity,
+                }
+              : item
+        );
+      });
     },
     [removeItem]
   );

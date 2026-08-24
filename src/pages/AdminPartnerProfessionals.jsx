@@ -113,7 +113,7 @@ export default function AdminPartnerProfessionals() {
 
     try {
       const { data, error } = await supabase.functions.invoke(
-        "qeh-professional-approva",
+        "qeh-professional-approval",
         {
           body: {
             application_id: selected.id,
@@ -123,7 +123,20 @@ export default function AdminPartnerProfessionals() {
         }
       );
 
-      if (error) throw error;
+      if (error) {
+        let functionMessage = error.message;
+
+        if (error.context instanceof Response) {
+          try {
+            const responseBody = await error.context.clone().json();
+            functionMessage = responseBody?.error || functionMessage;
+          } catch {
+            // La réponse n'était pas du JSON : on conserve le message du SDK.
+          }
+        }
+
+        throw new Error(functionMessage);
+      }
       if (!data?.success) throw new Error(data?.error || "La décision n’a pas été enregistrée.");
 
       toast.success(
@@ -136,6 +149,7 @@ export default function AdminPartnerProfessionals() {
       await loadApplications();
     } catch (error) {
       toast.error(error?.message || "Impossible de traiter cette demande.");
+      await loadApplications();
     } finally {
       setAction(null);
     }

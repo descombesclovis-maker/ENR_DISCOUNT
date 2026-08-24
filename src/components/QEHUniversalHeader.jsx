@@ -66,14 +66,14 @@ export default function QEHUniversalHeader({
       className={`sticky top-0 z-[1000] border-b ${theme.border} bg-[#020711]/95 text-white shadow-[0_12px_40px_rgba(2,7,17,0.3)] backdrop-blur-xl`}
     >
       <div
-        className={`mx-auto grid max-w-7xl items-center gap-x-3 px-3 py-2 sm:px-8 ${
+        className={`mx-auto grid max-w-7xl items-center px-2 py-2 sm:px-8 ${
           hasUtilities
-            ? "min-h-[126px] grid-cols-[1fr_auto] grid-rows-[auto_auto] gap-y-2 lg:min-h-[82px] lg:grid-cols-[1fr_auto_1fr] lg:grid-rows-1"
-            : "min-h-[82px] grid-cols-[48px_minmax(0,1fr)_48px] sm:grid-cols-[56px_minmax(0,1fr)_56px]"
+            ? "min-h-[64px] grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-1 gap-x-1.5 sm:gap-x-3 lg:min-h-[82px] lg:grid-cols-[1fr_auto_1fr]"
+            : "min-h-[82px] grid-cols-[48px_minmax(0,1fr)_48px] gap-x-3 sm:grid-cols-[56px_minmax(0,1fr)_56px]"
         }`}
       >
         {hasUtilities ? (
-          <div className="col-start-1 row-start-2 flex min-w-0 items-center justify-self-start lg:col-start-1 lg:row-start-1">
+          <div className="col-start-1 row-start-1 flex min-w-0 items-center justify-self-start">
             {utilityLeft}
           </div>
         ) : (
@@ -84,7 +84,7 @@ export default function QEHUniversalHeader({
           activeBrand={activeBrand}
           className={
             hasUtilities
-              ? "col-span-2 col-start-1 row-start-1 mx-auto lg:col-span-1 lg:col-start-2"
+              ? "col-start-2 row-start-1 mx-auto min-w-0"
               : "mx-auto"
           }
         />
@@ -92,7 +92,7 @@ export default function QEHUniversalHeader({
         <div
           className={`flex min-w-0 items-center justify-self-end gap-2 ${
             hasUtilities
-              ? "col-start-2 row-start-2 lg:col-start-3 lg:row-start-1"
+              ? "col-start-3 row-start-1 gap-1.5 sm:gap-2"
               : ""
           }`}
         >
@@ -103,7 +103,7 @@ export default function QEHUniversalHeader({
             onClick={() => setMenuOpen((current) => !current)}
             aria-expanded={menuOpen}
             aria-label={menuOpen ? `Fermer ${menuLabel}` : `Ouvrir ${menuLabel}`}
-            className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/15 bg-white/5 text-white transition sm:h-12 sm:w-12 ${theme.button}`}
+            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/15 bg-white/5 text-white transition lg:h-12 lg:w-12 ${theme.button}`}
           >
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>

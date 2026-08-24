@@ -743,6 +743,19 @@ html {
   place-items: center;
 }
 
+.qehp-energy-visual__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(242, 207, 121, 0.26);
+  border-radius: 50%;
+  object-fit: cover;
+  opacity: 0.48;
+  filter: saturate(0.85) contrast(1.08);
+  mask-image: radial-gradient(circle, black 52%, transparent 73%);
+}
+
 .qehp-energy-visual__sun {
   position: relative;
   z-index: 2;
@@ -1224,6 +1237,33 @@ html {
   background: rgba(255, 255, 255, 0.055);
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(12px);
+}
+
+.qehp-pro-hero__panel-image,
+.qehp-pro-hero__panel-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.qehp-pro-hero__panel-image {
+  object-fit: cover;
+  opacity: 0.42;
+  transition: transform 0.75s ease;
+}
+
+.qehp-pro-hero__panel:hover .qehp-pro-hero__panel-image {
+  transform: scale(1.045);
+}
+
+.qehp-pro-hero__panel-overlay {
+  background: linear-gradient(135deg, rgba(2, 7, 20, 0.96), rgba(2, 7, 20, 0.38));
+}
+
+.qehp-pro-hero__panel > :not(.qehp-pro-hero__panel-image):not(.qehp-pro-hero__panel-overlay) {
+  position: relative;
+  z-index: 2;
 }
 
 .qehp-pro-hero__panel > svg { width: 43px; height: 43px; margin-bottom: 35px; color: var(--qehp-gold-bright); }

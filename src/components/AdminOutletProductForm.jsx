@@ -1,6 +1,7 @@
 import React, {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -10,6 +11,7 @@ import {
   ArrowLeft,
   ImagePlus,
   LoaderCircle,
+  PackagePlus,
   Plus,
   Save,
   Trash2,
@@ -22,6 +24,7 @@ import {
 } from "react-router-dom";
 
 import { supabase } from "../lib/supabase";
+import { parseTechnicalSpecifications } from "./TechnicalSpecsTable";
 
 const emptyProduct = {
   name: "",
@@ -31,6 +34,7 @@ const emptyProduct = {
   reference: "",
   sku: "",
   category_id: "",
+  short_description: "",
   description: "",
   price: "",
   sale_price: "",
@@ -58,6 +62,123 @@ const emptyVariant = {
   is_active: true,
 };
 
+const emptyCustomOption = {
+  name: "",
+  description: "",
+  price_delta: "",
+  is_default_selected: false,
+  is_active: true,
+};
+
+const PRODUCT_IMAGE_BUCKET = "produits";
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+];
+
+function createLocalId() {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
+}
+
+function sanitizeFileName(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9.]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function validateImageFile(file) {
+  if (!file) {
+    return "Aucun fichier sélectionné.";
+  }
+
+  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+    return `${file.name} : format non accepté (JPG, PNG, WEBP ou AVIF uniquement).`;
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return `${file.name} : l’image dépasse 5 Mo.`;
+  }
+
+  return "";
+}
+
+function getStoragePathFromPublicUrl(publicUrl) {
+  if (!publicUrl) {
+    return "";
+  }
+
+  const marker = `/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/`;
+  const markerIndex = publicUrl.indexOf(marker);
+
+  if (markerIndex === -1) {
+    return "";
+  }
+
+  const encodedPath = publicUrl
+    .slice(markerIndex + marker.length)
+    .split("?")[0];
+
+  try {
+    return decodeURIComponent(encodedPath);
+  } catch {
+    return encodedPath;
+  }
+}
+
+async function uploadProductImage({
+  file,
+  folder,
+}) {
+  const safeFileName =
+    sanitizeFileName(file.name) ||
+    `photo-${Date.now()}.jpg`;
+
+  const storagePath = `${folder}/${Date.now()}-${createLocalId()}-${safeFileName}`;
+
+  const { error: uploadError } =
+    await supabase.storage
+      .from(PRODUCT_IMAGE_BUCKET)
+      .upload(storagePath, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { data } = supabase.storage
+    .from(PRODUCT_IMAGE_BUCKET)
+    .getPublicUrl(storagePath);
+
+  if (!data?.publicUrl) {
+    throw new Error(
+      "Impossible de générer l’adresse publique de la photo."
+    );
+  }
+
+  return {
+    publicUrl: data.publicUrl,
+    storagePath,
+  };
+}
+
 function slugify(value) {
   return value
     .normalize("NFD")
@@ -74,6 +195,47 @@ function nullableNumber(value) {
     value === undefined
     ? null
     : Number(value);
+}
+
+function restoreTechnicalDescription(
+  description,
+  specifications
+) {
+  const descriptionText = String(
+    description || ""
+  ).trim();
+
+  if (
+    parseTechnicalSpecifications(
+      descriptionText
+    ).specifications.length > 0
+  ) {
+    return descriptionText;
+  }
+
+  const specificationLines = Array.isArray(specifications)
+    ? specifications
+        .map((specification) => {
+          const label = String(
+            specification?.label || ""
+          ).trim();
+          const value = String(
+            specification?.value || ""
+          ).trim();
+
+          return label && value
+            ? `${label} : ${value}`
+            : "";
+        })
+        .filter(Boolean)
+    : [];
+
+  return [
+    descriptionText,
+    specificationLines.join("\n"),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function toDateInput(value) {
@@ -144,7 +306,15 @@ export default function AdminOutletProductForm({
   const [variants, setVariants] =
     useState([]);
 
+  const [
+    customOptions,
+    setCustomOptions,
+  ] = useState([]);
+
   const [images, setImages] =
+    useState([]);
+
+  const [deletedImages, setDeletedImages] =
     useState([]);
 
   const [loading, setLoading] =
@@ -155,6 +325,37 @@ export default function AdminOutletProductForm({
 
   const [errorMessage, setErrorMessage] =
     useState("");
+
+  const previewUrlsRef = useRef(new Set());
+
+  function createPreviewUrl(file) {
+    const previewUrl = URL.createObjectURL(file);
+    previewUrlsRef.current.add(previewUrl);
+    return previewUrl;
+  }
+
+  function revokePreviewUrl(previewUrl) {
+    if (
+      !previewUrl ||
+      !previewUrlsRef.current.has(previewUrl)
+    ) {
+      return;
+    }
+
+    URL.revokeObjectURL(previewUrl);
+    previewUrlsRef.current.delete(previewUrl);
+  }
+
+  useEffect(() => {
+    const previewUrls = previewUrlsRef.current;
+
+    return () => {
+      previewUrls.forEach((previewUrl) => {
+        URL.revokeObjectURL(previewUrl);
+      });
+      previewUrls.clear();
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -177,6 +378,14 @@ export default function AdminOutletProductForm({
         categoriesResult.data || []
       );
 
+      if (categoriesResult.error) {
+        setErrorMessage(
+          categoriesResult.error.message
+        );
+        setLoading(false);
+        return;
+      }
+
       if (!isEditing) {
         setLoading(false);
         return;
@@ -186,6 +395,7 @@ export default function AdminOutletProductForm({
         productResult,
         variantsResult,
         imagesResult,
+        customOptionsResult,
       ] = await Promise.all([
         supabase
           .from("products")
@@ -208,15 +418,35 @@ export default function AdminOutletProductForm({
           .order("display_order", {
             ascending: true,
           }),
+
+        supabase
+          .from("product_custom_options")
+          .select("*")
+          .eq(
+            "product_id",
+            productId
+          )
+          .order("display_order", {
+            ascending: true,
+          })
+          .order("created_at", {
+            ascending: true,
+          }),
       ]);
 
       if (!active) {
         return;
       }
 
-      if (productResult.error) {
+      const pageLoadError =
+        productResult.error ||
+        variantsResult.error ||
+        imagesResult.error ||
+        customOptionsResult.error;
+
+      if (pageLoadError) {
         setErrorMessage(
-          productResult.error.message
+          pageLoadError.message
         );
       } else {
         const value = productResult.data;
@@ -227,6 +457,15 @@ export default function AdminOutletProductForm({
 
           category_id:
             value.category_id || "",
+
+          short_description:
+            value.short_description || "",
+
+          description:
+            restoreTechnicalDescription(
+              value.description,
+              value.specifications
+            ),
 
           price:
             value.price ?? "",
@@ -260,10 +499,29 @@ export default function AdminOutletProductForm({
           variantsResult.data || []
         );
 
+        setCustomOptions(
+          (customOptionsResult.data || []).map(
+            (option) => ({
+              ...option,
+
+              description:
+                option.description || "",
+
+              price_delta:
+                option.price_delta ?? "",
+            })
+          )
+        );
+
         setImages(
           (imagesResult.data || []).map(
             (image) => ({
               ...image,
+
+              file: null,
+
+              preview_url:
+                image.image_url || "",
 
               image_url:
                 image.image_url || "",
@@ -273,6 +531,8 @@ export default function AdminOutletProductForm({
             })
           )
         );
+
+        setDeletedImages([]);
       }
 
       setLoading(false);
@@ -323,7 +583,7 @@ export default function AdminOutletProductForm({
 
       {
         ...emptyVariant,
-        local_id: crypto.randomUUID(),
+        local_id: createLocalId(),
       },
     ]);
   }
@@ -355,18 +615,98 @@ export default function AdminOutletProductForm({
     );
   }
 
-  function addImage() {
-    setImages((current) => [
+  function addCustomOption() {
+    setCustomOptions((current) => [
       ...current,
-
       {
-        local_id: crypto.randomUUID(),
-        image_url: "",
-        alt_text: "",
-        is_primary:
-          current.length === 0,
+        ...emptyCustomOption,
+        local_id: createLocalId(),
       },
     ]);
+  }
+
+  function updateCustomOption(
+    index,
+    name,
+    value
+  ) {
+    setCustomOptions((current) =>
+      current.map(
+        (option, optionIndex) =>
+          optionIndex === index
+            ? {
+                ...option,
+                [name]: value,
+              }
+            : option
+      )
+    );
+  }
+
+  function removeCustomOption(index) {
+    setCustomOptions((current) =>
+      current.filter(
+        (_, optionIndex) =>
+          optionIndex !== index
+      )
+    );
+  }
+
+  function handleImageSelection(event) {
+    const selectedFiles = Array.from(
+      event.target.files || []
+    );
+
+    if (!selectedFiles.length) {
+      return;
+    }
+
+    const validationErrors = [];
+    const selectedImages = [];
+
+    selectedFiles.forEach((file) => {
+      const validationError =
+        validateImageFile(file);
+
+      if (validationError) {
+        validationErrors.push(validationError);
+        return;
+      }
+
+      selectedImages.push({
+        local_id: createLocalId(),
+        file,
+        preview_url: createPreviewUrl(file),
+        image_url: "",
+        alt_text: "",
+        is_primary: false,
+      });
+    });
+
+    if (selectedImages.length) {
+      setImages((current) => {
+        const hasPrimaryImage = current.some(
+          (image) => image.is_primary
+        );
+
+        return [
+          ...current,
+          ...selectedImages.map((image, index) => ({
+            ...image,
+            is_primary:
+              !hasPrimaryImage && index === 0,
+          })),
+        ];
+      });
+    }
+
+    if (validationErrors.length) {
+      setErrorMessage(validationErrors.join(" "));
+    } else {
+      setErrorMessage("");
+    }
+
+    event.target.value = "";
   }
 
   function updateImage(
@@ -400,6 +740,21 @@ export default function AdminOutletProductForm({
   }
 
   function removeImage(index) {
+    const imageToRemove = images[index];
+
+    if (!imageToRemove) {
+      return;
+    }
+
+    revokePreviewUrl(imageToRemove.preview_url);
+
+    if (imageToRemove.id) {
+      setDeletedImages((current) => [
+        ...current,
+        imageToRemove,
+      ]);
+    }
+
     setImages((current) => {
       const next = current.filter(
         (_, imageIndex) =>
@@ -452,9 +807,15 @@ export default function AdminOutletProductForm({
       category_id:
         product.category_id || null,
 
+      short_description:
+        product.short_description?.trim() ||
+        null,
+
       description:
         product.description?.trim() ||
         null,
+
+      specifications: [],
 
       price:
         Number(product.price || 0),
@@ -518,178 +879,399 @@ export default function AdminOutletProductForm({
         ),
     };
 
-    const productResult = isEditing
-      ? await supabase
-          .from("products")
-          .update(payload)
-          .eq("id", productId)
-          .select("id")
-          .single()
-      : await supabase
-          .from("products")
-          .insert(payload)
-          .select("id")
-          .single();
+    const uploadedStoragePaths = [];
+    let createdProductId = null;
+    let uploadedImagesCommitted = false;
 
-    if (productResult.error) {
-      setErrorMessage(
-        productResult.error.message
-      );
-
-      setSaving(false);
-      return;
-    }
-
-    const savedProductId =
-      productResult.data.id;
-
-    const validVariants =
-      variants.filter((variant) =>
-        variant.name?.trim()
-      );
-
-    const validImages =
-      images.filter((image) =>
-        image.image_url?.trim()
-      );
-
-    const deleteVariants =
-      await supabase
-        .from("product_variants")
-        .delete()
-        .eq(
-          "product_id",
-          savedProductId
+    try {
+      const validCustomOptions =
+        customOptions.filter(
+          (option) =>
+            option.name?.trim()
         );
 
-    if (deleteVariants.error) {
-      setErrorMessage(
-        deleteVariants.error.message
-      );
+      if (
+        validCustomOptions.some(
+          (option) =>
+            !Number.isFinite(
+              Number(option.price_delta)
+            ) ||
+            Number(option.price_delta) < 0
+        )
+      ) {
+        throw new Error(
+          "Chaque option doit avoir un supplément de prix valide, positif ou nul."
+        );
+      }
 
-      setSaving(false);
-      return;
-    }
+      const productResult = isEditing
+        ? await supabase
+            .from("products")
+            .update(payload)
+            .eq("id", productId)
+            .select("id")
+            .single()
+        : await supabase
+            .from("products")
+            .insert(payload)
+            .select("id")
+            .single();
 
-    if (validVariants.length) {
-      const variantsResult =
+      if (productResult.error) {
+        throw productResult.error;
+      }
+
+      const savedProductId =
+        productResult.data.id;
+
+      if (!isEditing) {
+        createdProductId = savedProductId;
+      }
+
+      const validVariants =
+        variants.filter((variant) =>
+          variant.name?.trim()
+        );
+
+      const validImages =
+        images.filter(
+          (image) =>
+            image.file ||
+            image.image_url?.trim()
+        );
+
+      const preparedImages = [];
+
+      for (
+        let index = 0;
+        index < validImages.length;
+        index += 1
+      ) {
+        const image = validImages[index];
+        let imageUrl =
+          image.image_url?.trim() || "";
+
+        if (image.file) {
+          const uploadedImage =
+            await uploadProductImage({
+              file: image.file,
+              folder: `${payload.slug}/${savedProductId}`,
+            });
+
+          uploadedStoragePaths.push(
+            uploadedImage.storagePath
+          );
+          imageUrl = uploadedImage.publicUrl;
+        }
+
+        preparedImages.push({
+          ...image,
+          image_url: imageUrl,
+          display_order: index,
+        });
+      }
+
+      const deleteVariants =
         await supabase
           .from("product_variants")
-          .insert(
-            validVariants.map(
-              (variant) => ({
-                product_id:
-                  savedProductId,
-
-                name:
-                  variant.name.trim(),
-
-                reference:
-                  variant.reference?.trim() ||
-                  null,
-
-                sku:
-                  variant.sku?.trim() ||
-                  null,
-
-                price:
-                  nullableNumber(
-                    variant.price
-                  ),
-
-                stock:
-                  Math.max(
-                    0,
-                    Number(
-                      variant.stock || 0
-                    )
-                  ),
-
-                is_active:
-                  variant.is_active !==
-                  false,
-              })
-            )
+          .delete()
+          .eq(
+            "product_id",
+            savedProductId
           );
 
-      if (variantsResult.error) {
-        setErrorMessage(
-          variantsResult.error.message
-        );
-
-        setSaving(false);
-        return;
+      if (deleteVariants.error) {
+        throw deleteVariants.error;
       }
-    }
 
-    const deleteImages =
-      await supabase
-        .from("product_images")
-        .delete()
-        .eq(
-          "product_id",
-          savedProductId
-        );
+      if (validVariants.length) {
+        const variantsResult =
+          await supabase
+            .from("product_variants")
+            .insert(
+              validVariants.map(
+                (variant) => ({
+                  product_id:
+                    savedProductId,
 
-    if (deleteImages.error) {
-      setErrorMessage(
-        deleteImages.error.message
-      );
+                  name:
+                    variant.name.trim(),
 
-      setSaving(false);
-      return;
-    }
+                  reference:
+                    variant.reference?.trim() ||
+                    null,
 
-    if (validImages.length) {
-      const imagesResult =
+                  sku:
+                    variant.sku?.trim() ||
+                    null,
+
+                  price:
+                    nullableNumber(
+                      variant.price
+                    ),
+
+                  stock:
+                    Math.max(
+                      0,
+                      Number(
+                        variant.stock || 0
+                      )
+                    ),
+
+                  is_active:
+                    variant.is_active !==
+                    false,
+                })
+              )
+            );
+
+        if (variantsResult.error) {
+          throw variantsResult.error;
+        }
+      }
+
+      const deleteCustomOptionsResult =
+        await supabase
+          .from("product_custom_options")
+          .delete()
+          .eq(
+            "product_id",
+            savedProductId
+          );
+
+      if (deleteCustomOptionsResult.error) {
+        throw deleteCustomOptionsResult.error;
+      }
+
+      if (validCustomOptions.length) {
+        const customOptionsResult =
+          await supabase
+            .from("product_custom_options")
+            .insert(
+              validCustomOptions.map(
+                (option, index) => ({
+                  product_id:
+                    savedProductId,
+
+                  name:
+                    option.name.trim(),
+
+                  description:
+                    option.description?.trim() ||
+                    null,
+
+                  price_delta: Number(
+                    option.price_delta || 0
+                  ),
+
+                  is_default_selected:
+                    Boolean(
+                      option.is_default_selected
+                    ),
+
+                  is_active: Boolean(
+                    option.is_active
+                  ),
+
+                  display_order: index,
+                })
+              )
+            );
+
+        if (customOptionsResult.error) {
+          throw customOptionsResult.error;
+        }
+      }
+
+      const resetPrimaryImages =
         await supabase
           .from("product_images")
-          .insert(
-            validImages.map(
-              (image, index) => ({
-                product_id:
-                  savedProductId,
-
-                image_url:
-                  image.image_url.trim(),
-
-                alt_text:
-                  image.alt_text?.trim() ||
-                  product.name.trim(),
-
-                is_primary:
-                  Boolean(
-                    image.is_primary
-                  ) ||
-                  (
-                    index === 0 &&
-                    !validImages.some(
-                      (item) =>
-                        item.is_primary
-                    )
-                  ),
-
-                display_order: index,
-              })
-            )
+          .update({ is_primary: false })
+          .eq(
+            "product_id",
+            savedProductId
           );
 
-      if (imagesResult.error) {
-        setErrorMessage(
-          imagesResult.error.message
+      if (resetPrimaryImages.error) {
+        throw resetPrimaryImages.error;
+      }
+
+      const hasPrimaryImage =
+        preparedImages.some(
+          (image) => image.is_primary
         );
 
-        setSaving(false);
-        return;
-      }
-    }
+      for (
+        let index = 0;
+        index < preparedImages.length;
+        index += 1
+      ) {
+        const image = preparedImages[index];
+        const imagePayload = {
+          product_id: savedProductId,
+          image_url: image.image_url,
+          alt_text:
+            image.alt_text?.trim() ||
+            product.name.trim(),
+          is_primary:
+            Boolean(image.is_primary) ||
+            (!hasPrimaryImage && index === 0),
+          display_order: index,
+        };
 
-    navigate(
-      "/admin/produits",
-      {
-        replace: true,
+        if (image.id) {
+          const imageUpdateResult =
+            await supabase
+              .from("product_images")
+              .update(imagePayload)
+              .eq("id", image.id)
+              .eq(
+                "product_id",
+                savedProductId
+              )
+              .select("id")
+              .maybeSingle();
+
+          if (imageUpdateResult.error) {
+            throw imageUpdateResult.error;
+          }
+
+          if (!imageUpdateResult.data) {
+            throw new Error(
+              "La photo n’a pas pu être modifiée. Vérifiez les autorisations administrateur."
+            );
+          }
+        } else {
+          const imageInsertResult =
+            await supabase
+              .from("product_images")
+              .insert(imagePayload)
+              .select("id")
+              .single();
+
+          if (imageInsertResult.error) {
+            throw imageInsertResult.error;
+          }
+        }
       }
-    );
+
+      uploadedImagesCommitted = true;
+
+      const deletedImageIds =
+        deletedImages
+          .map((image) => image.id)
+          .filter(Boolean);
+
+      if (deletedImageIds.length) {
+        const deleteImagesResult =
+          await supabase
+            .from("product_images")
+            .delete()
+            .in("id", deletedImageIds)
+            .select("id");
+
+        if (deleteImagesResult.error) {
+          throw deleteImagesResult.error;
+        }
+
+        if (
+          (deleteImagesResult.data || []).length !==
+          deletedImageIds.length
+        ) {
+          throw new Error(
+            "Certaines photos n’ont pas pu être supprimées. Vérifiez les autorisations administrateur."
+          );
+        }
+      }
+
+      const obsoleteStoragePaths =
+        deletedImages
+          .map((image) =>
+            getStoragePathFromPublicUrl(
+              image.image_url
+            )
+          )
+          .filter(Boolean);
+
+      if (obsoleteStoragePaths.length) {
+        const { error: storageDeleteError } =
+          await supabase.storage
+            .from(PRODUCT_IMAGE_BUCKET)
+            .remove(obsoleteStoragePaths);
+
+        if (storageDeleteError) {
+          console.warn(
+            "Certaines anciennes photos n’ont pas pu être supprimées du stockage :",
+            storageDeleteError
+          );
+        }
+      }
+
+      previewUrlsRef.current.forEach(
+        (previewUrl) => {
+          URL.revokeObjectURL(previewUrl);
+        }
+      );
+      previewUrlsRef.current.clear();
+
+      navigate(
+        "/admin/produits",
+        {
+          replace: true,
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Erreur lors de l’enregistrement du produit :",
+        error
+      );
+
+      if (
+        uploadedStoragePaths.length &&
+        !uploadedImagesCommitted
+      ) {
+        const { error: cleanupError } =
+          await supabase.storage
+            .from(PRODUCT_IMAGE_BUCKET)
+            .remove(uploadedStoragePaths);
+
+        if (cleanupError) {
+          console.error(
+            "Impossible de nettoyer les photos après l’échec :",
+            cleanupError
+          );
+        }
+      }
+
+      if (createdProductId) {
+        const { error: cleanupProductError } =
+          await supabase
+            .from("products")
+            .delete()
+            .eq("id", createdProductId);
+
+        if (cleanupProductError) {
+          console.error(
+            "Impossible de supprimer le produit incomplet :",
+            cleanupProductError
+          );
+        }
+      }
+
+      const message =
+        error?.message ||
+        "Impossible d’enregistrer le produit.";
+
+      setErrorMessage(
+        message.toLowerCase().includes(
+          "row-level security"
+        )
+          ? "Accès refusé par les règles de sécurité Supabase. Exécutez le correctif RLS QEH OUTLET, puis réessayez."
+          : message
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   const inputClass =
@@ -904,11 +1486,32 @@ export default function AdminOutletProductForm({
                 </Field>
 
                 <Field
-                  label="Description"
+                  label="Description courte"
                   className="sm:col-span-2"
                 >
                   <textarea
-                    rows="7"
+                    rows="3"
+                    value={
+                      product.short_description ||
+                      ""
+                    }
+                    onChange={(event) =>
+                      changeProduct(
+                        "short_description",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Petit texte commercial affiché à côté du produit."
+                    className={`${inputClass} py-3`}
+                  />
+                </Field>
+
+                <Field
+                  label="Description technique"
+                  className="sm:col-span-2"
+                >
+                  <textarea
+                    rows="9"
                     value={
                       product.description ||
                       ""
@@ -919,9 +1522,183 @@ export default function AdminOutletProductForm({
                         event.target.value
                       )
                     }
+                    placeholder={
+                      "Puissance : 500 W\nPoids : 21 kg\nGarantie : 25 ans"
+                    }
                     className={`${inputClass} py-3`}
                   />
+
+                  <span className="mt-2 block text-xs font-semibold text-slate-500">
+                    Écrivez une caractéristique par ligne sous la forme « Caractéristique : valeur ». Elles seront automatiquement affichées dans le tableau technique.
+                  </span>
                 </Field>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-[#0b5ca8]/20 bg-gradient-to-br from-white via-white to-blue-50/50 p-5 shadow-sm sm:p-7">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#020714] text-[#65b9ff]">
+                    <PackagePlus className="h-5 w-5" />
+                  </span>
+
+                  <div>
+                    <h2 className="font-display text-xl font-black">
+                      Options privées
+                    </h2>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      Ces options apparaissent uniquement sous ce produit et ajoutent un supplément au prix.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addCustomOption}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#0b5ca8] px-4 font-black text-white"
+                >
+                  <Plus className="h-4 w-4" />
+                  Ajouter une option
+                </button>
+              </div>
+
+              <div className="mt-5 space-y-4">
+                {customOptions.map(
+                  (option, index) => (
+                    <div
+                      key={
+                        option.id ||
+                        option.local_id ||
+                        index
+                      }
+                      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                    >
+                      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_auto] lg:items-end">
+                        <Field label="Nom de l’option">
+                          <input
+                            required
+                            maxLength="120"
+                            placeholder="Ex. Borne de recharge"
+                            value={option.name || ""}
+                            onChange={(event) =>
+                              updateCustomOption(
+                                index,
+                                "name",
+                                event.target.value
+                              )
+                            }
+                            className={inputClass}
+                          />
+                        </Field>
+
+                        <Field label="Supplément de prix">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                            placeholder="0,00"
+                            value={
+                              option.price_delta ?? ""
+                            }
+                            onChange={(event) =>
+                              updateCustomOption(
+                                index,
+                                "price_delta",
+                                event.target.value
+                              )
+                            }
+                            className={inputClass}
+                          />
+                        </Field>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeCustomOption(index)
+                          }
+                          className="grid h-12 w-12 place-items-center rounded-xl border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-600 hover:text-white"
+                          aria-label="Supprimer l’option"
+                          title="Supprimer l’option"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <Field
+                        label="Petit texte explicatif"
+                        className="mt-3 block"
+                      >
+                        <input
+                          maxLength="300"
+                          placeholder="Ex. Rechargez votre véhicule directement sous le carport."
+                          value={
+                            option.description || ""
+                          }
+                          onChange={(event) =>
+                            updateCustomOption(
+                              index,
+                              "description",
+                              event.target.value
+                            )
+                          }
+                          className={inputClass}
+                        />
+                      </Field>
+
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(
+                              option.is_default_selected
+                            )}
+                            onChange={(event) =>
+                              updateCustomOption(
+                                index,
+                                "is_default_selected",
+                                event.target.checked
+                              )
+                            }
+                            className="h-4 w-4 accent-[#ff5a00]"
+                          />
+
+                          Cochée par défaut
+                        </label>
+
+                        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={
+                              option.is_active !== false
+                            }
+                            onChange={(event) =>
+                              updateCustomOption(
+                                index,
+                                "is_active",
+                                event.target.checked
+                              )
+                            }
+                            className="h-4 w-4 accent-[#0b5ca8]"
+                          />
+
+                          Option visible
+                        </label>
+                      </div>
+                    </div>
+                  )
+                )}
+
+                {!customOptions.length ? (
+                  <div className="rounded-2xl border border-dashed border-[#0b5ca8]/30 bg-white/70 p-8 text-center">
+                    <PackagePlus className="mx-auto h-7 w-7 text-[#0b5ca8]/45" />
+
+                    <p className="mt-3 text-sm font-bold text-slate-600">
+                      Aucune option privée pour ce produit.
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </section>
 
@@ -1097,20 +1874,40 @@ export default function AdminOutletProductForm({
                   </h2>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    Ajoutez les URL des photos
-                    du produit.
+                    Importez directement les photos
+                    depuis votre ordinateur ou votre téléphone.
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={addImage}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 font-black"
-                >
-                  <ImagePlus className="h-4 w-4" />
-                  Ajouter
-                </button>
+                <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600">
+                  {images.length}{" "}
+                  {images.length > 1
+                    ? "photos"
+                    : "photo"}
+                </span>
               </div>
+
+              <label className="mt-5 flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#ff5a00]/35 bg-orange-50/40 px-5 py-6 text-center transition hover:border-[#ff5a00] hover:bg-orange-50">
+                <input
+                  type="file"
+                  multiple
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                  onChange={handleImageSelection}
+                  className="sr-only"
+                />
+
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#ff5a00] text-white shadow-[0_10px_24px_rgba(255,90,0,.24)]">
+                  <ImagePlus className="h-5 w-5" />
+                </span>
+
+                <span className="mt-3 font-black text-slate-950">
+                  Choisir une ou plusieurs photos
+                </span>
+
+                <span className="mt-1 text-xs font-semibold text-slate-500">
+                  JPG, PNG, WEBP ou AVIF · 5 Mo maximum par photo
+                </span>
+              </label>
 
               <div className="mt-5 space-y-3">
                 {images.map(
@@ -1124,10 +1921,17 @@ export default function AdminOutletProductForm({
                       className="grid gap-3 rounded-2xl border border-slate-200 p-4 sm:grid-cols-[90px_1fr_auto]"
                     >
                       <div className="grid h-[76px] place-items-center overflow-hidden rounded-xl bg-slate-100">
-                        {image.image_url ? (
+                        {image.preview_url ||
+                        image.image_url ? (
                           <img
-                            src={image.image_url}
-                            alt=""
+                            src={
+                              image.preview_url ||
+                              image.image_url
+                            }
+                            alt={
+                              image.alt_text ||
+                              `Aperçu ${index + 1}`
+                            }
                             className="h-full w-full object-contain"
                           />
                         ) : (
@@ -1136,24 +1940,24 @@ export default function AdminOutletProductForm({
                       </div>
 
                       <div className="space-y-2">
-                        <input
-                          placeholder="URL de l’image"
-                          value={
-                            image.image_url ||
-                            ""
-                          }
-                          onChange={(event) =>
-                            updateImage(
-                              index,
-                              "image_url",
-                              event.target.value
-                            )
-                          }
-                          className={inputClass}
-                        />
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-black text-slate-900">
+                            Photo {index + 1}
+                          </span>
+
+                          <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[.08em] ${
+                            image.file
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-emerald-50 text-emerald-700"
+                          }`}>
+                            {image.file
+                              ? "Prête à importer"
+                              : "Enregistrée"}
+                          </span>
+                        </div>
 
                         <input
-                          placeholder="Texte alternatif"
+                          placeholder="Texte alternatif (facultatif)"
                           value={
                             image.alt_text ||
                             ""
@@ -1194,6 +1998,7 @@ export default function AdminOutletProductForm({
                         onClick={() =>
                           removeImage(index)
                         }
+                        aria-label={`Supprimer la photo ${index + 1}`}
                         className="grid h-10 w-10 place-items-center rounded-xl text-red-500 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -1201,6 +2006,12 @@ export default function AdminOutletProductForm({
                     </div>
                   )
                 )}
+
+                {!images.length ? (
+                  <p className="rounded-2xl bg-slate-50 px-4 py-3 text-center text-sm font-semibold text-slate-500">
+                    Aucune photo sélectionnée pour le moment.
+                  </p>
+                ) : null}
               </div>
             </section>
           </div>

@@ -12,6 +12,7 @@ import {
   SunMedium,
   Truck,
 } from "lucide-react";
+import QEHContextBanner from "../components/QEHContextBanner";
 
 const universes = [
   {
@@ -196,6 +197,20 @@ export default function QEHPartner() {
           </div>
         </div>
       </section>
+
+      <QEHContextBanner
+        theme="partner"
+        eyebrow="Le passage au niveau professionnel"
+        title="Approvisionnez vos chantiers avec un espace pensé pour les pros."
+        description="Catalogue distinct, prix HT, quantités de gros et logistique professionnelle : votre activité dispose enfin de son propre parcours QEH."
+        image="/images/editorial/qeh-partner-logistique.jpg"
+        imageAlt="Entrepôt premium de matériel solaire et logistique QEH Partner"
+        links={[
+          { to: "/qeh-partner/connexion-pro", label: "Passer à Pro" },
+          { to: "/qeh-partner/inscription-pro", label: "Créer mon compte Pro" },
+          { to: "/qeh-partner/franchise", label: "Devenir partenaire" },
+        ]}
+      />
 
       <section className="qehp-section qehp-section--dark">
         <div className="qehp-container">

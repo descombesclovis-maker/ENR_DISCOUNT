@@ -52,10 +52,10 @@ export const Header = () => {
     <Link
       to="/connexion"
       title="Connexion à l’espace particulier"
-      className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[#ff5a00] px-3 font-bold text-white shadow-[0_10px_28px_rgba(255,90,0,0.24)] transition hover:bg-[#ff6d1a] sm:px-5"
+      className="inline-flex h-10 min-h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-[#ff5a00] p-0 font-bold text-white shadow-[0_10px_28px_rgba(255,90,0,0.24)] transition hover:bg-[#ff6d1a] lg:min-h-11 lg:w-auto lg:px-5"
     >
       <User className="h-5 w-5" />
-      <span className="hidden sm:inline">Connexion particulier</span>
+      <span className="hidden lg:inline">Connexion particulier</span>
     </Link>
   ) : (
     <div ref={accountMenuRef} className="relative">
@@ -63,11 +63,11 @@ export const Header = () => {
         type="button"
         onClick={() => setAccountMenuOpen((current) => !current)}
         title="Compte particulier"
-        className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 font-bold hover:border-[#ff5a00] sm:px-4"
+        className="inline-flex h-10 min-h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 p-0 font-bold hover:border-[#ff5a00] lg:min-h-11 lg:w-auto lg:px-4"
       >
         <User className="h-5 w-5" />
-        <span className="hidden max-w-44 truncate sm:inline">{customerDisplayName}</span>
-        <ChevronDown className={`hidden h-4 w-4 transition sm:block ${accountMenuOpen ? "rotate-180" : ""}`} />
+        <span className="hidden max-w-44 truncate lg:inline">{customerDisplayName}</span>
+        <ChevronDown className={`hidden h-4 w-4 transition lg:block ${accountMenuOpen ? "rotate-180" : ""}`} />
       </button>
 
       {accountMenuOpen ? (

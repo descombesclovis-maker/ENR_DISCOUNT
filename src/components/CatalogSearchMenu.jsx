@@ -456,7 +456,7 @@ export default function CatalogSearchMenu() {
         }
         aria-expanded={open}
         title="Rechercher un produit"
-        className={`w-11 h-11 rounded-full border grid place-items-center transition-all duration-200 ${
+        className={`grid h-10 w-10 place-items-center rounded-full border transition-all duration-200 sm:h-11 sm:w-11 ${
           open
             ? "border-[#ff5a00] bg-[#ff5a00] text-white shadow-[0_10px_30px_rgba(255,90,0,0.28)]"
             : "border-white/20 bg-white/5 text-white hover:border-[#0b5ca8] hover:bg-[#0b5ca8]/20"

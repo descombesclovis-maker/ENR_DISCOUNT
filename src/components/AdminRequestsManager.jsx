@@ -40,14 +40,33 @@ const statusOptions = [
   },
 ];
 
+const energyRequestStatusOptions = [
+  {
+    value: "pending",
+    label: "Nouvelle",
+  },
+  {
+    value: "contacted",
+    label: "Contactée",
+  },
+  {
+    value: "closed",
+    label: "Clôturée",
+  },
+];
+
 const statusStyles = {
   new: "border-blue-200 bg-blue-50 text-blue-700",
+  pending:
+    "border-blue-200 bg-blue-50 text-blue-700",
   contacted:
     "border-amber-200 bg-amber-50 text-amber-700",
   accepted:
     "border-emerald-200 bg-emerald-50 text-emerald-700",
   rejected:
     "border-red-200 bg-red-50 text-red-700",
+  closed:
+    "border-slate-200 bg-slate-100 text-slate-700",
 };
 
 function text(value) {
@@ -86,6 +105,14 @@ export default function AdminRequestsManager({
   icon: PageIcon,
   fields,
 }) {
+  const availableStatusOptions =
+    tableName === "solar_consumer_requests"
+      ? energyRequestStatusOptions
+      : statusOptions;
+
+  const defaultStatus =
+    availableStatusOptions[0].value;
+
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] =
     useState(true);
@@ -138,7 +165,7 @@ export default function AdminRequestsManager({
     return requests.filter((request) => {
       const matchesStatus =
         statusFilter === "all" ||
-        (request.status || "new") ===
+        (request.status || defaultStatus) ===
           statusFilter;
 
       const searchable = [
@@ -163,11 +190,12 @@ export default function AdminRequestsManager({
     requests,
     searchValue,
     statusFilter,
+    defaultStatus,
   ]);
 
   const newCount = requests.filter(
     (request) =>
-      (request.status || "new") === "new"
+      (request.status || defaultStatus) === defaultStatus
   ).length;
 
   async function updateStatus(
@@ -315,7 +343,7 @@ export default function AdminRequestsManager({
                 Tous les statuts
               </option>
 
-              {statusOptions.map((status) => (
+              {availableStatusOptions.map((status) => (
                 <option
                   key={status.value}
                   value={status.value}
@@ -372,10 +400,10 @@ export default function AdminRequestsManager({
               {filteredRequests.map(
                 (request) => {
                   const status =
-                    request.status || "new";
+                    request.status || defaultStatus;
 
                   const statusLabel =
-                    statusOptions.find(
+                    availableStatusOptions.find(
                       (item) =>
                         item.value === status
                     )?.label || status;
@@ -432,7 +460,7 @@ export default function AdminRequestsManager({
                         className={`w-fit rounded-full border px-3 py-1.5 text-xs font-black ${
                           statusStyles[
                             status
-                          ] || statusStyles.new
+                          ] || statusStyles[defaultStatus]
                         }`}
                       >
                         {statusLabel}
@@ -549,7 +577,7 @@ export default function AdminRequestsManager({
               <select
                 value={
                   selectedRequest.status ||
-                  "new"
+                  defaultStatus
                 }
                 disabled={
                   updatingId ===
@@ -563,7 +591,7 @@ export default function AdminRequestsManager({
                 }
                 className="min-h-12 w-full rounded-xl border border-slate-200 bg-white px-4 font-black outline-none"
               >
-                {statusOptions.map(
+                {availableStatusOptions.map(
                   (status) => (
                     <option
                       key={status.value}

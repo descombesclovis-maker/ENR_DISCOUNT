@@ -161,8 +161,8 @@ export default function CustomerOrders() {
 
           </div>
 
-          <div className="py-10 px-8"></div>
-                      {loading ? (
+          <div className="px-8 py-10">
+            {loading ? (
 
               <div className="text-center py-20">
 
@@ -402,11 +402,13 @@ export default function CustomerOrders() {
 
             </Link>
 
-             </div>
+          </div>
 
         </div>
 
       </div>
+
+    </div>
 
 
   );

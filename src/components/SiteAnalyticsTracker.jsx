@@ -14,15 +14,25 @@ function createVisitorId() {
 
 function getVisitorId() {
   try {
-    const existingId = localStorage.getItem(VISITOR_STORAGE_KEY);
+    const existingId = sessionStorage.getItem(VISITOR_STORAGE_KEY);
 
     if (existingId) return existingId;
 
     const newId = createVisitorId();
-    localStorage.setItem(VISITOR_STORAGE_KEY, newId);
+    sessionStorage.setItem(VISITOR_STORAGE_KEY, newId);
     return newId;
   } catch {
     return createVisitorId();
+  }
+}
+
+function getReferrerOrigin() {
+  if (!document.referrer) return null;
+
+  try {
+    return new URL(document.referrer).origin;
+  } catch {
+    return null;
   }
 }
 
@@ -43,7 +53,7 @@ export default function SiteAnalyticsTracker() {
         visitor_id: getVisitorId(),
         path: location.pathname,
         universe: getUniverse(location.pathname),
-        referrer: document.referrer || null,
+        referrer: getReferrerOrigin(),
       });
 
       if (error && error.code !== "42P01") {

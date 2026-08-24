@@ -144,6 +144,9 @@ export default function Products() {
     searchParams.get("categorie") ||
     "";
 
+  const promotionsOnly =
+    searchParams.get("promotion") === "1";
+
   const [
     products,
     setProducts,
@@ -385,6 +388,15 @@ is_on_sale:
           );
       }
 
+      if (promotionsOnly) {
+        filteredProducts =
+          filteredProducts.filter(
+            (product) =>
+              product.is_on_sale &&
+              Number(product.sale_price || 0) > 0
+          );
+      }
+
       if (selectedBrand) {
         filteredProducts =
           filteredProducts.filter(
@@ -514,6 +526,7 @@ is_on_sale:
     }, [
       products,
       selectedCategorySlug,
+      promotionsOnly,
       selectedBrand,
       selectedCondition,
       sortMode,
@@ -546,6 +559,7 @@ is_on_sale:
   const hasActiveFilters =
     Boolean(
       selectedCategorySlug ||
+        promotionsOnly ||
         selectedBrand ||
         selectedCondition ||
         sortMode !==
@@ -624,17 +638,19 @@ is_on_sale:
 
       <h1 className="font-display font-black text-white text-4xl lg:text-6xl leading-none">
 
-        {selectedCategoryName
-          ? selectedCategoryName
-          : "Catalogue"}
+        {promotionsOnly
+          ? "Objets en promotion"
+          : selectedCategoryName
+            ? selectedCategoryName
+            : "Catalogue"}
 
       </h1>
 
       <p className="text-blue-100 mt-5 max-w-2xl text-lg">
 
-        Découvrez notre sélection de matériels neufs,
-        déstockés et d'occasion destinés aux
-        professionnels et aux particuliers.
+        {promotionsOnly
+          ? "Retrouvez uniquement les produits actuellement proposés à prix réduit."
+          : "Découvrez notre sélection de matériels neufs, déstockés et d'occasion destinés aux professionnels et aux particuliers."}
 
       </p>
 
