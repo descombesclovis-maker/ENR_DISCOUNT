@@ -32,10 +32,10 @@ export const SOLOPORT_PROMOTION = {
     "2026-09-30T23:59:59+02:00",
 
   originalPrice:
-    16929.9,
+    24929.9,
 
   promotionalPrice:
-    14990.9,
+    14929.9,
 
   productPath:
     "/produits/abri-voiture-solaire-soloport-pp4-g12600-1",
@@ -93,7 +93,7 @@ const PRODUCT_HIGHLIGHTS = [
       Gauge,
 
     value:
-      "12,6 kWp",
+      "13,5 kWp",
 
     label:
       "puissance totale",
@@ -104,7 +104,7 @@ const PRODUCT_HIGHLIGHTS = [
       PanelsTopLeft,
 
     value:
-      "30 × 420 Wp",
+      "30 × 450 Wp",
 
     label:
       "modules monocristallins",
@@ -536,7 +536,7 @@ export default function HomeSolarCarportPromotion() {
               </h2>
 
               <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/68 sm:text-base">
-                Protégez quatre véhicules et produisez jusqu’à 12,6 kWp avec un carport double face en acier galvanisé, conçu pour durer et évoluer avec votre projet.
+                Protégez quatre véhicules et produisez jusqu’à 13,5 kWp avec un carport double face en acier galvanisé, conçu pour durer et évoluer avec votre projet.
               </p>
 
               <div className="mt-7 grid grid-cols-2 gap-3">
@@ -640,6 +640,10 @@ export default function HomeSolarCarportPromotion() {
                     Vous économisez {formatPrice(
                       discount
                     )} HT
+                  </p>
+
+                  <p className="mt-3 max-w-xl text-[10px] leading-relaxed text-white/40">
+                    * Offre événement : cette offre comprend le carport en kit avec les 30 panneaux, l’onduleur et son coffret AC.
                   </p>
                 </>
               ) : (
