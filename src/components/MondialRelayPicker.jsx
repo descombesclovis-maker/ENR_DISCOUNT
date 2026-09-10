@@ -6,22 +6,34 @@ import { CheckCircle2, LoaderCircle, MapPin, RefreshCw } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 const DEFAULT_CENTER = [46.603354, 1.888334];
+const MONDIAL_RELAY_LOGO = "/images/mondial-relay-logo.svg";
 
-const relayIcon = L.divIcon({
-  className: "qeh-relay-marker",
-  html: '<div style="width:34px;height:34px;border-radius:9999px;background:#ff5a00;border:4px solid white;box-shadow:0 4px 14px rgba(2,7,20,.28);display:grid;place-items:center;color:white;font-weight:900;font-size:13px">MR</div>',
-  iconSize: [34, 34],
-  iconAnchor: [17, 17],
-  popupAnchor: [0, -18],
-});
+function createRelayIcon(selected = false) {
+  const size = selected ? 54 : 46;
+  const badgeSize = selected ? 46 : 38;
+  const borderColor = selected ? "#0b5ca8" : "#e40087";
+  const glow = selected
+    ? "0 0 0 5px rgba(11,92,168,.16),0 8px 20px rgba(2,7,20,.28)"
+    : "0 7px 18px rgba(2,7,20,.24)";
 
-const selectedRelayIcon = L.divIcon({
-  className: "qeh-relay-marker-selected",
-  html: '<div style="width:40px;height:40px;border-radius:9999px;background:#0b5ca8;border:4px solid white;box-shadow:0 5px 18px rgba(11,92,168,.35);display:grid;place-items:center;color:white;font-weight:900;font-size:13px">✓</div>',
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
-  popupAnchor: [0, -21],
-});
+  return L.divIcon({
+    className: selected ? "qeh-relay-marker-selected" : "qeh-relay-marker",
+    html: `
+      <div style="width:${size}px;height:${size + 8}px;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 2px 2px rgba(0,0,0,.08));">
+        <div style="width:${badgeSize}px;height:${badgeSize}px;border-radius:14px;background:#fff;border:3px solid ${borderColor};box-shadow:${glow};display:flex;align-items:center;justify-content:center;overflow:hidden;padding:4px;box-sizing:border-box;">
+          <img src="${MONDIAL_RELAY_LOGO}" alt="Mondial Relay" style="display:block;width:100%;height:100%;object-fit:contain;" />
+        </div>
+        <div style="width:11px;height:11px;background:#fff;border-right:3px solid ${borderColor};border-bottom:3px solid ${borderColor};transform:translateY(-5px) rotate(45deg);box-sizing:border-box;"></div>
+      </div>
+    `,
+    iconSize: [size, size + 8],
+    iconAnchor: [size / 2, size + 4],
+    popupAnchor: [0, -(size - 3)],
+  });
+}
+
+const relayIcon = createRelayIcon(false);
+const selectedRelayIcon = createRelayIcon(true);
 
 function FitRelayPoints({ points }) {
   const map = useMap();
@@ -220,7 +232,14 @@ export default function MondialRelayPicker({
                   >
                     <Popup>
                       <div style={{ minWidth: 190 }}>
-                        <strong>{point.name || "Point Relais"}</strong>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
+                          <img
+                            src={MONDIAL_RELAY_LOGO}
+                            alt="Mondial Relay"
+                            style={{ width: 34, height: 34, objectFit: "contain" }}
+                          />
+                          <strong>{point.name || "Point Relais"}</strong>
+                        </div>
                         <div style={{ marginTop: 5 }}>{relayAddress(point)}</div>
                         {distanceLabel(point.distanceMeters) && (
                           <div style={{ marginTop: 5 }}>
@@ -267,17 +286,15 @@ export default function MondialRelayPicker({
                 >
                   <div className="flex items-start gap-3">
                     <div
-                      className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full ${
-                        isSelected
-                          ? "bg-[#0b5ca8] text-white"
-                          : "bg-orange-50 text-[#ff5a00]"
+                      className={`mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-white p-1 ${
+                        isSelected ? "border-[#0b5ca8]" : "border-[#e40087]/40"
                       }`}
                     >
-                      {isSelected ? (
-                        <CheckCircle2 className="h-4 w-4" />
-                      ) : (
-                        <MapPin className="h-4 w-4" />
-                      )}
+                      <img
+                        src={MONDIAL_RELAY_LOGO}
+                        alt="Mondial Relay"
+                        className="h-full w-full object-contain"
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
@@ -297,6 +314,9 @@ export default function MondialRelayPicker({
                         Point {point.code}
                       </p>
                     </div>
+                    {isSelected && (
+                      <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
+                    )}
                   </div>
                 </button>
               );
