@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/index.css";
 import App from "@/App";
+import MondialRelayPortal from "@/components/MondialRelayPortal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +19,7 @@ root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
+      <MondialRelayPortal />
     </QueryClientProvider>
   </React.StrictMode>,
 );
