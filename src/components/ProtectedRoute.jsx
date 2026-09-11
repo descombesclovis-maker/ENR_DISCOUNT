@@ -1,12 +1,12 @@
 import React from "react";
 import {
   Navigate,
+  Outlet,
   useLocation,
 } from "react-router-dom";
 import { LoaderCircle } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
-import AdminMfaGate from "./AdminMfaGate";
 
 export default function ProtectedRoute() {
   const location = useLocation();
@@ -38,5 +38,5 @@ export default function ProtectedRoute() {
     );
   }
 
-  return <AdminMfaGate />;
+  return <Outlet />;
 }
