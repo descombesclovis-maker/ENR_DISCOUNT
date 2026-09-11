@@ -15,7 +15,16 @@ if (!supabasePublishableKey) {
   );
 }
 
-const client = createClient(supabaseUrl, supabasePublishableKey);
+// La session d'authentification reste disponible pendant la session du navigateur,
+// mais n'est pas conservée durablement dans localStorage.
+const client = createClient(supabaseUrl, supabasePublishableKey, {
+  auth: {
+    storage: window.sessionStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
 
 const originalInvoke = client.functions.invoke.bind(client.functions);
 
