@@ -1,6 +1,10 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import {
+  COOKIE_CONSENT_EVENT,
+  hasAnalyticsConsent,
+} from "./CookieConsent";
 
 const VISITOR_STORAGE_KEY = "qeh_visitor_id";
 
@@ -44,9 +48,16 @@ function getUniverse(pathname) {
 
 export default function SiteAnalyticsTracker() {
   const location = useLocation();
+  const [analyticsAllowed, setAnalyticsAllowed] = React.useState(() => hasAnalyticsConsent());
 
   useEffect(() => {
-    if (location.pathname.startsWith("/admin")) return;
+    const handleConsent = () => setAnalyticsAllowed(hasAnalyticsConsent());
+    window.addEventListener(COOKIE_CONSENT_EVENT, handleConsent);
+    return () => window.removeEventListener(COOKIE_CONSENT_EVENT, handleConsent);
+  }, []);
+
+  useEffect(() => {
+    if (!analyticsAllowed || location.pathname.startsWith("/admin")) return;
 
     const timer = window.setTimeout(async () => {
       const { error } = await supabase.from("site_page_views").insert({
@@ -62,7 +73,7 @@ export default function SiteAnalyticsTracker() {
     }, 400);
 
     return () => window.clearTimeout(timer);
-  }, [location.pathname]);
+  }, [analyticsAllowed, location.pathname]);
 
   return null;
 }
