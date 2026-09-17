@@ -78,19 +78,43 @@ function distanceInMeters(firstPoint, secondPoint) {
 }
 
 async function geocodeAddress(query) {
-  const response = await fetch(
-    `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(
-      query
-    )}&limit=1`
-  );
+  let response;
 
-  if (!response.ok) {
+  try {
+    response = await fetch(
+      `https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(
+        query
+      )}&limit=1&autocomplete=0`,
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    console.error("Erreur réseau du géocodeur IGN :", error);
     throw new Error(
-      "Le service de recherche d’adresse est momentanément indisponible."
+      "La recherche d’adresse est momentanément indisponible. Réessayez dans quelques instants."
     );
   }
 
-  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(
+      "La recherche d’adresse est momentanément indisponible. Réessayez dans quelques instants."
+    );
+  }
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch (error) {
+    console.error("Réponse invalide du géocodeur IGN :", error);
+    throw new Error(
+      "Le service de recherche d’adresse a renvoyé une réponse invalide. Réessayez dans quelques instants."
+    );
+  }
+
   const feature = result.features?.[0];
 
   if (!feature) {
@@ -101,10 +125,16 @@ async function geocodeAddress(query) {
 
   const [longitude, latitude] = feature.geometry.coordinates;
 
+  if (!Number.isFinite(Number(latitude)) || !Number.isFinite(Number(longitude))) {
+    throw new Error(
+      "Cette adresse n’a pas pu être positionnée précisément. Essayez avec le numéro, la rue, le code postal et la ville."
+    );
+  }
+
   return {
-    latitude,
-    longitude,
-    label: feature.properties.label,
+    latitude: Number(latitude),
+    longitude: Number(longitude),
+    label: feature.properties?.label || query,
   };
 }
 
