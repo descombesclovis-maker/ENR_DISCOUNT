@@ -95,7 +95,7 @@ export default function QEHPartnerLayout() {
           </div>
 
           <div className="qehp-footer__links">
-            <Link to="/">QEH OUTLET</Link>
+            <Link to="/qeh-outlet">QEH OUTLET</Link>
             <Link to="/qeh-energies">QEH Énergies</Link>
             <Link to="/contact">Contact</Link>
           </div>
