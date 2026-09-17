@@ -219,7 +219,7 @@ export default function CheckoutSuccess() {
               Continuer mes achats
             </Link>
             <Link
-              to="/"
+              to="/qeh-outlet"
               className="inline-flex items-center justify-center h-12 px-7 rounded-full border border-border font-semibold hover:bg-secondary"
             >
               Retour à l’accueil
