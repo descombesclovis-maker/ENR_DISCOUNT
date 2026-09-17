@@ -381,40 +381,31 @@ export default function ProfessionalLogin() {
               openProfessionalRegistration
             }
             whileHover={{
-              scale: 1.02,
-              y: -3,
+              x: 4,
             }}
             whileTap={{
               scale: 0.98,
             }}
             style={{
-              position: "relative",
-              display: "flex",
-              width: "100%",
-              minHeight: "64px",
+              display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "12px",
-              overflow: "hidden",
-              border:
-                "1px solid #fff0b8",
-              borderRadius: "18px",
-              padding: "0 24px",
-              color: "#07101c",
-              background:
-                "linear-gradient(110deg, #8e6119 0%, #f8e4a4 35%, #c58e2d 65%, #fff0b8 100%)",
-              backgroundSize: "240% 100%",
-              boxShadow:
-                "0 16px 50px rgba(216,169,61,0.42), inset 0 1px rgba(255,255,255,0.75)",
-              fontSize: "16px",
-              fontWeight: "950",
+              gap: "8px",
+              border: "none",
+              padding: "4px 0",
+              color: "#c8d0dc",
+              background: "transparent",
+              fontSize: "15px",
+              fontWeight: "700",
+              lineHeight: "1.5",
               cursor: "pointer",
             }}
           >
             <Sparkles
               style={{
-                width: "21px",
-                height: "21px",
+                width: "16px",
+                height: "16px",
+                color: "#f2cf79",
               }}
             />
 
@@ -422,8 +413,9 @@ export default function ProfessionalLogin() {
 
             <ArrowRight
               style={{
-                width: "21px",
-                height: "21px",
+                width: "16px",
+                height: "16px",
+                color: "#f2cf79",
               }}
             />
           </motion.button>
