@@ -1,418 +1,472 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   Boxes,
-  Factory,
   Lock,
   Map,
-  PackageSearch,
-  ShieldCheck,
-  Sparkles,
-  SunMedium,
-  UserCheck,
-  Users,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 import { useProfessionalAuth } from "../context/ProfessionalAuthContext";
 
-const MOBILE_CANVAS_WIDTH = 390;
+const euro = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+});
 
 const UNIVERSES = [
   {
     id: "outlet",
-    shortLabel: "OUTLET",
+    label: "OUTLET",
     title: "QEH OUTLET",
-    eyebrow: "Équipement · Déstockage · Bonnes affaires",
+    tagline: "Acheter",
     headline: "Le matériel technique au prix juste.",
-    description:
-      "Panneaux solaires, chauffage, climatisation, plomberie et équipements techniques disponibles immédiatement ou sur demande.",
+    description: "Équipements techniques, déstockage et bonnes affaires disponibles immédiatement ou sur demande.",
     accent: "#ff5a00",
-    accentSoft: "#ff9b62",
+    softAccent: "#ff8a4b",
     logo: "/images/qeh-outlet-logo.jpg",
-    image: "/images/editorial/qeh-outlet-showroom.jpg",
-    imageAlt: "Univers QEH OUTLET",
-    glow: "rgba(255,90,0,.30)",
+    background:
+      "radial-gradient(circle at 18% 8%, rgba(255,90,0,.28), transparent 34%), linear-gradient(155deg,#07111f 0%,#0a2440 58%,#11100d 100%)",
   },
   {
     id: "energies",
-    shortLabel: "ÉNERGIES",
+    label: "ÉNERGIES",
     title: "QEH ÉNERGIES",
-    eyebrow: "Production locale · Solaire · Territoire",
+    tagline: "Explorer",
     headline: "L'énergie produite près de chez vous.",
-    description:
-      "Explorez les projets et producteurs autour de vous, comprenez l'écosystème et participez à une énergie plus locale.",
+    description: "Découvrez les projets, producteurs et initiatives photovoltaïques de votre territoire.",
     accent: "#82d246",
-    accentSoft: "#b7ef8c",
+    softAccent: "#a8eb75",
     logo: "/images/qeh-energies-logo.png",
-    image: "/images/editorial/qeh-energies-territoire.jpg",
-    imageAlt: "Univers QEH ÉNERGIES",
-    glow: "rgba(130,210,70,.28)",
+    background:
+      "radial-gradient(circle at 50% 8%, rgba(130,210,70,.27), transparent 34%), linear-gradient(160deg,#07170e 0%,#11301e 55%,#061009 100%)",
   },
   {
     id: "partner",
-    shortLabel: "PARTNER",
+    label: "PARTNER",
     title: "QEH PARTNER",
-    eyebrow: "Professionnels · Production · Développement",
-    headline: "L'univers professionnel du groupe QEH.",
-    description:
-      "Accédez au matériel professionnel, développez la production QEH ou rejoignez le réseau en devenant franchisé.",
-    accent: "#e5bd58",
-    accentSoft: "#f6df98",
+    tagline: "Développer",
+    headline: "L'univers réservé à ceux qui développent QEH.",
+    description: "Matériel professionnel, production et développement du réseau QEH réunis dans un espace dédié.",
+    accent: "#f2cf79",
+    softAccent: "#ffe4a0",
     logo: "/images/qeh-partner-logo-gold.png",
-    image: "/images/editorial/qeh-partner-logistique.jpg",
-    imageAlt: "Univers QEH PARTNER",
-    glow: "rgba(229,189,88,.28)",
+    background:
+      "radial-gradient(circle at 78% 8%, rgba(242,207,121,.22), transparent 34%), linear-gradient(155deg,#171109 0%,#2a2111 55%,#0c0905 100%)",
   },
 ];
 
-function UniverseSelector({ activeId, onSelect }) {
+function getPrimaryImage(images, productName) {
+  if (!Array.isArray(images) || images.length === 0) {
+    return { url: "/images/product-placeholder.png", alt: productName };
+  }
+
+  const sorted = [...images].sort((first, second) => {
+    if (first.is_primary !== second.is_primary) return first.is_primary ? -1 : 1;
+    return Number(first.display_order || 0) - Number(second.display_order || 0);
+  });
+
+  return {
+    url: sorted[0]?.image_url || "/images/product-placeholder.png",
+    alt: sorted[0]?.alt_text || productName,
+  };
+}
+
+function outletPrice(product) {
+  const value = product.is_on_sale && Number(product.sale_price) > 0
+    ? Number(product.sale_price)
+    : Number(product.price || 0);
+
+  return value > 0 ? euro.format(value) : "Sur demande";
+}
+
+function OutletProducts({ products, loading }) {
+  if (loading) {
+    return (
+      <div className="grid min-h-40 place-items-center rounded-[24px] border border-white/10 bg-white/[.045] text-xs font-bold text-white/40">
+        Chargement des produits…
+      </div>
+    );
+  }
+
+  if (!products.length) {
+    return (
+      <Link
+        to="/produits"
+        className="flex min-h-40 items-center justify-center rounded-[24px] border border-dashed border-white/20 bg-white/[.04] text-sm font-black transition hover:border-[#ff5a00]/60 hover:bg-white/[.07]"
+      >
+        Découvrir le catalogue
+      </Link>
+    );
+  }
+
   return (
-    <div className="mx-auto flex w-full max-w-[720px] items-center justify-center gap-1 rounded-full border border-white/10 bg-white/[.045] p-1.5 shadow-[0_18px_60px_rgba(0,0,0,.22)] backdrop-blur-xl">
-      {UNIVERSES.map((universe) => {
-        const active = activeId === universe.id;
-
-        return (
-          <motion.button
-            key={universe.id}
-            type="button"
-            onClick={() => onSelect(universe.id)}
-            className="relative flex min-h-11 flex-1 items-center justify-center rounded-full px-3 text-[10px] font-black uppercase tracking-[.14em] text-white/55 transition hover:text-white"
-            aria-pressed={active}
-          >
-            {active ? (
-              <motion.span
-                layoutId="qeh-active-selector"
-                className="absolute inset-0 rounded-full border border-white/15 bg-white/[.09] shadow-[0_10px_28px_rgba(0,0,0,.20)]"
-                transition={{ type: "spring", stiffness: 320, damping: 30 }}
-              />
+    <div className="grid grid-cols-2 gap-3">
+      {products.slice(0, 2).map((product) => (
+        <Link
+          key={product.id}
+          to={`/produits/${product.slug}`}
+          className="group overflow-hidden rounded-[22px] border border-white/10 bg-[#081b2e]/85 shadow-[0_18px_50px_rgba(0,0,0,.22)] transition hover:-translate-y-1 hover:border-[#ff5a00]/70"
+        >
+          <div className="relative aspect-square bg-white p-2.5">
+            <img
+              src={product.image.url}
+              alt={product.image.alt}
+              loading="lazy"
+              className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
+            />
+            {product.is_on_sale && Number(product.sale_price) > 0 ? (
+              <span className="absolute left-2 top-2 rounded-full bg-[#ff5a00] px-2 py-1 text-[8px] font-black uppercase tracking-[.08em] text-white">
+                Promo
+              </span>
             ) : null}
-
-            <span className="relative flex items-center gap-2">
-              <span
-                className="h-2 w-2 rounded-full transition"
-                style={{
-                  background: universe.accent,
-                  boxShadow: active ? `0 0 16px ${universe.accent}` : "none",
-                }}
-              />
-              {universe.shortLabel}
-            </span>
-          </motion.button>
-        );
-      })}
+          </div>
+          <div className="p-3">
+            <p className="line-clamp-2 min-h-[34px] text-[11px] font-black leading-snug text-white/90">
+              {product.name}
+            </p>
+            <p className="mt-2 text-sm font-black text-[#ff7a32]">{outletPrice(product)}</p>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
 
-function ActionButton({ action, accent, primary }) {
-  const Icon = action.icon;
+function LockedPartnerPreview() {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {[0, 1].map((item) => (
+        <div
+          key={item}
+          className="overflow-hidden rounded-[22px] border border-[#f2cf79]/15 bg-black/25"
+        >
+          <div className="relative aspect-[4/3] overflow-hidden">
+            <img
+              src="/images/editorial/qeh-partner-logistique.jpg"
+              alt="Aperçu du catalogue professionnel QEH PARTNER"
+              className="h-full w-full scale-110 object-cover opacity-30 blur-[5px]"
+            />
+            <div className="absolute inset-0 grid place-items-center bg-[#07111f]/55">
+              <span className="grid h-11 w-11 place-items-center rounded-full border border-[#f2cf79]/45 bg-black/70 text-[#f2cf79] shadow-xl">
+                <Lock className="h-4 w-4" />
+              </span>
+            </div>
+          </div>
+          <div className="p-3">
+            <p className="text-[9px] font-black uppercase tracking-[.16em] text-[#f2cf79]">
+              Matériel professionnel
+            </p>
+            <p className="mt-1 text-xs font-black text-white/80">Catalogue réservé</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProfessionalProducts({ products, loading }) {
+  if (loading) {
+    return (
+      <div className="grid min-h-36 place-items-center rounded-[22px] border border-[#f2cf79]/15 bg-black/20 text-xs font-bold text-white/40">
+        Chargement de l'espace professionnel…
+      </div>
+    );
+  }
+
+  if (!products.length) {
+    return (
+      <Link
+        to="/qeh-partner/materiel-pro"
+        className="flex min-h-36 items-center justify-center rounded-[22px] border border-dashed border-[#f2cf79]/25 bg-black/20 text-sm font-black text-[#f2cf79]"
+      >
+        Ouvrir le catalogue professionnel
+      </Link>
+    );
+  }
 
   return (
-    <Link
-      to={action.to}
-      className={`group flex min-h-[74px] items-center justify-between gap-4 rounded-[22px] border px-5 py-4 transition duration-300 hover:-translate-y-1 ${
-        primary
-          ? "border-transparent text-white shadow-[0_18px_50px_rgba(0,0,0,.28)]"
-          : "border-white/10 bg-white/[.055] text-white hover:bg-white/[.085]"
-      }`}
-      style={primary ? { background: accent } : undefined}
-    >
-      <span className="flex items-center gap-3">
-        <span
-          className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${
-            primary ? "bg-black/15" : "bg-white/[.07]"
-          }`}
+    <div className="grid grid-cols-2 gap-3">
+      {products.slice(0, 2).map((product) => (
+        <Link
+          key={product.id}
+          to="/qeh-partner/materiel-pro"
+          className="group overflow-hidden rounded-[22px] border border-[#f2cf79]/16 bg-black/25 transition hover:-translate-y-1 hover:border-[#f2cf79]/50"
         >
-          <Icon className="h-5 w-5" />
-        </span>
-        <span className="text-sm font-black leading-tight">{action.label}</span>
+          <div className="aspect-[4/3] bg-white/95 p-3">
+            <img
+              src={product.image_url || "/images/product-placeholder.png"}
+              alt={product.name}
+              className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
+            />
+          </div>
+          <div className="p-3">
+            <p className="line-clamp-2 text-xs font-black text-white/90">{product.name}</p>
+            <p className="mt-2 text-xs font-black text-[#f2cf79]">
+              {Number(product.price_excluding_tax) > 0
+                ? `${euro.format(Number(product.price_excluding_tax))} HT`
+                : "Prix professionnel"}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function ActionLink({ to, icon: Icon, title, accent, filled = false }) {
+  return (
+    <Link
+      to={to}
+      className={`group flex min-h-[70px] items-center gap-3 rounded-[20px] border px-4 py-3 transition hover:-translate-y-0.5 ${
+        filled
+          ? "border-transparent text-[#071018] shadow-[0_16px_45px_rgba(0,0,0,.18)]"
+          : "border-white/10 bg-white/[.055] text-white hover:bg-white/[.09]"
+      }`}
+      style={filled ? { backgroundColor: accent } : undefined}
+    >
+      <span
+        className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${filled ? "bg-black/10" : "bg-black/20"}`}
+        style={!filled ? { color: accent } : undefined}
+      >
+        <Icon className="h-5 w-5" />
       </span>
-      <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-black">{title}</span>
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 transition group-hover:translate-x-1" />
     </Link>
   );
 }
 
-function MobileLayout({ activeId, onSelect, universe, actions, reduceMotion }) {
+function UniverseCard({ universe, children }) {
   return (
-    <div className="relative w-[390px] overflow-hidden px-4 pb-10 pt-8">
-      <div className="mx-auto max-w-xl text-center">
-        <p className="text-[10px] font-black uppercase tracking-[.28em] text-white/35">QEH</p>
-        <h1 className="mt-2 font-display text-3xl font-black tracking-[-.045em]">
-          Un groupe. Trois univers.
-        </h1>
-        <p className="mt-2 text-sm text-white/48">Choisissez votre univers.</p>
-      </div>
-
-      <div className="mx-auto mt-6 max-w-xl">
-        <UniverseSelector activeId={activeId} onSelect={onSelect} />
-      </div>
-
-      <div className="relative mx-auto mt-4 h-[250px] max-w-xl">
-        {UNIVERSES.map((item, index) => {
-          const isActive = item.id === activeId;
-          const positions = [
-            { left: "30%", top: "54%", rotate: -8 },
-            { left: "50%", top: "43%", rotate: 4 },
-            { left: "68%", top: "56%", rotate: 8 },
-          ];
-          const position = positions[index];
-
-          return (
-            <motion.button
-              key={item.id}
-              type="button"
-              onClick={() => onSelect(item.id)}
-              className="absolute h-[118px] w-[118px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border bg-[#06101d] p-3 shadow-2xl"
-              style={{
-                left: position.left,
-                top: position.top,
-                zIndex: isActive ? 4 : 2 - index,
-                borderColor: isActive ? item.accent : "rgba(255,255,255,.12)",
-                boxShadow: isActive
-                  ? `0 18px 55px ${item.glow}`
-                  : "0 18px 45px rgba(0,0,0,.40)",
-              }}
-              animate={
-                reduceMotion
-                  ? { scale: isActive ? 1.12 : 0.9, opacity: isActive ? 1 : 0.58 }
-                  : {
-                      scale: isActive ? 1.12 : 0.9,
-                      opacity: isActive ? 1 : 0.58,
-                      y: [0, -6 - index * 2, 0],
-                      rotate: [position.rotate, position.rotate + 2, position.rotate],
-                    }
-              }
-              transition={
-                reduceMotion
-                  ? { duration: 0.2 }
-                  : {
-                      duration: 4.5 + index * 0.6,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }
-              }
-              aria-label={`Choisir ${item.title}`}
-            >
-              <img
-                src={item.logo}
-                alt={item.title}
-                className="h-full w-full rounded-full object-contain"
-                draggable="false"
-              />
-            </motion.button>
-          );
-        })}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {universe ? (
-          <motion.div
-            key={universe.id}
-            initial={reduceMotion ? false : { opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0, y: 12 }}
-            className="mx-auto max-w-xl"
-          >
-            <div className="relative overflow-hidden rounded-[30px] border border-white/10 bg-black/25 shadow-2xl">
-              <div className="relative aspect-[4/3]">
-                <img
-                  src={universe.image}
-                  alt={universe.imageAlt}
-                  className="h-full w-full object-cover opacity-80"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#030811] via-[#030811]/30 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <p
-                    className="text-[9px] font-black uppercase tracking-[.18em]"
-                    style={{ color: universe.accentSoft }}
-                  >
-                    {universe.eyebrow}
-                  </p>
-                  <h2 className="mt-2 font-display text-2xl font-black leading-none tracking-[-.04em]">
-                    {universe.headline}
-                  </h2>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3 space-y-2.5">
-              {actions.map((action, index) => (
-                <ActionButton
-                  key={`${universe.id}-${action.label}`}
-                  action={action}
-                  accent={universe.accent}
-                  primary={index === 0}
-                />
-              ))}
-            </div>
-          </motion.div>
-        ) : (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mx-auto max-w-xl text-center text-sm font-bold text-white/42"
-          >
-            Touchez un logo ou utilisez le sélecteur pour ouvrir un univers.
-          </motion.p>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function MobileReplica({ activeId, onSelect, universe, actions, reduceMotion }) {
-  const canvasRef = useRef(null);
-  const [layout, setLayout] = useState({ scale: 1, baseHeight: 760 });
-
-  useEffect(() => {
-    let frame = null;
-
-    const updateLayout = () => {
-      if (!canvasRef.current) return;
-
-      const viewportWidth = window.innerWidth;
-      const targetWidth =
-        viewportWidth < 768
-          ? viewportWidth
-          : Math.min(840, Math.max(620, viewportWidth - 120));
-      const scale = targetWidth / MOBILE_CANVAS_WIDTH;
-      const baseHeight = canvasRef.current.scrollHeight;
-
-      setLayout((current) => {
-        if (
-          Math.abs(current.scale - scale) < 0.001 &&
-          Math.abs(current.baseHeight - baseHeight) < 1
-        ) {
-          return current;
-        }
-        return { scale, baseHeight };
-      });
-    };
-
-    const requestUpdate = () => {
-      if (frame) cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(updateLayout);
-    };
-
-    requestUpdate();
-    window.addEventListener("resize", requestUpdate);
-
-    const observer = new ResizeObserver(requestUpdate);
-    observer.observe(canvasRef.current);
-
-    return () => {
-      if (frame) cancelAnimationFrame(frame);
-      observer.disconnect();
-      window.removeEventListener("resize", requestUpdate);
-    };
-  }, [activeId]);
-
-  return (
-    <div
-      className="relative mx-auto"
-      style={{
-        width: `${MOBILE_CANVAS_WIDTH * layout.scale}px`,
-        height: `${layout.baseHeight * layout.scale}px`,
-      }}
+    <section
+      className="relative min-w-[88vw] max-w-[460px] snap-center overflow-hidden rounded-[30px] border border-white/10 shadow-[0_24px_80px_rgba(0,0,0,.32)]"
+      style={{ background: universe.background }}
     >
-      <div
-        ref={canvasRef}
-        style={{
-          width: `${MOBILE_CANVAS_WIDTH}px`,
-          transform: `scale(${layout.scale})`,
-          transformOrigin: "top left",
-        }}
-      >
-        <MobileLayout
-          activeId={activeId}
-          onSelect={onSelect}
-          universe={universe}
-          actions={actions}
-          reduceMotion={reduceMotion}
-        />
+      <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: universe.accent }} />
+      <div className="p-5">
+        <div className="flex min-h-[68px] items-center justify-center rounded-[19px] border border-white/12 bg-black/25 p-3 backdrop-blur-xl">
+          <img src={universe.logo} alt={universe.title} className="max-h-[46px] w-full object-contain" />
+        </div>
+        <p className="mt-6 text-[10px] font-black uppercase tracking-[.2em]" style={{ color: universe.softAccent }}>
+          {universe.tagline}
+        </p>
+        <h2 className="mt-2 font-display text-3xl font-black leading-[.98] tracking-[-.04em]">{universe.headline}</h2>
+        <p className="mt-3 text-sm font-medium leading-relaxed text-white/58">{universe.description}</p>
+        <div className="mt-5">{children}</div>
       </div>
-    </div>
+    </section>
   );
 }
 
 export default function UniverseHome() {
   const reduceMotion = useReducedMotion();
-  const { isProfessional } = useProfessionalAuth();
-  const [activeId, setActiveId] = useState(null);
+  const { isProfessional, professionalLoading } = useProfessionalAuth();
+  const [outletProducts, setOutletProducts] = useState([]);
+  const [proProducts, setProProducts] = useState([]);
+  const [outletLoading, setOutletLoading] = useState(true);
+  const [proLoading, setProLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "QEH | Trois univers";
+    document.title = "QEH | Trois univers, un même écosystème";
+
+    let active = true;
+    async function loadOutletProducts() {
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          id,
+          name,
+          slug,
+          price,
+          sale_price,
+          is_on_sale,
+          stock,
+          on_demand,
+          product_images (image_url, alt_text, is_primary, display_order)
+        `)
+        .eq("is_active", true)
+        .order("is_featured", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(4);
+
+      if (!active) return;
+      if (error) {
+        console.error("Impossible de charger les produits QEH OUTLET :", error);
+        setOutletProducts([]);
+      } else {
+        setOutletProducts(
+          (data || []).map((product) => ({
+            ...product,
+            image: getPrimaryImage(product.product_images, product.name),
+          }))
+        );
+      }
+      setOutletLoading(false);
+    }
+
+    loadOutletProducts();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const activeUniverse = useMemo(
-    () => UNIVERSES.find((universe) => universe.id === activeId) || null,
-    [activeId]
-  );
+  useEffect(() => {
+    let active = true;
 
-  const actions = useMemo(() => {
-    if (!activeUniverse) return [];
+    async function loadProfessionalProducts() {
+      if (professionalLoading) return;
+      if (!isProfessional) {
+        setProProducts([]);
+        setProLoading(false);
+        return;
+      }
 
-    if (activeUniverse.id === "outlet") {
-      return [
-        { label: "Explorer le catalogue", to: "/produits", icon: Boxes },
-        { label: "Découvrir QEH OUTLET", to: "/qeh-outlet", icon: Sparkles },
-        { label: "Suivre ma commande", to: "/suivi-commande", icon: PackageSearch },
-      ];
+      setProLoading(true);
+      const { data, error } = await supabase
+        .from("qeh_partner_products")
+        .select("id, name, category, price_excluding_tax, image_url, stock")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (!active) return;
+      if (error) {
+        console.error("Impossible de charger les produits QEH PARTNER :", error);
+        setProProducts([]);
+      } else {
+        setProProducts(data || []);
+      }
+      setProLoading(false);
     }
 
-    if (activeUniverse.id === "energies") {
-      return [
-        {
-          label: "Explorer la carte solaire",
-          to: "/qeh-energies/carte-solaire",
-          icon: Map,
-        },
-        {
-          label: "Comment ça marche",
-          to: "/qeh-energies/comment-ca-marche",
-          icon: SunMedium,
-        },
-        { label: "Participer", to: "/qeh-energies/participer", icon: Users },
-      ];
-    }
+    loadProfessionalProducts();
+    return () => {
+      active = false;
+    };
+  }, [isProfessional, professionalLoading]);
 
-    return [
-      {
-        label: isProfessional ? "Accéder au matériel Pro" : "Accéder au catalogue Pro",
-        to: isProfessional ? "/qeh-partner/materiel-pro" : "/qeh-partner/connexion-pro",
-        icon: isProfessional ? ShieldCheck : Lock,
-      },
-      { label: "Devenir producteur", to: "/qeh-partner/production", icon: Factory },
-      { label: "Devenir franchisé", to: "/qeh-partner/franchise", icon: UserCheck },
-    ];
-  }, [activeUniverse, isProfessional]);
-
-  const background = activeUniverse
-    ? `radial-gradient(circle at 70% 20%, ${activeUniverse.glow}, transparent 33%), radial-gradient(circle at 20% 72%, ${activeUniverse.glow}, transparent 28%), linear-gradient(145deg,#020711 0%,#06111f 48%,#02050b 100%)`
-    : "radial-gradient(circle at 26% 70%, rgba(255,90,0,.18), transparent 30%), radial-gradient(circle at 50% 34%, rgba(130,210,70,.14), transparent 30%), radial-gradient(circle at 74% 70%, rgba(229,189,88,.14), transparent 30%), linear-gradient(145deg,#020711 0%,#071321 52%,#02050b 100%)";
+  const outlet = UNIVERSES[0];
+  const energies = UNIVERSES[1];
+  const partner = UNIVERSES[2];
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#020711] text-white">
+    <main className="min-h-screen overflow-hidden bg-[#020711] text-white">
+      <header className="relative z-20 border-b border-white/10 bg-[#030811]/90 px-4 py-4 backdrop-blur-2xl sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1900px] items-center justify-between gap-5">
+          <div>
+            <p className="font-display text-2xl font-black tracking-[-.05em] sm:text-3xl">QEH</p>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[.16em] text-white/35 sm:text-[11px]">
+              Trois expertises. Un même écosystème.
+            </p>
+          </div>
+        </div>
+      </header>
+
       <motion.div
-        className="pointer-events-none absolute inset-0"
-        animate={{ opacity: 1 }}
-        style={{ background }}
-        transition={{ duration: reduceMotion ? 0 : 0.7 }}
-      />
+        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        <div className="px-4 pb-2 pt-5 sm:px-6">
+          <p className="text-xs font-semibold leading-relaxed text-white/48">
+            Glissez horizontalement pour passer d'un univers QEH à l'autre.
+          </p>
+          <div className="mt-4 flex items-center gap-2">
+            {UNIVERSES.map((universe) => (
+              <span
+                key={universe.id}
+                className="h-1.5 flex-1 rounded-full opacity-85"
+                style={{ backgroundColor: universe.accent }}
+              />
+            ))}
+          </div>
+        </div>
 
-      <div className="pointer-events-none absolute inset-0 opacity-[.16] [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:linear-gradient(to_bottom,black,transparent_88%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/35 to-transparent" />
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[6vw] pb-8 pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <UniverseCard universe={outlet}>
+            <OutletProducts products={outletProducts} loading={outletLoading} />
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Link
+                to="/produits"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#ff5a00] px-4 text-xs font-black text-white"
+              >
+                Catalogue <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/suivi-commande"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/12 bg-white/[.055] px-4 text-xs font-black"
+              >
+                Suivi
+              </Link>
+            </div>
+          </UniverseCard>
 
-      <div className="relative z-10 py-2">
-        <MobileReplica
-          activeId={activeId}
-          onSelect={setActiveId}
-          universe={activeUniverse}
-          actions={actions}
-          reduceMotion={reduceMotion}
-        />
-      </div>
+          <UniverseCard universe={energies}>
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[24px] border border-white/10">
+              <img
+                src="/images/editorial/qeh-energies-territoire.jpg"
+                alt="Production solaire locale QEH ÉNERGIES"
+                className="h-full w-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#07110c] via-transparent to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-md">
+                <p className="text-[10px] font-black text-[#a8eb75]">Carte solaire locale</p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-2">
+              <ActionLink to="/qeh-energies/carte-solaire" icon={Map} title="Explorer la carte" accent="#82d246" filled />
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to="/qeh-energies/comment-ca-marche"
+                  className="flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[.055] px-3 text-center text-[11px] font-black"
+                >
+                  Comprendre
+                </Link>
+                <Link
+                  to="/qeh-energies/participer"
+                  className="flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[.055] px-3 text-center text-[11px] font-black"
+                >
+                  Participer
+                </Link>
+              </div>
+            </div>
+          </UniverseCard>
+
+          <UniverseCard universe={partner}>
+            {isProfessional ? (
+              <ProfessionalProducts products={proProducts} loading={proLoading || professionalLoading} />
+            ) : (
+              <LockedPartnerPreview />
+            )}
+            <div className="mt-4 grid gap-2">
+              <Link
+                to={isProfessional ? "/qeh-partner/materiel-pro" : "/qeh-partner/connexion-pro"}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#f2cf79] px-4 text-xs font-black text-[#171109]"
+              >
+                {isProfessional ? "Catalogue Pro" : "Se connecter"} <ArrowRight className="h-4 w-4" />
+              </Link>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to="/qeh-partner/production"
+                  className="flex min-h-11 items-center justify-center rounded-full border border-[#f2cf79]/20 bg-[#f2cf79]/[.07] px-3 text-center text-[11px] font-black text-[#ffe4a0]"
+                >
+                  Devenir producteur
+                </Link>
+                <Link
+                  to="/qeh-partner/franchise"
+                  className="flex min-h-11 items-center justify-center rounded-full border border-[#f2cf79]/20 bg-[#f2cf79]/[.07] px-3 text-center text-[11px] font-black text-[#ffe4a0]"
+                >
+                  Être franchisé
+                </Link>
+              </div>
+            </div>
+          </UniverseCard>
+        </div>
+      </motion.div>
     </main>
   );
 }
