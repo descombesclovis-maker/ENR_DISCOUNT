@@ -75,17 +75,20 @@ export default function QEHIntro() {
       onClick={finish}
       style={{
         position: "fixed",
-        inset: 0,
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100dvh",
+        minHeight: "100svh",
         zIndex: 2147483647,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         overflow: "hidden",
-        background: "#020711",
+        background: "#06131f",
         opacity: closing ? 0 : 1,
         pointerEvents: closing ? "none" : "auto",
         transition: `opacity ${FADE_MS}ms cubic-bezier(.22,.61,.36,1)`,
         cursor: "pointer",
+        touchAction: "manipulation",
+        WebkitTapHighlightColor: "transparent",
       }}
     >
       <video
@@ -96,11 +99,15 @@ export default function QEHIntro() {
         onEnded={finish}
         onError={finish}
         style={{
-          width: "100%",
-          height: "100%",
+          position: "absolute",
+          inset: "-3px",
+          width: "calc(100% + 6px)",
+          height: "calc(100% + 6px)",
           display: "block",
-          objectFit: "contain",
-          background: "#020711",
+          objectFit: "cover",
+          objectPosition: "center center",
+          background: "#06131f",
+          transform: "translateZ(0)",
         }}
       >
         <source src="/videos/qeh-outlet-intro.mp4" type="video/mp4" />
