@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./App.css";
 import "./qeh-partner.css";
 import "./professional-space.css";
@@ -9,6 +9,8 @@ import {
   Route,
   Outlet,
   Navigate,
+  useLocation,
+  useNavigate,
 } from "react-router-dom";
 
 import { Toaster } from "sonner";
@@ -16,7 +18,10 @@ import { Toaster } from "sonner";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { AuthProvider } from "./context/AuthContext";
-import { CustomerAuthProvider } from "./context/CustomerAuthContext";
+import {
+  CustomerAuthProvider,
+  useCustomerAuth,
+} from "./context/CustomerAuthContext";
 import { ProfessionalAuthProvider } from "./context/ProfessionalAuthContext";
 import { PartnerCartProvider } from "./context/PartnerCartContext";
 
@@ -88,6 +93,31 @@ import AdminPartnerProduits from "./pages/AdminPartnerProduits";
 import AdminPartnerCommandes from "./pages/AdminPartnerCommandes";
 import AdminPartnerProfessionals from "./pages/AdminPartnerProfessionals";
 
+const CUSTOMER_LOGIN_REDIRECT_KEY = "qeh_customer_login_redirect";
+
+function CustomerAuthRedirect() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, authLoading } = useCustomerAuth();
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
+    const shouldOpenCustomerSpace =
+      sessionStorage.getItem(CUSTOMER_LOGIN_REDIRECT_KEY) === "1";
+
+    if (!shouldOpenCustomerSpace) return;
+
+    sessionStorage.removeItem(CUSTOMER_LOGIN_REDIRECT_KEY);
+
+    if (location.pathname !== "/mon-compte") {
+      navigate("/mon-compte", { replace: true });
+    }
+  }, [authLoading, isAuthenticated, location.pathname, navigate]);
+
+  return null;
+}
+
 function StoreLayout() {
   return (
     <MaintenanceGate>
@@ -114,6 +144,7 @@ function App() {
               <CartProvider>
                 <WishlistProvider>
                   <BrowserRouter>
+                    <CustomerAuthRedirect />
                     <SiteAnalyticsTracker />
                     <CookieConsent />
 
