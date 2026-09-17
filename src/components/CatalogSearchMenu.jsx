@@ -108,6 +108,7 @@ export default function CatalogSearchMenu() {
               id,
               name,
               slug,
+              image_url,
               is_active,
               display_order
             `)
@@ -129,6 +130,12 @@ export default function CatalogSearchMenu() {
               brand,
               reference,
               is_active,
+              product_images (
+                image_url,
+                alt_text,
+                is_primary,
+                display_order
+              ),
               categories (
                 id,
                 name,
@@ -266,9 +273,25 @@ export default function CatalogSearchMenu() {
                 category.id
             );
 
+          const exampleProduct = categoryProducts.find((product) =>
+            Array.isArray(product.product_images) && product.product_images.length > 0
+          );
+          const exampleImage = exampleProduct
+            ? [...exampleProduct.product_images].sort((first, second) => {
+                if (first.is_primary !== second.is_primary) return first.is_primary ? -1 : 1;
+                return Number(first.display_order || 0) - Number(second.display_order || 0);
+              })[0]
+            : null;
+          const categoryImage = category.image_url || exampleImage?.image_url || null;
+          const categoryImageAlt = exampleImage?.alt_text || `Exemple de produit ${category.name}`;
+
           if (!normalizedSearchText) {
             return {
               ...category,
+
+              categoryImage,
+
+              categoryImageAlt,
 
               products:
                 categoryProducts,
@@ -305,6 +328,10 @@ export default function CatalogSearchMenu() {
 
           return {
             ...category,
+
+            categoryImage,
+
+            categoryImageAlt,
 
             products:
               categoryMatches
@@ -614,8 +641,20 @@ export default function CatalogSearchMenu() {
                               }
                               className="group flex-1 min-w-0 flex items-center gap-4 px-5 sm:px-6 py-4 hover:bg-white/5 transition-colors"
                             >
-                              <span className="w-11 h-11 shrink-0 rounded-2xl border border-[#0b5ca8]/45 bg-[#0b5ca8]/15 text-[#55a8ff] grid place-items-center group-hover:border-[#ff5a00]/60 group-hover:text-[#ff5a00] transition-colors">
-                                <Boxes className="w-5 h-5" />
+                              <span className="w-14 h-14 shrink-0 overflow-hidden rounded-2xl border border-[#0b5ca8]/45 bg-white text-[#55a8ff] grid place-items-center group-hover:border-[#ff5a00]/60 transition-colors">
+                                {category.categoryImage ? (
+                                  <img
+                                    src={category.categoryImage}
+                                    alt={category.categoryImageAlt}
+                                    className="h-full w-full object-contain p-1.5"
+                                    loading="lazy"
+                                    onError={(event) => {
+                                      event.currentTarget.style.display = "none";
+                                      event.currentTarget.nextElementSibling?.classList.remove("hidden");
+                                    }}
+                                  />
+                                ) : null}
+                                <Boxes className={`w-5 h-5 ${category.categoryImage ? "hidden" : ""}`} />
                               </span>
 
                               <span className="min-w-0">
