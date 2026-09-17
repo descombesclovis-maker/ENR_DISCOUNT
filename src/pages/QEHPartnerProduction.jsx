@@ -150,8 +150,8 @@ export default function QEHPartnerProduction() {
             className="qehp-energy-visual"
           >
             <img
-              src="/images/qeh-energies/realisations/qeh-carport-bois.webp"
-              alt="Construction locale d’un carport destiné à accueillir du photovoltaïque"
+              src="/images/qeh-energies/realisations/qeh-grande-toiture.webp"
+              alt="Grande toiture équipée de panneaux photovoltaïques"
               className="qehp-energy-visual__photo"
             />
             <div className="qehp-energy-visual__sun"><SunMedium /></div>
