@@ -70,3 +70,13 @@ h1, h2, h3, h4, h5, .font-display {
 
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@media (max-width: 639px) {
+    .max-w-7xl.mx-auto.px-5,
+    .max-w-6xl.mx-auto.px-5,
+    .max-w-7xl.mx-auto.px-6,
+    .max-w-6xl.mx-auto.px-6 {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}

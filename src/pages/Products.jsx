@@ -845,7 +845,7 @@ is_on_sale:
         </div>
       ) : (
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-2 gap-2.5 sm:gap-6 lg:grid-cols-3"
           data-testid="product-grid"
         >
           {visibleProducts.map(
@@ -857,13 +857,13 @@ is_on_sale:
                 key={product.id}
                 to={`/produits/${product.slug}`}
                 data-testid={`product-card-${product.slug}`}
-                className="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:-translate-y-1 transition-transform duration-200 hover:shadow-lg"
+                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg"
                 style={{
                   animationDelay:
                     `${index * 60}ms`,
                 }}
               >
-                <div className="relative aspect-square overflow-hidden bg-white grid place-items-center p-6">
+                <div className="relative grid aspect-square place-items-center overflow-hidden bg-white p-2.5 sm:p-6">
                   <img
                     src={product.image}
                     alt={
@@ -883,7 +883,7 @@ is_on_sale:
                   />
 
                   <span
-                    className={`absolute top-4 left-4 inline-flex items-center min-h-8 px-3 rounded-full border text-xs font-bold ${product.conditionClassName}`}
+                    className={`absolute left-2 top-2 inline-flex min-h-6 items-center rounded-full border px-2 text-[8px] font-bold sm:left-4 sm:top-4 sm:min-h-8 sm:px-3 sm:text-xs ${product.conditionClassName}`}
                   >
                     {
                       product.conditionLabel
@@ -894,7 +894,7 @@ is_on_sale:
  product.sale_price && (
 
   <span
-    className="absolute top-4 right-4 bg-[#ff5a00] text-white font-black text-xs px-3 py-2 rounded-full shadow-lg"
+    className="absolute right-2 top-2 rounded-full bg-[#ff5a00] px-2 py-1 text-[9px] font-black text-white shadow-lg sm:right-4 sm:top-4 sm:px-3 sm:py-2 sm:text-xs"
   >
     -
     {Math.round(
@@ -909,27 +909,27 @@ is_on_sale:
 
 )}
 
-                <div className="flex flex-col flex-1 p-5 border-t border-border">
+                <div className="flex flex-1 flex-col border-t border-border p-3 sm:p-5">
                   {product.category && (
-                    <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
+                    <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-primary sm:mb-2 sm:text-xs">
                       {
                         product.category
                       }
                     </p>
                   )}
 
-                  <h2 className="font-display font-semibold text-base leading-snug">
+                  <h2 className="line-clamp-3 font-display text-xs font-semibold leading-snug sm:text-base">
                     {product.name}
                   </h2>
 
                   {product.brand && (
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground sm:text-sm">
                       {product.brand}
                     </p>
                   )}
 
                   {product.reference && (
-                    <p className="text-xs text-muted-foreground mt-2">
+                    <p className="mt-1 hidden text-xs text-muted-foreground sm:block sm:mt-2">
                       Réf.{" "}
                       {
                         product.reference
@@ -943,13 +943,13 @@ product.sale_price ? (
 
   <div>
 
-    <p className="text-sm text-slate-400 line-through">
+    <p className="text-[10px] text-slate-400 line-through sm:text-sm">
 
       {Number(product.price).toFixed(2)} €
 
     </p>
 
-    <p className="font-display font-black text-2xl text-[#ff5a00]">
+    <p className="font-display text-sm font-black text-[#ff5a00] sm:text-2xl">
 
       {Number(product.sale_price).toFixed(2)} €
 
@@ -959,7 +959,7 @@ product.sale_price ? (
 
 ) : (
 
-  <p className="font-display font-black text-xl text-slate-950">
+    <p className="font-display text-sm font-black text-slate-950 sm:text-xl">
 
     {priceLabel(product)}
 
@@ -968,7 +968,7 @@ product.sale_price ? (
 )}
 
                     <p
-                      className={`text-xs font-semibold mt-1 ${product.availabilityClassName}`}
+                      className={`mt-1 text-[9px] font-semibold sm:text-xs ${product.availabilityClassName}`}
                     >
                       {
                         product.availabilityLabel
