@@ -4,6 +4,8 @@ import { Mail, Lock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useCustomerAuth } from "../context/CustomerAuthContext";
 
+const CUSTOMER_LOGIN_REDIRECT_KEY = "qeh_customer_login_redirect";
+
 export default function CustomerLogin() {
   const {
     signIn,
@@ -18,6 +20,7 @@ export default function CustomerLogin() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
+      sessionStorage.removeItem(CUSTOMER_LOGIN_REDIRECT_KEY);
       window.location.replace("/mon-compte");
     }
   }, [authLoading, isAuthenticated]);
@@ -28,10 +31,12 @@ export default function CustomerLogin() {
 
     try {
       setLoading(true);
+      sessionStorage.setItem(CUSTOMER_LOGIN_REDIRECT_KEY, "1");
       await signIn(email, password);
       toast.success("Connexion réussie.");
       window.location.replace("/mon-compte");
     } catch (error) {
+      sessionStorage.removeItem(CUSTOMER_LOGIN_REDIRECT_KEY);
       toast.error(error.message);
       setLoading(false);
     }
@@ -42,8 +47,10 @@ export default function CustomerLogin() {
 
     try {
       setLoading(true);
+      sessionStorage.setItem(CUSTOMER_LOGIN_REDIRECT_KEY, "1");
       await signInWithGoogle();
     } catch (error) {
+      sessionStorage.removeItem(CUSTOMER_LOGIN_REDIRECT_KEY);
       toast.error(error.message);
       setLoading(false);
     }
