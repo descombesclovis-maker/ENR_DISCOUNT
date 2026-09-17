@@ -20,7 +20,9 @@ export default function CustomerLogin() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      sessionStorage.removeItem(CUSTOMER_LOGIN_REDIRECT_KEY);
+      // Ne pas supprimer le marqueur ici : il doit survivre jusqu'à ce que
+      // /mon-compte soit réellement ouvert. Cela permet aussi de récupérer
+      // un retour OAuth qui arriverait malgré tout sur la racine du site.
       window.location.replace("/mon-compte");
     }
   }, [authLoading, isAuthenticated]);
