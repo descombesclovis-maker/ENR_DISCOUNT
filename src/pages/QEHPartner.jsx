@@ -113,6 +113,14 @@ export default function QEHPartner() {
               </a>
 
               <Link
+                to="/qeh-partner/materiel-pro"
+                className="qehp-button qehp-button--ghost"
+              >
+                Accéder au matériel Pro
+                <Factory size={18} />
+              </Link>
+
+              <Link
                 to="/qeh-energies"
                 className="qehp-button qehp-button--ghost"
               >
@@ -206,7 +214,7 @@ export default function QEHPartner() {
         image="/images/editorial/qeh-partner-logistique.jpg"
         imageAlt="Entrepôt premium de matériel solaire et logistique QEH Partner"
         links={[
-          { to: "/qeh-partner/connexion-pro", label: "Passer à Pro" },
+          { to: "/qeh-partner/materiel-pro", label: "Accéder au matériel Pro" },
           { to: "/qeh-partner/inscription-pro", label: "Créer mon compte Pro" },
           { to: "/qeh-partner/franchise", label: "Devenir partenaire" },
         ]}
