@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, ShoppingCart, User } from "lucide-react";
+import { LogIn, LogOut, ShoppingCart, User } from "lucide-react";
 import { useCustomerAuth } from "../context/CustomerAuthContext";
 import { useProfessionalAuth } from "../context/ProfessionalAuthContext";
 import { usePartnerCart } from "../context/PartnerCartContext";
@@ -34,6 +34,18 @@ export default function QEHPartnerLayout() {
         activeBrand="partner"
         menuLabel="le menu QEH PARTNER"
         directLinks={navigation}
+        utilityRight={
+          !isProfessional ? (
+            <Link
+              to="/qeh-partner/connexion-pro"
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[#f2cf79]/45 bg-[#f2cf79]/10 px-2.5 text-[11px] font-black text-[#f7dd9a] shadow-[0_8px_24px_rgba(242,207,121,.08)] transition hover:-translate-y-0.5 hover:border-[#f2cf79] hover:bg-[#f2cf79]/20 hover:text-[#fff1bd] sm:px-3 sm:text-xs lg:h-12 lg:px-4"
+              aria-label="Connexion professionnelle QEH PARTNER"
+            >
+              <LogIn className="h-4 w-4 shrink-0" />
+              <span>Connexion</span>
+            </Link>
+          ) : null
+        }
       >
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
