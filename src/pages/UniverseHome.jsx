@@ -10,6 +10,7 @@ import {
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useProfessionalAuth } from "../context/ProfessionalAuthContext";
+import QEHIntro from "../components/QEHIntro";
 
 const euro = new Intl.NumberFormat("fr-FR", {
   style: "currency",
@@ -385,6 +386,7 @@ export default function UniverseHome() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#020711] text-white">
+      <QEHIntro />
       <header className="relative z-20 border-b border-white/10 bg-[#030811]/90 px-4 py-3 backdrop-blur-2xl sm:px-6">
         <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-4">
           <div>
