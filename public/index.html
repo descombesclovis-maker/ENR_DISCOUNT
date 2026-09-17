@@ -5,6 +5,26 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#020711" />
 
+        <script>
+            (function () {
+                try {
+                    var mustOpenCustomerAccount =
+                        window.sessionStorage.getItem("qeh_customer_login_redirect") === "1";
+
+                    if (mustOpenCustomerAccount && window.location.pathname === "/") {
+                        // Conserve impérativement le code / hash OAuth afin que Supabase
+                        // puisse terminer la création de session sur /mon-compte.
+                        window.location.replace(
+                            "/mon-compte" + window.location.search + window.location.hash
+                        );
+                    }
+                } catch (_) {
+                    // Le chargement normal du site continue si le stockage navigateur
+                    // n'est pas disponible.
+                }
+            })();
+        </script>
+
         <title>QEH OUTLET | Matériel technique · QEH Énergies · QEH Partner</title>
         <meta
             name="description"
