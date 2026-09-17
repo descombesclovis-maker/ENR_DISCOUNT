@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
-  BadgeEuro,
   Boxes,
   Factory,
   Lock,
@@ -22,6 +21,48 @@ const euro = new Intl.NumberFormat("fr-FR", {
   style: "currency",
   currency: "EUR",
 });
+
+const UNIVERSES = [
+  {
+    id: "outlet",
+    label: "OUTLET",
+    title: "QEH OUTLET",
+    tagline: "Acheter",
+    headline: "Le matériel technique au prix juste.",
+    description: "Équipements techniques, déstockage et bonnes affaires disponibles immédiatement ou sur demande.",
+    accent: "#ff5a00",
+    softAccent: "#ff8a4b",
+    logo: "/images/qeh-outlet-logo.jpg",
+    background:
+      "radial-gradient(circle at 18% 8%, rgba(255,90,0,.28), transparent 34%), linear-gradient(155deg,#07111f 0%,#0a2440 58%,#11100d 100%)",
+  },
+  {
+    id: "energies",
+    label: "ÉNERGIES",
+    title: "QEH ÉNERGIES",
+    tagline: "Explorer",
+    headline: "L'énergie produite près de chez vous.",
+    description: "Découvrez les projets, producteurs et initiatives photovoltaïques de votre territoire.",
+    accent: "#82d246",
+    softAccent: "#a8eb75",
+    logo: "/images/qeh-energies-logo.png",
+    background:
+      "radial-gradient(circle at 50% 8%, rgba(130,210,70,.27), transparent 34%), linear-gradient(160deg,#07170e 0%,#11301e 55%,#061009 100%)",
+  },
+  {
+    id: "partner",
+    label: "PARTNER",
+    title: "QEH PARTNER",
+    tagline: "Développer",
+    headline: "L'univers réservé à ceux qui développent QEH.",
+    description: "Matériel professionnel, production et développement du réseau QEH réunis dans un espace dédié.",
+    accent: "#f2cf79",
+    softAccent: "#ffe4a0",
+    logo: "/images/qeh-partner-logo-gold.png",
+    background:
+      "radial-gradient(circle at 78% 8%, rgba(242,207,121,.22), transparent 34%), linear-gradient(155deg,#171109 0%,#2a2111 55%,#0c0905 100%)",
+  },
+];
 
 function getPrimaryImage(images, productName) {
   if (!Array.isArray(images) || images.length === 0) {
@@ -43,33 +84,90 @@ function outletPrice(product) {
   const value = product.is_on_sale && Number(product.sale_price) > 0
     ? Number(product.sale_price)
     : Number(product.price || 0);
+
   return value > 0 ? euro.format(value) : "Sur demande";
 }
 
-function ProLockedPreview() {
+function OutletProducts({ products, loading, compact = false }) {
+  if (loading) {
+    return (
+      <div className="grid min-h-40 place-items-center rounded-[24px] border border-white/10 bg-white/[.045] text-xs font-bold text-white/40">
+        Chargement des produits…
+      </div>
+    );
+  }
+
+  if (!products.length) {
+    return (
+      <Link
+        to="/produits"
+        className="flex min-h-40 items-center justify-center rounded-[24px] border border-dashed border-white/20 bg-white/[.04] text-sm font-black transition hover:border-[#ff5a00]/60 hover:bg-white/[.07]"
+      >
+        Découvrir le catalogue
+      </Link>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-2 gap-2.5">
-      {[0, 1].map((item) => (
+    <div className={`grid ${compact ? "grid-cols-2" : "grid-cols-2 xl:grid-cols-4"} gap-3`}>
+      {products.slice(0, compact ? 2 : 4).map((product) => (
+        <Link
+          key={product.id}
+          to={`/produits/${product.slug}`}
+          className="group overflow-hidden rounded-[22px] border border-white/10 bg-[#081b2e]/85 shadow-[0_18px_50px_rgba(0,0,0,.22)] transition hover:-translate-y-1 hover:border-[#ff5a00]/70"
+        >
+          <div className="relative aspect-square bg-white p-2.5">
+            <img
+              src={product.image.url}
+              alt={product.image.alt}
+              loading="lazy"
+              className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
+            />
+            {product.is_on_sale && Number(product.sale_price) > 0 ? (
+              <span className="absolute left-2 top-2 rounded-full bg-[#ff5a00] px-2 py-1 text-[8px] font-black uppercase tracking-[.08em] text-white">
+                Promo
+              </span>
+            ) : null}
+          </div>
+          <div className="p-3">
+            <p className="line-clamp-2 min-h-[34px] text-[11px] font-black leading-snug text-white/90">
+              {product.name}
+            </p>
+            <p className="mt-2 text-sm font-black text-[#ff7a32]">
+              {outletPrice(product)}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function LockedPartnerPreview({ compact = false }) {
+  return (
+    <div className={`grid ${compact ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3"} gap-3`}>
+      {[0, 1, 2].slice(0, compact ? 2 : 3).map((item) => (
         <div
           key={item}
-          className="relative overflow-hidden rounded-[20px] border border-[#17649e]/45 bg-[#0a2744] p-2.5 shadow-[0_12px_34px_rgba(2,7,20,.18)]"
+          className="overflow-hidden rounded-[22px] border border-[#f2cf79]/15 bg-black/25"
         >
-          <div className="relative aspect-square overflow-hidden rounded-[15px] bg-[#071b31]">
+          <div className="relative aspect-[4/3] overflow-hidden">
             <img
               src="/images/editorial/qeh-partner-logistique.jpg"
-              alt="Catalogue professionnel QEH Partner verrouillé"
-              className="h-full w-full scale-110 object-cover opacity-35 blur-[5px]"
+              alt="Aperçu du catalogue professionnel QEH PARTNER"
+              className="h-full w-full scale-110 object-cover opacity-30 blur-[5px]"
             />
-            <div className="absolute inset-0 grid place-items-center bg-[#071b31]/55">
-              <span className="grid h-10 w-10 place-items-center rounded-full border border-[#f2cf79]/45 bg-[#080704]/80 text-[#f2cf79] shadow-xl">
+            <div className="absolute inset-0 grid place-items-center bg-[#07111f]/55">
+              <span className="grid h-11 w-11 place-items-center rounded-full border border-[#f2cf79]/45 bg-black/70 text-[#f2cf79] shadow-xl">
                 <Lock className="h-4 w-4" />
               </span>
             </div>
           </div>
-          <div className="mt-2.5">
-            <p className="text-[9px] font-black uppercase tracking-[.16em] text-[#f2cf79]">Matériel Pro</p>
-            <p className="mt-1 text-xs font-black text-white/80">Produit réservé</p>
-            <p className="mt-1 text-[10px] font-bold text-white/35">Prix masqué</p>
+          <div className="p-3">
+            <p className="text-[9px] font-black uppercase tracking-[.16em] text-[#f2cf79]">
+              Matériel professionnel
+            </p>
+            <p className="mt-1 text-xs font-black text-white/80">Catalogue réservé</p>
           </div>
         </div>
       ))}
@@ -77,18 +175,409 @@ function ProLockedPreview() {
   );
 }
 
+function ProfessionalProducts({ products, loading, compact = false }) {
+  if (loading) {
+    return (
+      <div className="grid min-h-36 place-items-center rounded-[22px] border border-[#f2cf79]/15 bg-black/20 text-xs font-bold text-white/40">
+        Chargement de l'espace professionnel…
+      </div>
+    );
+  }
+
+  if (!products.length) {
+    return (
+      <Link
+        to="/qeh-partner/materiel-pro"
+        className="flex min-h-36 items-center justify-center rounded-[22px] border border-dashed border-[#f2cf79]/25 bg-black/20 text-sm font-black text-[#f2cf79]"
+      >
+        Ouvrir le catalogue professionnel
+      </Link>
+    );
+  }
+
+  return (
+    <div className={`grid ${compact ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3"} gap-3`}>
+      {products.slice(0, compact ? 2 : 3).map((product) => (
+        <Link
+          key={product.id}
+          to="/qeh-partner/materiel-pro"
+          className="group overflow-hidden rounded-[22px] border border-[#f2cf79]/16 bg-black/25 transition hover:-translate-y-1 hover:border-[#f2cf79]/50"
+        >
+          <div className="aspect-[4/3] bg-white/95 p-3">
+            <img
+              src={product.image_url || "/images/product-placeholder.png"}
+              alt={product.name}
+              className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
+            />
+          </div>
+          <div className="p-3">
+            <p className="line-clamp-2 text-xs font-black text-white/90">{product.name}</p>
+            <p className="mt-2 text-xs font-black text-[#f2cf79]">
+              {Number(product.price_excluding_tax) > 0
+                ? `${euro.format(Number(product.price_excluding_tax))} HT`
+                : "Prix professionnel"}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function ActionLink({ to, icon: Icon, title, detail, accent, filled = false }) {
+  return (
+    <Link
+      to={to}
+      className={`group flex min-h-[70px] items-center gap-3 rounded-[20px] border px-4 py-3 transition hover:-translate-y-0.5 ${
+        filled
+          ? "border-transparent text-[#071018] shadow-[0_16px_45px_rgba(0,0,0,.18)]"
+          : "border-white/10 bg-white/[.055] text-white hover:bg-white/[.09]"
+      }`}
+      style={filled ? { backgroundColor: accent } : undefined}
+    >
+      <span
+        className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${
+          filled ? "bg-black/10" : "bg-black/20"
+        }`}
+        style={!filled ? { color: accent } : undefined}
+      >
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-black">{title}</span>
+        {detail ? (
+          <span className={`mt-0.5 block text-[11px] font-semibold ${filled ? "text-black/55" : "text-white/45"}`}>
+            {detail}
+          </span>
+        ) : null}
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 transition group-hover:translate-x-1" />
+    </Link>
+  );
+}
+
+function OutletExpanded({ products, loading }) {
+  return (
+    <div className="mt-7 grid min-h-0 flex-1 grid-cols-1 gap-5 xl:grid-cols-[.72fr_1.28fr]">
+      <div className="flex flex-col gap-3">
+        <ActionLink
+          to="/produits"
+          icon={Boxes}
+          title="Explorer le catalogue"
+          detail="Voir tous les produits QEH OUTLET"
+          accent="#ff5a00"
+          filled
+        />
+        <ActionLink
+          to="/produits"
+          icon={Sparkles}
+          title="Bonnes affaires"
+          detail="Promotions, déstockage et opportunités"
+          accent="#ff7a32"
+        />
+        <ActionLink
+          to="/suivi-commande"
+          icon={PackageSearch}
+          title="Suivre ma commande"
+          detail="Retrouver l'avancement de votre livraison"
+          accent="#ff7a32"
+        />
+        <div className="mt-auto rounded-[24px] border border-white/10 bg-black/20 p-4">
+          <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#ff8a4b]">QEH OUTLET</p>
+          <p className="mt-2 text-sm font-semibold leading-relaxed text-white/55">
+            Une boutique directe, lisible et orientée produit : vous trouvez, vous achetez, vous suivez.
+          </p>
+        </div>
+      </div>
+
+      <div className="min-w-0 rounded-[28px] border border-white/10 bg-black/15 p-4 backdrop-blur-sm">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[.18em] text-white/35">En vitrine</p>
+            <h3 className="mt-1 font-display text-xl font-black">Produits du moment</h3>
+          </div>
+          <Link to="/produits" className="text-xs font-black text-[#ff8a4b]">Tout voir</Link>
+        </div>
+        <OutletProducts products={products} loading={loading} />
+      </div>
+    </div>
+  );
+}
+
+function EnergiesExpanded() {
+  return (
+    <div className="mt-7 grid min-h-0 flex-1 grid-cols-1 gap-5 xl:grid-cols-[1.2fr_.8fr]">
+      <div className="relative min-h-[360px] overflow-hidden rounded-[30px] border border-white/10 bg-black/20">
+        <img
+          src="/images/editorial/qeh-energies-territoire.jpg"
+          alt="Territoire et production solaire QEH ÉNERGIES"
+          className="absolute inset-0 h-full w-full object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#06120b] via-[#06120b]/15 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-2 text-xs font-black backdrop-blur-md">
+            <SunMedium className="h-4 w-4 text-[#a8eb75]" />
+            Énergie locale
+          </div>
+          <p className="mt-3 max-w-xl font-display text-2xl font-black leading-tight">
+            Visualisez ce qui se produit et se construit autour de vous.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <ActionLink
+          to="/qeh-energies/carte-solaire"
+          icon={Map}
+          title="Explorer la carte"
+          detail="Projets et producteurs autour de vous"
+          accent="#82d246"
+          filled
+        />
+        <ActionLink
+          to="/qeh-energies/comment-ca-marche"
+          icon={SunMedium}
+          title="Comprendre QEH Énergies"
+          detail="Le fonctionnement de l'écosystème local"
+          accent="#a8eb75"
+        />
+        <ActionLink
+          to="/qeh-energies/participer"
+          icon={Users}
+          title="Participer"
+          detail="Proposer un projet ou rejoindre la dynamique"
+          accent="#a8eb75"
+        />
+        <div className="mt-auto grid grid-cols-2 gap-3">
+          <div className="rounded-[22px] border border-white/10 bg-white/[.045] p-4">
+            <ShieldCheck className="h-5 w-5 text-[#a8eb75]" />
+            <p className="mt-3 text-xs font-black">Projets identifiés</p>
+            <p className="mt-1 text-[10px] font-semibold text-white/40">Lecture claire du territoire</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-white/[.045] p-4">
+            <Users className="h-5 w-5 text-[#a8eb75]" />
+            <p className="mt-3 text-xs font-black">Réseau local</p>
+            <p className="mt-1 text-[10px] font-semibold text-white/40">Producteurs, clients et partenaires</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PartnerExpanded({ isProfessional, products, loading }) {
+  return (
+    <div className="mt-7 grid min-h-0 flex-1 grid-cols-1 gap-5 xl:grid-cols-[1.2fr_.8fr]">
+      <div className="rounded-[28px] border border-[#f2cf79]/14 bg-black/20 p-4 backdrop-blur-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#f2cf79]">Espace professionnel</p>
+            <h3 className="mt-1 font-display text-xl font-black">
+              {isProfessional ? "Votre catalogue QEH PARTNER" : "Aperçu du catalogue professionnel"}
+            </h3>
+          </div>
+          {!isProfessional ? <Lock className="h-5 w-5 text-[#f2cf79]" /> : <UserCheck className="h-5 w-5 text-[#f2cf79]" />}
+        </div>
+        {isProfessional ? (
+          <ProfessionalProducts products={products} loading={loading} />
+        ) : (
+          <LockedPartnerPreview />
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <ActionLink
+          to={isProfessional ? "/qeh-partner/materiel-pro" : "/qeh-partner/connexion-pro"}
+          icon={isProfessional ? UserCheck : Lock}
+          title={isProfessional ? "Accéder au catalogue Pro" : "Se connecter"}
+          detail={isProfessional ? "Votre matériel professionnel QEH" : "Accéder à votre espace professionnel"}
+          accent="#f2cf79"
+          filled
+        />
+        <ActionLink
+          to="/qeh-partner/production"
+          icon={Factory}
+          title="Devenir producteur"
+          detail="Produire ou référencer du matériel au sein du réseau"
+          accent="#f2cf79"
+        />
+        <ActionLink
+          to="/qeh-partner/franchise"
+          icon={ShieldCheck}
+          title="Être franchisé"
+          detail="Développer QEH sur votre territoire"
+          accent="#f2cf79"
+        />
+        {!isProfessional ? (
+          <Link
+            to="/qeh-partner/inscription-pro"
+            className="mt-auto flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#f2cf79]/25 bg-[#f2cf79]/10 px-5 text-sm font-black text-[#ffe4a0] transition hover:bg-[#f2cf79]/15"
+          >
+            Devenir professionnel <ArrowRight className="h-4 w-4" />
+          </Link>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function DesktopUniversePanel({ universe, activeUniverse, setActiveUniverse, children, reducedMotion }) {
+  const isActive = activeUniverse === universe.id;
+  const anotherIsActive = Boolean(activeUniverse) && !isActive;
+
+  return (
+    <motion.section
+      layout
+      onMouseEnter={() => setActiveUniverse(universe.id)}
+      animate={{
+        flexGrow: activeUniverse ? (isActive ? 2.4 : 0.5) : 1,
+        opacity: anotherIsActive ? 0.72 : 1,
+      }}
+      transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 150, damping: 24, mass: 0.9 }}
+      className="relative min-w-0 overflow-hidden border-r border-white/10 last:border-r-0"
+      style={{ background: universe.background }}
+    >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-1" style={{ backgroundColor: universe.accent }} />
+      <div
+        className="pointer-events-none absolute -top-24 h-80 w-80 rounded-full blur-[110px]"
+        style={{ backgroundColor: `${universe.accent}22`, left: universe.id === "partner" ? "55%" : "-10%" }}
+      />
+
+      <div className={`relative flex h-full min-h-[690px] flex-col ${anotherIsActive ? "p-4 xl:p-5" : "p-6 xl:p-8"}`}>
+        <div className={`${anotherIsActive ? "mx-auto w-full max-w-[170px]" : "w-full"}`}>
+          <div className={`flex items-center ${anotherIsActive ? "justify-center" : "justify-between"} gap-4`}>
+            <div
+              className={`flex items-center justify-center overflow-hidden rounded-[20px] border border-white/12 bg-black/25 p-3 backdrop-blur-xl transition-all ${
+                anotherIsActive ? "h-[62px] w-full" : "h-[72px] min-w-[180px] max-w-[330px]"
+              }`}
+            >
+              <img src={universe.logo} alt={universe.title} className="max-h-[48px] w-full object-contain" />
+            </div>
+
+            {!anotherIsActive ? (
+              <button
+                type="button"
+                onClick={() => setActiveUniverse(isActive ? null : universe.id)}
+                className="hidden rounded-full border border-white/12 bg-black/20 px-4 py-2 text-[10px] font-black uppercase tracking-[.16em] text-white/60 transition hover:bg-white/10 xl:block"
+              >
+                {isActive ? "Vue globale" : "Découvrir"}
+              </button>
+            ) : null}
+          </div>
+
+          <div className={`${anotherIsActive ? "mt-8 text-center" : "mt-7"}`}>
+            <p className="text-[10px] font-black uppercase tracking-[.22em]" style={{ color: universe.softAccent }}>
+              {universe.tagline}
+            </p>
+            <h2
+              className={`${anotherIsActive ? "mt-3 text-xl" : "mt-3 text-3xl xl:text-4xl"} font-display font-black leading-[.98] tracking-[-.04em]`}
+            >
+              {anotherIsActive ? universe.title : universe.headline}
+            </h2>
+            {!anotherIsActive ? (
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/58">
+                {universe.description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        <AnimatePresence mode="wait" initial={false}>
+          {isActive ? (
+            <motion.div
+              key={`${universe.id}-expanded`}
+              initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reducedMotion ? undefined : { opacity: 0, y: 8 }}
+              transition={{ duration: 0.24 }}
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              {children}
+            </motion.div>
+          ) : !activeUniverse ? (
+            <motion.div
+              key={`${universe.id}-overview`}
+              initial={reducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-auto pt-8"
+            >
+              <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 backdrop-blur-md">
+                <p className="text-xs font-black uppercase tracking-[.16em] text-white/35">{universe.title}</p>
+                <p className="mt-3 text-sm font-semibold leading-relaxed text-white/65">
+                  {universe.id === "outlet" && "Catalogue, produits, commandes."}
+                  {universe.id === "energies" && "Carte solaire, projets, participation."}
+                  {universe.id === "partner" && "Matériel Pro, production, franchise."}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveUniverse(universe.id)}
+                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-black text-[#071018] transition hover:brightness-110"
+                  style={{ backgroundColor: universe.accent }}
+                >
+                  Découvrir cet univers <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={`${universe.id}-collapsed`}
+              initial={reducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-auto pb-3 text-center"
+            >
+              <button
+                type="button"
+                onClick={() => setActiveUniverse(universe.id)}
+                className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-white/15 bg-black/25 transition hover:scale-105"
+                style={{ color: universe.accent }}
+                aria-label={`Ouvrir ${universe.title}`}
+              >
+                <ArrowRight className="h-5 w-5" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.section>
+  );
+}
+
+function MobileUniverseCard({ universe, children }) {
+  return (
+    <section
+      className="relative min-w-[88vw] max-w-[460px] snap-center overflow-hidden rounded-[30px] border border-white/10 shadow-[0_24px_80px_rgba(0,0,0,.32)]"
+      style={{ background: universe.background }}
+    >
+      <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: universe.accent }} />
+      <div className="p-5">
+        <div className="flex min-h-[68px] items-center justify-center rounded-[19px] border border-white/12 bg-black/25 p-3 backdrop-blur-xl">
+          <img src={universe.logo} alt={universe.title} className="max-h-[46px] w-full object-contain" />
+        </div>
+        <p className="mt-6 text-[10px] font-black uppercase tracking-[.2em]" style={{ color: universe.softAccent }}>
+          {universe.tagline}
+        </p>
+        <h2 className="mt-2 font-display text-3xl font-black leading-[.98] tracking-[-.04em]">{universe.headline}</h2>
+        <p className="mt-3 text-sm font-medium leading-relaxed text-white/58">{universe.description}</p>
+        <div className="mt-5">{children}</div>
+      </div>
+    </section>
+  );
+}
+
 export default function UniverseHome() {
   const reduceMotion = useReducedMotion();
-  const { isProfessional, professionalAccount, professionalLoading } = useProfessionalAuth();
+  const { isProfessional, professionalLoading } = useProfessionalAuth();
+  const [activeUniverse, setActiveUniverse] = useState(null);
   const [outletProducts, setOutletProducts] = useState([]);
   const [proProducts, setProProducts] = useState([]);
   const [outletLoading, setOutletLoading] = useState(true);
   const [proLoading, setProLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "QEH | Trois univers";
+    document.title = "QEH | Trois univers, un même écosystème";
 
     let active = true;
+
     async function loadOutletProducts() {
       const { data, error } = await supabase
         .from("products")
@@ -109,292 +598,252 @@ export default function UniverseHome() {
         .limit(4);
 
       if (!active) return;
+
       if (error) {
         console.error("Impossible de charger les produits QEH OUTLET :", error);
         setOutletProducts([]);
       } else {
-        setOutletProducts((data || []).map((product) => ({
-          ...product,
-          image: getPrimaryImage(product.product_images, product.name),
-        })));
+        setOutletProducts(
+          (data || []).map((product) => ({
+            ...product,
+            image: getPrimaryImage(product.product_images, product.name),
+          }))
+        );
       }
+
       setOutletLoading(false);
     }
 
     loadOutletProducts();
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
     let active = true;
 
     async function loadProfessionalProducts() {
-      if (professionalLoading || !isProfessional) {
-        if (!isProfessional) {
-          setProProducts([]);
-          setProLoading(false);
-        }
+      if (professionalLoading) return;
+
+      if (!isProfessional) {
+        setProProducts([]);
+        setProLoading(false);
         return;
       }
 
       setProLoading(true);
+
       const { data, error } = await supabase
         .from("qeh_partner_products")
         .select("id, name, category, price_excluding_tax, image_url, stock")
         .eq("is_active", true)
         .order("created_at", { ascending: false })
-        .limit(4);
+        .limit(3);
 
       if (!active) return;
+
       if (error) {
         console.error("Impossible de charger les produits QEH PARTNER :", error);
         setProProducts([]);
       } else {
         setProProducts(data || []);
       }
+
       setProLoading(false);
     }
 
     loadProfessionalProducts();
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
   }, [isProfessional, professionalLoading]);
 
-  const panelAnimation = (delay) => ({
-    initial: reduceMotion ? false : { opacity: 0, y: 24 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6, delay: reduceMotion ? 0 : delay },
-  });
+  const outlet = UNIVERSES[0];
+  const energies = UNIVERSES[1];
+  const partner = UNIVERSES[2];
 
   return (
-    <main className="min-h-screen bg-[#020711] text-white">
-      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-3">
-        {/* QEH OUTLET */}
-        <motion.section
-          {...panelAnimation(0)}
-          className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_20%_0%,rgba(255,90,0,.30),transparent_38%),linear-gradient(160deg,#07111f_0%,#0a2440_52%,#11100d_100%)] lg:min-h-screen lg:border-b-0 lg:border-r"
+    <main className="min-h-screen overflow-hidden bg-[#020711] text-white">
+      <header className="relative z-20 border-b border-white/10 bg-[#030811]/90 px-4 py-4 backdrop-blur-2xl sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1900px] items-center justify-between gap-5">
+          <div>
+            <p className="font-display text-2xl font-black tracking-[-.05em] sm:text-3xl">QEH</p>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[.16em] text-white/35 sm:text-[11px]">
+              Trois expertises. Un même écosystème.
+            </p>
+          </div>
+
+          <div className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/[.04] p-1.5 lg:flex">
+            {UNIVERSES.map((universe) => {
+              const active = activeUniverse === universe.id;
+              return (
+                <button
+                  key={universe.id}
+                  type="button"
+                  onClick={() => setActiveUniverse(active ? null : universe.id)}
+                  className="relative min-w-[112px] rounded-full px-4 py-2.5 text-[10px] font-black uppercase tracking-[.16em] transition"
+                  style={{ color: active ? "#071018" : universe.softAccent }}
+                >
+                  {active ? (
+                    <motion.span
+                      layoutId="qeh-active-universe"
+                      className="absolute inset-0 rounded-full"
+                      style={{ backgroundColor: universe.accent }}
+                      transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 240, damping: 26 }}
+                    />
+                  ) : null}
+                  <span className="relative z-10">{universe.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="hidden text-right xl:block">
+            <p className="text-[10px] font-black uppercase tracking-[.18em] text-white/28">
+              Sélectionnez un univers
+            </p>
+            <p className="mt-1 text-xs font-semibold text-white/48">
+              Survolez pour l'ouvrir
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div
+        className="hidden min-h-[calc(100vh-89px)] lg:flex"
+        onMouseLeave={() => setActiveUniverse(null)}
+      >
+        <DesktopUniversePanel
+          universe={outlet}
+          activeUniverse={activeUniverse}
+          setActiveUniverse={setActiveUniverse}
+          reducedMotion={reduceMotion}
         >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[#ff5a00]" />
-          <div className="pointer-events-none absolute -left-28 top-28 h-72 w-72 rounded-full bg-[#ff5a00]/16 blur-[90px]" />
-          <div className="relative flex h-full flex-col p-4 pb-8 pt-7 sm:p-7 lg:p-6 xl:p-8">
-            <Link to="/qeh-outlet" className="flex min-h-[78px] items-center justify-center rounded-[22px] border border-white/15 bg-black/25 p-3 backdrop-blur-xl transition hover:border-[#ff5a00]/70">
-              <img src="/images/qeh-outlet-logo.jpg" alt="QEH OUTLET" className="max-h-[58px] w-full object-contain" />
-            </Link>
+          <OutletExpanded products={outletProducts} loading={outletLoading} />
+        </DesktopUniversePanel>
 
-            <div className="mt-6">
-              <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#ff8a4b]">Déstockage · équipement · bonnes affaires</p>
-              <h1 className="mt-2 font-display text-3xl font-black leading-[.95] tracking-[-.04em] xl:text-4xl">Le matériel technique au prix juste.</h1>
-              <p className="mt-3 text-sm leading-relaxed text-white/65">Panneaux solaires, climatisation, chauffage, plomberie et équipements techniques disponibles immédiatement ou sur demande.</p>
+        <DesktopUniversePanel
+          universe={energies}
+          activeUniverse={activeUniverse}
+          setActiveUniverse={setActiveUniverse}
+          reducedMotion={reduceMotion}
+        >
+          <EnergiesExpanded />
+        </DesktopUniversePanel>
+
+        <DesktopUniversePanel
+          universe={partner}
+          activeUniverse={activeUniverse}
+          setActiveUniverse={setActiveUniverse}
+          reducedMotion={reduceMotion}
+        >
+          <PartnerExpanded
+            isProfessional={isProfessional}
+            products={proProducts}
+            loading={proLoading || professionalLoading}
+          />
+        </DesktopUniversePanel>
+      </div>
+
+      <div className="lg:hidden">
+        <div className="px-4 pb-2 pt-5 sm:px-6">
+          <p className="text-xs font-semibold leading-relaxed text-white/48">
+            Glissez horizontalement pour passer d'un univers QEH à l'autre.
+          </p>
+          <div className="mt-4 flex items-center gap-2">
+            {UNIVERSES.map((universe) => (
+              <span
+                key={universe.id}
+                className="h-1.5 flex-1 rounded-full opacity-85"
+                style={{ backgroundColor: universe.accent }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[6vw] pb-8 pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <MobileUniverseCard universe={outlet}>
+            <OutletProducts products={outletProducts} loading={outletLoading} compact />
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Link
+                to="/produits"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#ff5a00] px-4 text-xs font-black text-white"
+              >
+                Catalogue <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/suivi-commande"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/12 bg-white/[.055] px-4 text-xs font-black"
+              >
+                Suivi
+              </Link>
             </div>
+          </MobileUniverseCard>
 
-            <div className="mt-5 grid grid-cols-3 gap-2">
-              {[
-                [Boxes, "Catalogue", "/produits"],
-                [BadgeEuro, "Prix Outlet", "/qeh-outlet"],
-                [PackageSearch, "Suivi", "/suivi-commande"],
-              ].map(([Icon, label, to]) => (
-                <Link key={label} to={to} className="flex min-h-[78px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[.055] px-2 text-center text-[10px] font-black transition hover:-translate-y-0.5 hover:border-[#ff5a00]/70 hover:bg-white/[.09] sm:text-xs">
-                  <Icon className="h-5 w-5 text-[#ff7a32]" />
-                  {label}
+          <MobileUniverseCard universe={energies}>
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[24px] border border-white/10">
+              <img
+                src="/images/editorial/qeh-energies-territoire.jpg"
+                alt="Production solaire locale QEH ÉNERGIES"
+                className="h-full w-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#07110c] via-transparent to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-md">
+                <p className="text-[10px] font-black text-[#a8eb75]">Carte solaire locale</p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-2">
+              <ActionLink to="/qeh-energies/carte-solaire" icon={Map} title="Explorer la carte" accent="#82d246" filled />
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to="/qeh-energies/comment-ca-marche"
+                  className="flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[.055] px-3 text-center text-[11px] font-black"
+                >
+                  Comprendre
                 </Link>
-              ))}
-            </div>
-
-            <div className="mt-6 flex items-end justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[.18em] text-white/35">En vitrine</p>
-                <h2 className="mt-1 font-display text-lg font-black">Produits QEH OUTLET</h2>
+                <Link
+                  to="/qeh-energies/participer"
+                  className="flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[.055] px-3 text-center text-[11px] font-black"
+                >
+                  Participer
+                </Link>
               </div>
-              <Link to="/produits" className="text-[11px] font-black text-[#ff8a4b]">Tout voir</Link>
             </div>
+          </MobileUniverseCard>
 
-            {outletLoading ? (
-              <div className="mt-3 grid min-h-44 place-items-center rounded-[22px] border border-white/10 bg-white/[.04] text-xs font-bold text-white/40">Chargement…</div>
-            ) : outletProducts.length > 0 ? (
-              <div className="mt-3 grid grid-cols-2 gap-2.5">
-                {outletProducts.map((product) => (
-                  <Link key={product.id} to={`/produits/${product.slug}`} className="group overflow-hidden rounded-[20px] border border-[#17649e]/45 bg-[#0a2744] text-white shadow-[0_12px_34px_rgba(2,7,20,.18)] transition hover:-translate-y-1 hover:border-[#ff5a00]">
-                    <div className="relative aspect-square bg-[#0a2744] p-2.5">
-                      <img src={product.image.url} alt={product.image.alt} loading="lazy" className="h-full w-full object-contain transition duration-300 group-hover:scale-105" />
-                      {product.is_on_sale && Number(product.sale_price) > 0 ? <span className="absolute left-2 top-2 rounded-full bg-[#ff5a00] px-2 py-1 text-[8px] font-black text-white">PROMO</span> : null}
-                    </div>
-                    <div className="border-t border-white/10 p-2.5">
-                      <p className="line-clamp-2 min-h-[32px] text-[10px] font-black leading-snug sm:text-xs">{product.name}</p>
-                      <p className="mt-2 text-xs font-black text-[#ff7a32] sm:text-sm">{outletPrice(product)}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+          <MobileUniverseCard universe={partner}>
+            {isProfessional ? (
+              <ProfessionalProducts products={proProducts} loading={proLoading || professionalLoading} compact />
             ) : (
-              <Link to="/produits" className="mt-3 flex min-h-40 items-center justify-center rounded-[22px] border border-dashed border-white/20 bg-white/[.04] text-sm font-black">Découvrir le catalogue</Link>
+              <LockedPartnerPreview compact />
             )}
-
-            <Link to="/qeh-outlet" className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#ff5a00] px-5 text-sm font-black shadow-[0_16px_44px_rgba(255,90,0,.28)] transition hover:bg-[#ff742b]">
-              Entrer dans QEH OUTLET <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </motion.section>
-
-        {/* QEH ENERGIES */}
-        <motion.section
-          {...panelAnimation(0.08)}
-          className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(130,210,70,.30),transparent_40%),linear-gradient(165deg,#08170f_0%,#10291b_48%,#07110c_100%)] lg:min-h-screen lg:border-b-0 lg:border-r"
-        >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[#82d246]" />
-          <div className="pointer-events-none absolute -right-20 top-40 h-72 w-72 rounded-full bg-[#82d246]/14 blur-[95px]" />
-          <div className="relative flex h-full flex-col p-4 pb-8 pt-7 sm:p-7 lg:p-6 xl:p-8">
-            <Link to="/qeh-energies" className="flex min-h-[78px] items-center justify-center rounded-[22px] border border-white/15 bg-black/25 p-3 backdrop-blur-xl transition hover:border-[#82d246]/70">
-              <img src="/images/qeh-energies-logo.png" alt="QEH ÉNERGIES" className="max-h-[58px] w-full object-contain" />
-            </Link>
-
-            <div className="mt-6">
-              <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#a8eb75]">Production locale · solaire · partage</p>
-              <h2 className="mt-2 font-display text-3xl font-black leading-[.95] tracking-[-.04em] xl:text-4xl">L'énergie produite près de chez vous.</h2>
-              <p className="mt-3 text-sm leading-relaxed text-white/65">QEH ÉNERGIES connecte projets photovoltaïques, producteurs et territoires pour rendre l'énergie locale plus simple et plus visible.</p>
-            </div>
-
-            <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-black/20">
-              <div className="relative aspect-[16/10] overflow-hidden">
-                <img src="/images/editorial/qeh-energies-territoire.jpg" alt="Territoire et production solaire QEH ÉNERGIES" className="h-full w-full object-cover opacity-75" />
-                <div className="absolute inset-0 bg-gradient-t from-[#07110c] via-transparent to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-2xl border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-md">
-                  <SunMedium className="h-5 w-5 text-[#a8eb75]" />
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-[.16em] text-[#a8eb75]">Énergie locale</p>
-                    <p className="text-xs font-bold text-white/80">Voir ce qui se produit autour de vous</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-2.5">
-             {[
-                [Map, "Carte solaire", "Explorer les projets et producteurs autour de vous", "/qeh-energies/carte-solaire"],
-                [SunMedium, "Comment ça marche", "Comprendre le fonctionnement de l'écosystème énergétique", "/qeh-energies/comment-ca-marche"],
-                [Users, "Participer", "Proposer un projet ou rejoindre la dynamique locale", "/qeh-energies/participer"],
-             ].map(([Icon, title, detail, to]) => (
-                <Link key={title} to={to} className="group flex min-h-[74px] items-center gap-3 rounded-[20px] border border-white/10 bg-white/[.055] p-3 transition hover:-translate-y-0.5 hover:border-[#82d246]/65 hover:bg-white/[.09]">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#82d246]/12 text-[#a8eb75]"><Icon className="h-5 w-5" /></span>
-                  <span className="min-w-0">
-                    <strong className="block text-xs font-black sm:text-sm">{title}</strong>
-                    <span className="mt-0.5 block text-[10px] leading-snug text-white/45 sm:text-[11px]">{detail}</span>
-                  </span>
-                  <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-white/30 transition group-hover:text-[#a8eb75]" />
+            <div className="mt-4 grid gap-2">
+              <Link
+                to={isProfessional ? "/qeh-partner/materiel-pro" : "/qeh-partner/connexion-pro"}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#f2cf79] px-4 text-xs font-black text-[#171109]"
+              >
+                {isProfessional ? "Catalogue Pro" : "Se connecter"} <ArrowRight className="h-4 w-4" />
+              </Link>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to="/qeh-partner/production"
+                  className="flex min-h-11 items-center justify-center rounded-full border border-[#f2cf79]/20 bg-[#f2cf79]/[.07] px-3 text-center text-[11px] font-black text-[#ffe4a0]"
+                >
+                  Devenir producteur
                 </Link>
-             ))}
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-2.5">
-              <div className="rounded-[18px] border border-white/10 bg-white/[.045] p-3">
-                <ShieldCheck className="h-5 w-5 text-[#a8eb75]" />
-                <p className="mt-2 text-xs font-black">Projets identifiés</p>
-                <p className="mt-1 text-[10px] leading-relaxed text-white/40">Une lecture claire des initiatives du territoire.</p>
-              </div>
-              <div className="rounded-[18px] border border-white/10 bg-white/[.045] p-3">
-                <Users className="h-5 w-5 text-[#a8eb75]" />
-                <p className="mt-2 text-xs font-black">Réseau local</p>
-                <p className="mt-1 text-[10px] leading-relaxed text-white/40">Producteurs, clients et partenaires réunis.</p>
-              </div>
-            </div>
-
-            <Link to="/qeh-energies" className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#82d246] px-5 text-sm font-black text-[#07110c] shadow-[0_16px_44px_rgba(130,210,70,.20)] transition hover:brightness-110">
-              Entrer dans QEH ÉNERGIES <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </motion.section>
-
-        {/* QEH PARTNER */}
-        <motion.section
-          {...panelAnimation(0.16)}
-          className="relative overflow-hidden bg-[radial-gradient(circle_at_80%_0%,rgba(242,207,121,.26),transparent_40%),linear-gradient(160deg,#151108_0%,#20190b_50%,#0c0a06_100%)] lg:min-h-screen"
-        >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[#f2cf79]" />
-          <div className="pointer-events-none absolute -right-20 top-24 h-72 w-72 rounded-full bg-[#f2cf79]/13 blur-[95px]" />
-          <div className="relative flex h-full flex-col p-4 pb-8 pt-7 sm:p-7 lg:p-6 xl:p-8">
-            <Link to="/qeh-partner" className="flex min-h-[78px] items-center justify-center rounded-[22px] border border-white/15 bg-black/30 p-3 backdrop-blur-xl transition hover:border-[#f2cf79]/70">
-              <img src="/images/qeh-partner-logo-gold.png" alt="QEH PARTNER" className="max-h-[58px] w-full object-contain" />
-            </Link>
-
-            <div className="mt-6">
-              <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#f2cf79]">Professionnels · production · franchise</p>
-              <h2 className="mt-2 font-display text-3xl font-black leading-[.95] tracking-[-.04em] xl:text-4xl">L'univers réservé à ceux qui développent QEH.</h2>
-              <p className="mt-3 text-sm leading-relaxed text-white/65">Accédez au matériel professionnel, devenez producteur ou développez votre propre implantation avec le réseau QEH PARTNER.</p>
-            </div>
-
-            <div className="mt-5 flex items-center justify-between gap-3 rounded-[20px] border border-[#f2cf79]/20 bg-[#f2cf79]/[.07] p-3">
-              <div className="flex items-center gap-3">
-                <span className={`grid h-10 w-10 place-items-center rounded-full ${isProfessional ? "bg-emerald-400/15 text-emerald-300" : "bg-[#f2cf79]/12 text-[#f2cf79]"}`}>
-                  {isProfessional ? <UserCheck className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
-                </span>
-                <div>
-                  <p className="text-xs font-black">{isProfessional ? `Compte Pro ${professionalAccount?.company_name || "validé"}` : "Catalogue professionnel verrouillé"}</p>
-                  <p className="mt-0.5 text-[10px] text-white/45">{isProfessional ? "Vos prix et produits sont accessibles." : "Connectez-vous avec un compte Pro QEH validé."}</p>
-                </div>
-              </div>
-              {!isProfessional && !professionalLoading ? <Lock className="h-4 w-4 shrink-0 text-[#f2cf79]" /> : null}
-            </div>
-
-            <div className="mt-5">
-              <div className="mb-3 flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-[.16em] text-[#f2cf79]">Matériel professionnel</p>
-                  <h3 className="mt-1 font-display text-lg font-black">Catalogue QEH Partner</h3>
-                </div>
-                {isProfessional ? <Link to="/qeh-partner/materiel-pro" className="text-[11px] font-black text-[#f2cf79]">Ouvrir</Link> : null}
-              </div>
-
-              {professionalLoading || proLoading ? (
-                <div className="grid min-h-40 place-items-center rounded-[20px] border border-white/10 bg-white/[.04] text-xs font-bold text-white/40">Vérification du compte…</div>
-              ) : isProfessional && proProducts.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2.5">
-                  {proProducts.map((product) => (
-                    <Link key={product.id} to="/qeh-partner/materiel-pro" className="group overflow-hidden rounded-[20px] border border-[#17649e]/45 bg-[#0a2744] text-white shadow-[0_12px_34px_rgba(2,7,20,.18)] transition hover:-translate-y-1 hover:border-[#f2cf79]">
-                      <div className="aspect-square bg-[#0a2744] p-2.5">
-                        {product.image_url ? <img src={product.image_url} alt={product.name} loading="lazy" className="h-full w-full object-contain transition group-hover:scale-105" /> : <div className="grid h-full place-items-center rounded-xl bg-[#071b31]"><Boxes className="h-8 w-8 text-[#f2cf79]" /></div>}
-                      </div>
-                    <div className="border-t border-white/10 p-2.5">
-                        <p className="line-clamp-2 min-h-[32px] text-[10px] font-black leading-snug sm:text-xs">{product.name}</p>
-                        <p className="mt-2 text-xs font-black text-[#f2cf79]">{euro.format(Number(product.price_excluding_tax || 0))} HT</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <ProLockedPreview />
-              )}
-            </div>
-
-            {!isProfessional ? (
-              <div className="mt-3 grid grid-cols-2 gap-2.5">
-                <Link to="/qeh-partner/connexion-pro" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-[#f2cf79]/35 bg-[#f2cf79]/10 px-3 text-[11px] font-black text-[#f2cf79] transition hover:bg-[#f2cf79]/15">
-                  <Lock className="h-3.5 w-3.5" /> Connexion Pro
-                </Link>
-                <Link to="/qeh-partner/inscription-pro" className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#f2cf79] px-3 text-[11px] font-black text-[#151108] transition hover:brightness-110">
-                  Devenir Pro
+                <Link
+                  to="/qeh-partner/franchise"
+                  className="flex min-h-11 items-center justify-center rounded-full border border-[#f2cf79]/20 bg-[#f2cf79]/[.07] px-3 text-center text-[11px] font-black text-[#ffe4a0]"
+                >
+                  Être franchisé
                 </Link>
               </div>
-            ) : null}
-
-            <div className="mt-5 space-y-2.5">
-              {[
-                [Factory, "Devenir producteur", "Produire ou référencer du matériel au sein du réseau QEH.", "/qeh-partner/production"],
-                [Sparkles, "Être franchisé", "Développer QEH sur votre territoire avec un accompagnement dédié.", "/qeh-partner/franchise"],
-              ].map(([Icon, title, detail, to]) => (
-                <Link key={title} to={to} className="group flex min-h-[74px] items-center gap-3 rounded-[20px] border border-white/10 bg-white/[.055] p-3 transition hover:-translate-y-0.5 hover:border-[#f2cf79]/65 hover:bg-white/[.09]">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#f2cf79]/12 text-[#f2cf79]"><Icon className="h-5 w-5" /></span>
-                  <span className="min-w-0">
-                    <strong className="block text-xs font-black sm:text-sm">{title}</strong>
-                    <span className="mt-0.5 block text-[10px] leading-snug text-white/45 sm:text-[11px]">{detail}</span>
-                  </span>
-                  <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-white/30 transition group-hover:text-[#f2cf79]" />
-                </Link>
-              ))}
             </div>
-
-            <Link to={isProfessional ? "/qeh-partner/materiel-pro" : "/qeh-partner"} className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#f2cf79] px-5 text-sm font-black text-[#151108] shadow-[0_16px_44px_rgba(242,207,121,.18)] transition hover:brightness-110">
-              {isProfessional ? "Accéder au matériel Pro" : "Entrer dans QEH PARTNER"} <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </motion.section>
+          </MobileUniverseCard>
+        </div>
       </div>
     </main>
   );
