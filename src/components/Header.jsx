@@ -14,9 +14,9 @@ import { useCustomerAuth } from "../context/CustomerAuthContext";
 import CatalogSearchMenu from "./CatalogSearchMenu";
 import QEHUniversalHeader from "./QEHUniversalHeader";
 
-const links = [
+const publicLinks = [
   { to: "/produits", label: "Produits" },
-  { to: "/suivi-commande", label: "Suivi de commande" },
+  { to: "/suivi-commande", label: "Suivi transporteur" },
   { to: "/contact", label: "Contact" },
 ];
 
@@ -47,6 +47,14 @@ export const Header = () => {
       .join(" ") ||
     user?.email ||
     "Client";
+
+  const directLinks = isAuthenticated
+    ? [
+        { to: "/produits", label: "Produits" },
+        { to: "/mes-commandes", label: "Mes commandes" },
+        { to: "/contact", label: "Contact" },
+      ]
+    : publicLinks;
 
   const accountControl = !isAuthenticated ? (
     <Link
@@ -79,6 +87,9 @@ export const Header = () => {
           <Link to="/mon-compte" className="flex gap-3 px-5 py-4 hover:bg-slate-100">
             <User className="h-5 w-5" /> Mon compte
           </Link>
+          <Link to="/mes-commandes" className="flex gap-3 px-5 py-4 hover:bg-slate-100">
+            <PackageSearch className="h-5 w-5" /> Mes commandes
+          </Link>
           <button
             type="button"
             onClick={handleLogout}
@@ -95,7 +106,7 @@ export const Header = () => {
     <QEHUniversalHeader
       activeBrand="outlet"
       menuLabel="le menu QEH OUTLET"
-      directLinks={links}
+      directLinks={directLinks}
       utilityLeft={<CatalogSearchMenu />}
       utilityRight={accountControl}
     >
@@ -105,18 +116,18 @@ export const Header = () => {
             Services QEH OUTLET
           </p>
           <p className="mt-1 text-sm text-white/50">
-            Recherche, suivi, panier et espace particulier.
+            Recherche, commandes, panier et espace particulier.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <Link
-            to="/suivi-commande"
-            title="Suivre une commande"
+            to={isAuthenticated ? "/mes-commandes" : "/suivi-commande"}
+            title={isAuthenticated ? "Mes commandes" : "Suivi transporteur"}
             className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 font-semibold hover:border-[#0b5ca8]"
           >
             <PackageSearch className="h-5 w-5" />
-            <span className="hidden sm:inline">Suivi</span>
+            <span className="hidden sm:inline">{isAuthenticated ? "Mes commandes" : "Suivi"}</span>
           </Link>
 
           <Link
@@ -144,7 +155,6 @@ export const Header = () => {
               </span>
             ) : null}
           </Link>
-
         </div>
       </div>
     </QEHUniversalHeader>
