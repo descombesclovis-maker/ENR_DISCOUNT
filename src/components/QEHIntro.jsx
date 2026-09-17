@@ -72,6 +72,7 @@ export default function QEHIntro() {
   return (
     <div
       aria-hidden="true"
+      onClick={finish}
       style={{
         position: "fixed",
         inset: 0,
@@ -84,6 +85,7 @@ export default function QEHIntro() {
         opacity: closing ? 0 : 1,
         pointerEvents: closing ? "none" : "auto",
         transition: `opacity ${FADE_MS}ms cubic-bezier(.22,.61,.36,1)`,
+        cursor: "pointer",
       }}
     >
       <video
