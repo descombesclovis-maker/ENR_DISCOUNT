@@ -224,16 +224,16 @@ function UniverseCard({ universe, children, cardRef }) {
   return (
     <section
       ref={cardRef}
-      className="relative w-[86vw] max-w-[420px] shrink-0 snap-center overflow-hidden rounded-[26px] border border-white/10 shadow-[0_20px_65px_rgba(0,0,0,.28)]"
+      className="relative w-[86vw] max-w-[420px] sm:max-w-[500px] shrink-0 snap-center overflow-hidden rounded-[26px] border border-white/10 shadow-[0_20px_65px_rgba(0,0,0,.28)]"
       style={{ background: universe.background }}
     >
       <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: universe.accent }} />
       <div className="p-4">
-        <div className="flex h-[104px] items-center justify-center rounded-[20px] border border-white/12 bg-black/22 px-5 py-3 backdrop-blur-xl">
+        <div className="flex h-[104px] sm:h-[124px] items-center justify-center rounded-[20px] border border-white/12 bg-black/22 px-5 py-3 backdrop-blur-xl">
           <img
             src={universe.logo}
             alt={universe.title}
-            className="max-h-[82px] w-full object-contain"
+            className="max-h-[82px] sm:max-h-[100px] w-full object-contain"
           />
         </div>
 
@@ -405,7 +405,7 @@ export default function UniverseHome() {
         transition={{ duration: 0.3 }}
         className="mx-auto max-w-[1200px] px-3 pb-8 pt-4 sm:px-6"
       >
-        <div className="mx-auto mb-3 flex max-w-[470px] items-center justify-between gap-3 px-1">
+        <div className="mx-auto mb-3 flex max-w-[560px] items-center justify-between gap-3 px-1">
           <div>
             <p className="text-[11px] font-black text-white/75">Choisissez votre univers</p>
             <p className="mt-0.5 text-[10px] text-white/35">Glissez ou utilisez les flèches.</p>
@@ -428,13 +428,13 @@ export default function UniverseHome() {
           </div>
         </div>
 
-        <div className="relative mx-auto max-w-[500px]">
+        <div className="relative mx-auto max-w-[620px]">
           <button
             type="button"
             onClick={() => goToUniverse(activeIndex - 1)}
             disabled={activeIndex === 0}
             aria-label="Univers précédent"
-            className="absolute left-1 top-1/2 z-30 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/12 bg-[#030811]/88 text-white shadow-xl backdrop-blur-xl transition hover:bg-white/10 disabled:pointer-events-none disabled:opacity-20 sm:-left-12"
+            className="absolute left-1 top-1/2 z-30 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/12 bg-[#030811]/88 text-white shadow-xl backdrop-blur-xl transition hover:bg-white/10 disabled:pointer-events-none disabled:opacity-20 sm:-left-14"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -442,7 +442,7 @@ export default function UniverseHome() {
           <div
             ref={carouselRef}
             onScroll={syncActiveCard}
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[7vw] pb-3 pt-1 [scrollbar-width:none] sm:px-10 [&::-webkit-scrollbar]:hidden"
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[7vw] pb-3 pt-1 [scrollbar-width:none] sm:px-14 [&::-webkit-scrollbar]:hidden"
           >
             <UniverseCard universe={outlet} cardRef={(node) => { cardRefs.current[0] = node; }}>
               <OutletProducts products={outletProducts} loading={outletLoading} />
@@ -463,7 +463,7 @@ export default function UniverseHome() {
             </UniverseCard>
 
             <UniverseCard universe={energies} cardRef={(node) => { cardRefs.current[1] = node; }}>
-              <div className="relative h-32 overflow-hidden rounded-[18px] border border-white/10">
+              <div className="relative h-32 sm:h-36 overflow-hidden rounded-[18px] border border-white/10">
                 <img
                   src="/images/editorial/qeh-energies-territoire.jpg"
                   alt="Production solaire locale QEH ÉNERGIES"
@@ -527,7 +527,7 @@ export default function UniverseHome() {
             onClick={() => goToUniverse(activeIndex + 1)}
             disabled={activeIndex === UNIVERSES.length - 1}
             aria-label="Univers suivant"
-            className="absolute right-1 top-1/2 z-30 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/12 bg-[#030811]/88 text-white shadow-xl backdrop-blur-xl transition hover:bg-white/10 disabled:pointer-events-none disabled:opacity-20 sm:-right-12"
+            className="absolute right-1 top-1/2 z-30 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/12 bg-[#030811]/88 text-white shadow-xl backdrop-blur-xl transition hover:bg-white/10 disabled:pointer-events-none disabled:opacity-20 sm:-right-14"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
