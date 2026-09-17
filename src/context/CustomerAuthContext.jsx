@@ -24,11 +24,67 @@ const EMPTY_PROFILE = {
   country: "France",
 };
 
-function getOAuthRedirectUrl() {
+function getAccountRedirectUrl() {
   const origin =
     window.location.origin;
 
   return `${origin}/mon-compte`;
+}
+
+function getOAuthRedirectUrl() {
+  const origin =
+    window.location.origin;
+
+  // On revient volontairement à la racine après OAuth : cette URL est la plus
+  // fiable avec la configuration Supabase en production. Le provider détecte
+  // ensuite le retour OAuth et envoie immédiatement le client vers /mon-compte.
+  return `${origin}/`;
+}
+
+function isCustomerOAuthReturn(event, nextSession) {
+  if (
+    event !== "SIGNED_IN" ||
+    !nextSession?.user ||
+    window.location.pathname !== "/"
+  ) {
+    return false;
+  }
+
+  let pendingLogin = false;
+
+  try {
+    pendingLogin =
+      window.sessionStorage.getItem(
+        "qeh_customer_login_pending"
+      ) === "1";
+  } catch {
+    pendingLogin = false;
+  }
+
+  const searchParams =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const hashParams =
+    new URLSearchParams(
+      window.location.hash.replace(
+        /^#/,
+        ""
+      )
+    );
+
+  const hasOAuthPayload =
+    searchParams.has("code") ||
+    searchParams.has("error") ||
+    hashParams.has("access_token") ||
+    hashParams.has("refresh_token") ||
+    hashParams.has("error");
+
+  return (
+    pendingLogin ||
+    hasOAuthPayload
+  );
 }
 
 function normalizeProfile(
@@ -128,13 +184,6 @@ export function CustomerAuthProvider({
               authenticatedUser
             );
 
-          /*
-           * Si aucun profil n’existe encore,
-           * on le crée automatiquement.
-           *
-           * C’est utile pour les connexions
-           * Google, Apple et X/Twitter.
-           */
           if (!data) {
             const {
               data:
@@ -158,17 +207,11 @@ export function CustomerAuthProvider({
                     .last_name,
 
                 company: "",
-
                 phone: "",
-
                 address: "",
-
                 address2: "",
-
                 postal_code: "",
-
                 city: "",
-
                 country:
                   "France",
               })
@@ -222,45 +265,12 @@ export function CustomerAuthProvider({
       []
     );
 
- const signUp = useCallback(
-  async ({
-    email,
-    password,
-    first_name,
-    last_name,
-    phone,
-    company,
-    address,
-    address2,
-    postal_code,
-    city,
-    country,
-  }) => {
-        const cleanedEmail =
-          String(email || "")
-            .trim()
-            .toLowerCase();
-
-        const cleanedFirstName =
-          String(
-            first_name || ""
-          ).trim();
-
-        const cleanedLastName =
-          String(
-            last_name || ""
-          ).trim();
-
-       const {
-  data,
-  error,
-} = await supabase.auth.signUp({
-  email: cleanedEmail,
-  password,
-  options: {
-    data: {
-      first_name: cleanedFirstName,
-      last_name: cleanedLastName,
+  const signUp = useCallback(
+    async ({
+      email,
+      password,
+      first_name,
+      last_name,
       phone,
       company,
       address,
@@ -268,42 +278,74 @@ export function CustomerAuthProvider({
       postal_code,
       city,
       country,
-    },
-    emailRedirectTo: getOAuthRedirectUrl(),
-  },
-});
+    }) => {
+      const cleanedEmail =
+        String(email || "")
+          .trim()
+          .toLowerCase();
 
-if (error) {
-  throw error;
-}
-      if (data.user && data.session) {
+      const cleanedFirstName =
+        String(
+          first_name || ""
+        ).trim();
 
-  await loadProfile(data.user);
+      const cleanedLastName =
+        String(
+          last_name || ""
+        ).trim();
 
-}
-        
-
-        return {
-          
-          user:
-            data.user || null,
-
-          session:
-            data.session ||
-            null,
-
-          emailConfirmationRequired:
-            Boolean(
-              data.user &&
-                !data.session
-            ),
-        };
+      const {
+        data,
+        error,
+      } = await supabase.auth.signUp({
+        email: cleanedEmail,
+        password,
+        options: {
+          data: {
+            first_name: cleanedFirstName,
+            last_name: cleanedLastName,
+            phone,
+            company,
+            address,
+            address2,
+            postal_code,
+            city,
+            country,
+          },
+          emailRedirectTo:
+            getAccountRedirectUrl(),
         },
-[
-  loadProfile,
-]
-);
-        
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (
+        data.user &&
+        data.session
+      ) {
+        await loadProfile(
+          data.user
+        );
+      }
+
+      return {
+        user:
+          data.user || null,
+
+        session:
+          data.session || null,
+
+        emailConfirmationRequired:
+          Boolean(
+            data.user &&
+              !data.session
+          ),
+      };
+    },
+    [loadProfile]
+  );
 
   const signIn =
     useCallback(
@@ -384,6 +426,16 @@ if (error) {
           );
         }
 
+        try {
+          window.sessionStorage.setItem(
+            "qeh_customer_login_pending",
+            "1"
+          );
+        } catch {
+          // La redirection OAuth reste fonctionnelle même si sessionStorage
+          // n'est pas disponible dans le navigateur.
+        }
+
         const {
           data,
           error,
@@ -396,11 +448,6 @@ if (error) {
                 redirectTo:
                   getOAuthRedirectUrl(),
 
-                /*
-                 * Google permet de choisir
-                 * son compte à chaque
-                 * connexion.
-                 */
                 queryParams:
                   provider ===
                   "google"
@@ -413,6 +460,14 @@ if (error) {
             });
 
         if (error) {
+          try {
+            window.sessionStorage.removeItem(
+              "qeh_customer_login_pending"
+            );
+          } catch {
+            // Rien à nettoyer.
+          }
+
           throw error;
         }
 
@@ -441,28 +496,34 @@ if (error) {
       [signInWithProvider]
     );
 
- const signInWithX = useCallback(async () => {
-  console.log("OAuth provider :", "twitter");
-
-  return await supabase.auth.signInWithOAuth({
-    provider: "twitter",
-    options: {
-      redirectTo: `${window.location.origin}/mon-compte`,
-    },
-  });
-}, []);
+  const signInWithX =
+    useCallback(
+      async () => {
+        return signInWithProvider(
+          "twitter"
+        );
+      },
+      [signInWithProvider]
+    );
 
   const signOut =
     useCallback(
       async () => {
         const {
           error,
-        } =
-          await supabase.auth
-            .signOut();
+        } = await supabase.auth
+          .signOut();
 
         if (error) {
           throw error;
+        }
+
+        try {
+          window.sessionStorage.removeItem(
+            "qeh_customer_login_pending"
+          );
+        } catch {
+          // Rien à nettoyer.
         }
 
         setSession(null);
@@ -672,45 +733,63 @@ if (error) {
       data: {
         subscription,
       },
-    } =
-      supabase.auth
-        .onAuthStateChange(
-          async (
-            _event,
-            nextSession
-          ) => {
-            if (
-              !componentIsMounted
-            ) {
-              return;
-            }
-
-            setSession(
-              nextSession
-            );
-
-            setUser(
-              nextSession?.user ||
-                null
-            );
-
-            if (
-              nextSession?.user
-            ) {
-              await loadProfile(
-                nextSession.user
-              );
-            } else {
-              setProfile(null);
-            }
-
-            if (
-              componentIsMounted
-            ) {
-              setLoading(false);
-            }
+    } = supabase.auth
+      .onAuthStateChange(
+        async (
+          event,
+          nextSession
+        ) => {
+          if (
+            !componentIsMounted
+          ) {
+            return;
           }
-        );
+
+          setSession(
+            nextSession
+          );
+
+          setUser(
+            nextSession?.user ||
+              null
+          );
+
+          if (
+            nextSession?.user
+          ) {
+            await loadProfile(
+              nextSession.user
+            );
+          } else {
+            setProfile(null);
+          }
+
+          if (
+            componentIsMounted
+          ) {
+            setLoading(false);
+          }
+
+          if (
+            isCustomerOAuthReturn(
+              event,
+              nextSession
+            )
+          ) {
+            try {
+              window.sessionStorage.removeItem(
+                "qeh_customer_login_pending"
+              );
+            } catch {
+              // Rien à nettoyer.
+            }
+
+            window.location.replace(
+              "/mon-compte"
+            );
+          }
+        }
+      );
 
     return () => {
       componentIsMounted =
