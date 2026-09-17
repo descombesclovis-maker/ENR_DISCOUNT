@@ -698,7 +698,7 @@ is_on_sale:
           !errorMessage &&
           featuredProducts.length >
             0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-6 lg:grid-cols-3">
               {featuredProducts.map(
                 (
                   product,
@@ -735,11 +735,11 @@ is_on_sale:
                   >
                     <Link
                       to={`/produits/${product.slug}`}
-                      className="group relative flex h-full flex-col rounded-3xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1.5 hover:border-[#0b5ca8]/50 hover:shadow-[0_22px_55px_rgba(2,7,20,0.13)] transition-all duration-300"
+                      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1.5 hover:border-[#0b5ca8]/50 hover:shadow-[0_22px_55px_rgba(2,7,20,0.13)] sm:rounded-3xl"
                     >
                       <span className="pointer-events-none absolute inset-x-8 top-0 z-20 h-px bg-gradient-to-r from-transparent via-[#0b5ca8]/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-                    <div className="relative aspect-square overflow-hidden bg-white grid place-items-center p-6">
+                    <div className="relative grid aspect-square place-items-center overflow-hidden bg-white p-2.5 sm:p-6">
                       <img
                         src={
                           product.image
@@ -761,7 +761,7 @@ is_on_sale:
                       />
 
                       <span
-                        className={`absolute top-4 left-4 z-10 inline-flex items-center min-h-8 px-3 rounded-full border text-xs font-bold shadow-sm ${product.conditionClassName}`}
+                        className={`absolute left-2 top-2 z-10 inline-flex min-h-6 items-center rounded-full border px-2 text-[8px] font-bold shadow-sm sm:left-4 sm:top-4 sm:min-h-8 sm:px-3 sm:text-xs ${product.conditionClassName}`}
                       >
                         {
                           product.conditionLabel
@@ -769,41 +769,41 @@ is_on_sale:
                       </span>
                     </div>
 
-                    <div className="flex flex-col flex-1 p-5 sm:p-6 border-t border-slate-100">
+                    <div className="flex flex-1 flex-col border-t border-slate-100 p-3 sm:p-6">
                       {product.category && (
-                        <p className="text-xs font-black uppercase tracking-[0.12em] text-[#0b5ca8] mb-2">
+                        <p className="mb-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#0b5ca8] sm:mb-2 sm:text-xs">
                           {
                             product.category
                           }
                         </p>
                       )}
 
-                      <h3 className="font-display font-bold text-base leading-snug text-slate-950 group-hover:text-[#0b5ca8] transition-colors">
+                      <h3 className="line-clamp-3 font-display text-xs font-bold leading-snug text-slate-950 transition-colors group-hover:text-[#0b5ca8] sm:text-base">
                         {product.name}
                       </h3>
 
                       {product.brand && (
-                        <p className="text-sm text-slate-500 mt-1">
+                        <p className="mt-1 line-clamp-1 text-[10px] text-slate-500 sm:text-sm">
                           {
                             product.brand
                           }
                         </p>
                       )}
 
-                      <div className="mt-auto pt-5 flex items-end justify-between gap-4">
+                      <div className="mt-auto flex items-end justify-between gap-2 pt-3 sm:gap-4 sm:pt-5">
                         <div>
                           {product.is_on_sale &&
 product.sale_price ? (
 
   <div>
 
-    <p className="text-sm text-slate-400 line-through">
+    <p className="text-[10px] text-slate-400 line-through sm:text-sm">
 
       {Number(product.price).toFixed(2)} €
 
     </p>
 
-    <p className="font-display font-black text-2xl text-[#ff5a00]">
+    <p className="font-display text-sm font-black text-[#ff5a00] sm:text-2xl">
 
       {Number(product.sale_price).toFixed(2)} €
 
@@ -813,7 +813,7 @@ product.sale_price ? (
 
 ) : (
 
-  <p className="font-display font-black text-xl text-slate-950">
+  <p className="font-display text-sm font-black text-slate-950 sm:text-xl">
 
     {priceLabel(product)}
 
@@ -822,7 +822,7 @@ product.sale_price ? (
 )}
 
                           <p
-                            className={`text-xs font-bold mt-1 ${product.availabilityClassName}`}
+                            className={`mt-1 text-[9px] font-bold sm:text-xs ${product.availabilityClassName}`}
                           >
                             {
                               product.availabilityLabel
@@ -830,8 +830,8 @@ product.sale_price ? (
                           </p>
                         </div>
 
-                        <span className="w-10 h-10 rounded-full bg-[#020714] text-white grid place-items-center group-hover:bg-[#ff5a00] transition-colors">
-                          <ArrowRight className="w-4 h-4" />
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#020714] text-white transition-colors group-hover:bg-[#ff5a00] sm:h-10 sm:w-10">
+                          <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </span>
                       </div>
                     </div>

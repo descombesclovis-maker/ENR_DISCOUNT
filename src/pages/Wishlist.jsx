@@ -120,18 +120,18 @@ export default function Wishlist() {
       </section>
 
       <main className="max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-6 lg:grid-cols-3">
           {items.map(
             (product) => (
               <article
                 key={product.id}
-                className="group flex flex-col rounded-3xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1.5 hover:border-[#0b5ca8]/50 hover:shadow-[0_22px_55px_rgba(2,7,20,0.13)] transition-all duration-300"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1.5 hover:border-[#0b5ca8]/50 hover:shadow-[0_22px_55px_rgba(2,7,20,0.13)] sm:rounded-3xl"
               >
                 <Link
                   to={`/produits/${product.slug}`}
                   className="flex flex-col flex-1"
                 >
-                  <div className="relative aspect-square bg-white p-6 grid place-items-center overflow-hidden">
+                  <div className="relative grid aspect-square place-items-center overflow-hidden bg-white p-2.5 sm:p-6">
                     <img
                       src={
                         product.image ||
@@ -151,31 +151,31 @@ export default function Wishlist() {
                       }}
                     />
 
-                    <span className="absolute top-4 left-4 inline-flex items-center gap-2 min-h-8 px-3 rounded-full border border-[#0b5ca8]/20 bg-[#0b5ca8]/10 text-[#0b5ca8] text-xs font-bold">
+                    <span className="absolute left-2 top-2 inline-flex min-h-6 items-center gap-1 rounded-full border border-[#0b5ca8]/20 bg-[#0b5ca8]/10 px-2 text-[8px] font-bold text-[#0b5ca8] sm:left-4 sm:top-4 sm:min-h-8 sm:gap-2 sm:px-3 sm:text-xs">
                       <Heart className="w-3.5 h-3.5 fill-current" />
                       Favori
                     </span>
                   </div>
 
-                  <div className="flex flex-col flex-1 p-5 sm:p-6 border-t border-slate-100">
-                    <h2 className="font-display font-bold text-lg leading-snug text-slate-950 group-hover:text-[#0b5ca8] transition-colors">
+                  <div className="flex flex-1 flex-col border-t border-slate-100 p-3 sm:p-6">
+                    <h2 className="line-clamp-3 font-display text-xs font-bold leading-snug text-slate-950 transition-colors group-hover:text-[#0b5ca8] sm:text-lg">
                       {product.name}
                     </h2>
 
                     {product.brand && (
-                      <p className="text-sm text-slate-500 mt-2">
+                      <p className="mt-1 line-clamp-1 text-[10px] text-slate-500 sm:mt-2 sm:text-sm">
                         {product.brand}
                       </p>
                     )}
 
                     {product.reference && (
-                      <p className="text-xs text-slate-400 mt-2">
+                      <p className="mt-2 hidden text-xs text-slate-400 sm:block">
                         Réf. {product.reference}
                       </p>
                     )}
 
-                    <div className="mt-auto pt-5">
-                      <span className="inline-flex items-center gap-2 text-sm font-bold text-[#0b5ca8] group-hover:text-[#ff5a00] transition-colors">
+                    <div className="mt-auto pt-3 sm:pt-5">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#0b5ca8] transition-colors group-hover:text-[#ff5a00] sm:gap-2 sm:text-sm">
                         Voir le produit
 
                         <ArrowRight className="w-4 h-4" />
@@ -184,7 +184,7 @@ export default function Wishlist() {
                   </div>
                 </Link>
 
-                <div className="px-5 sm:px-6 pb-5 sm:pb-6">
+                <div className="px-3 pb-3 sm:px-6 sm:pb-6">
                   <button
                     type="button"
                     onClick={() =>
@@ -192,11 +192,12 @@ export default function Wishlist() {
                         product.id
                       )
                     }
-                    className="w-full inline-flex items-center justify-center gap-2 min-h-11 rounded-full border border-red-200 bg-red-50 text-red-600 font-semibold hover:bg-red-600 hover:text-white transition-colors"
+                    className="inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 text-[10px] font-semibold text-red-600 transition-colors hover:bg-red-600 hover:text-white sm:min-h-11 sm:gap-2 sm:text-sm"
                   >
                     <Trash2 className="w-4 h-4" />
 
-                    Retirer des favoris
+                    <span className="sm:hidden">Retirer</span>
+                    <span className="hidden sm:inline">Retirer des favoris</span>
                   </button>
                 </div>
               </article>

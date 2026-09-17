@@ -1452,7 +1452,7 @@ product.sale_price && (
 
             {galleryImages.length >
               1 && (
-              <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
+              <div className="mt-4 grid grid-cols-2 gap-2.5 pb-2 sm:flex sm:gap-3 sm:overflow-x-auto">
                 {galleryImages.map(
                   (
                     image,
@@ -1470,7 +1470,7 @@ product.sale_price && (
                         )
                       }
                       aria-label={`Afficher l’image ${index + 1}`}
-                      className={`relative w-24 h-24 shrink-0 rounded-2xl overflow-hidden border-2 bg-white transition-all ${
+                      className={`relative aspect-square w-full shrink-0 overflow-hidden rounded-2xl border-2 bg-white transition-all sm:h-24 sm:w-24 ${
                         index ===
                         imageIndex
                           ? "border-[#0b5ca8] shadow-[0_8px_24px_rgba(11,92,168,0.15)]"
