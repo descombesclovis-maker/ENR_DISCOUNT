@@ -33,7 +33,7 @@ export const Footer = () => (
         <ul className="space-y-3 text-sm">
           <li>
             <Link
-              to="/"
+              to="/qeh-outlet"
               className="flex items-center gap-3 hover:text-[#55a8ff] transition-colors"
             >
               <House className="w-4 h-4" />
