@@ -5,79 +5,20 @@ import {
   BadgeEuro,
   Boxes,
   Factory,
-  LoaderCircle,
+  Lock,
   Map,
   PackageSearch,
   ShieldCheck,
   Sparkles,
-  Store,
   SunMedium,
-  Truck,
   UserCheck,
   Users,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useProfessionalAuth } from "../context/ProfessionalAuthContext";
 
-const universes = [
-  {
-    id: "outlet",
-    name: "QEH OUTLET",
-    tagline: "Le matériel technique à prix déstockage",
-    description: "Équipements solaires, chauffage, climatisation, plomberie et électricité sélectionnés pour leur valeur réelle.",
-    logo: "/images/qeh-outlet-logo.jpg",
-    image: "/images/editorial/qeh-outlet-showroom.jpg",
-    to: "/qeh-outlet",
-    accent: "#ff5a00",
-    glow: "rgba(255,90,0,.32)",
-    links: [
-      { label: "Catalogue", to: "/produits", icon: Boxes },
-      { label: "Prix outlet", to: "/qeh-outlet", icon: Store },
-      { label: "Suivi de commande", to: "/suivi-commande", icon: PackageSearch },
-    ],
-  },
-  {
-    id: "energies",
-    name: "QEH ÉNERGIES",
-    tagline: "L'énergie solaire produite près de chez vous",
-    description: "Un univers dédié à la production locale, aux projets photovoltaïques et aux communautés énergétiques de demain.",
-    logo: "/images/qeh-energies-logo.png",
-    image: "/images/editorial/qeh-energies-territoire.jpg",
-    to: "/qeh-energies",
-    accent: "#82d246",
-    glow: "rgba(130,210,70,.28)",
-    links: [
-      { label: "Carte solaire", to: "/qeh-energies/carte-solaire", icon: Map },
-      { label: "Comment ça marche", to: "/qeh-energies/comment-ca-marche", icon: SunMedium },
-      { label: "Participer", to: "/qeh-energies/participer", icon: Users },
-    ],
-  },
-  {
-    id: "partner",
-    name: "QEH PARTNER",
-    tagline: "Le réseau professionnel qui construit plus loin",
-    description: "Production, franchises et matériel réservé aux professionnels dans une expérience sécurisée et spécialisée.",
-    logo: "/images/qeh-partner-logo-gold.png",
-    image: "/images/editorial/qeh-partner-logistique.jpg",
-    to: "/qeh-partner",
-    accent: "#f2cf79",
-    glow: "rgba(242,207,121,.26)",
-    links: [
-      { label: "Production", to: "/qeh-partner/production", icon: Factory },
-      { label: "Matériel Pro", to: "/qeh-partner/connexion-pro", icon: Boxes },
-      { label: "Franchise", to: "/qeh-partner/franchise", icon: Sparkles },
-    ],
-  },
-];
-
-const shortcuts = [
-  { label: "Prix déstockage", detail: "Voir les bonnes affaires", to: "/produits", icon: BadgeEuro, accent: "#ff5a00" },
-  { label: "Suivi précis", detail: "Suivre ma commande", to: "/suivi-commande", icon: Truck, accent: "#55a8ff" },
-  { label: "Carte solaire", detail: "Explorer les projets", to: "/qeh-energies/carte-solaire", icon: Map, accent: "#82d246" },
-  { label: "Accès Pro", detail: "Candidater ou se connecter", to: "/qeh-partner/connexion-pro", icon: UserCheck, accent: "#f2cf79" },
-];
-
-const currencyFormatter = new Intl.NumberFormat("fr-FR", {
+const euro = new Intl.NumberFormat("fr-FR", {
   style: "currency",
   currency: "EUR",
 });
@@ -87,50 +28,79 @@ function getPrimaryImage(images, productName) {
     return { url: "/images/product-placeholder.png", alt: productName };
   }
 
-  const sortedImages = [...images].sort((first, second) => {
-    if (first.is_primary !== second.is_primary) {
-      return first.is_primary ? -1 : 1;
-    }
+  const sorted = [...images].sort((first, second) => {
+    if (first.is_primary !== second.is_primary) return first.is_primary ? -1 : 1;
     return Number(first.display_order || 0) - Number(second.display_order || 0);
   });
 
   return {
-    url: sortedImages[0]?.image_url || "/images/product-placeholder.png",
-    alt: sortedImages[0]?.alt_text || productName,
+    url: sorted[0]?.image_url || "/images/product-placeholder.png",
+    alt: sorted[0]?.alt_text || productName,
   };
 }
 
-function displayPrice(product) {
-  const activePrice = product.is_on_sale && Number(product.sale_price) > 0
+function outletPrice(product) {
+  const value = product.is_on_sale && Number(product.sale_price) > 0
     ? Number(product.sale_price)
     : Number(product.price || 0);
-  return activePrice > 0 ? currencyFormatter.format(activePrice) : "Sur demande";
+  return value > 0 ? euro.format(value) : "Sur demande";
+}
+
+function ProLockedPreview() {
+  return (
+    <div className="grid grid-cols-2 gap-2.5">
+      {[0, 1].map((item) => (
+        <div
+          key={item}
+          className="relative overflow-hidden rounded-[20px] border border-white/15 bg-white/[.07] p-2.5"
+        >
+          <div className="relative aspect-square overflow-hidden rounded-[15px] bg-black/25">
+            <img
+              src="/images/editorial/qeh-partner-logistique.jpg"
+              alt="Catalogue professionnel QEH Partner verrouillé"
+              className="h-full w-full scale-110 object-cover opacity-35 blur-[5px]"
+            />
+            <div className="absolute inset-0 grid place-items-center bg-[#0b0a07]/35">
+              <span className="grid h-10 w-10 place-items-center rounded-full border border-[#f2cf79]/45 bg-[#080704]/80 text-[#f2cf79] shadow-xl">
+                <Lock className="h-4 w-4" />
+              </span>
+            </div>
+          </div>
+          <div className="mt-2.5">
+            <p className="text-[9px] font-black uppercase tracking-[.16em] text-[#f2cf79]">Matériel Pro</p>
+            <p className="mt-1 text-xs font-black text-white/80">Produit réservé</p>
+            <p className="mt-1 text-[10px] font-bold text-white/35">Prix masqué</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function UniverseHome() {
   const reduceMotion = useReducedMotion();
-  const [products, setProducts] = useState([]);
-  const [productsLoading, setProductsLoading] = useState(true);
+  const { isProfessional, professionalAccount, professionalLoading } = useProfessionalAuth();
+  const [outletProducts, setOutletProducts] = useState([]);
+  const [proProducts, setProProducts] = useState([]);
+  const [outletLoading, setOutletLoading] = useState(true);
+  const [proLoading, setProLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "QEH | Trois univers, une même exigence";
+    document.title = "QEH | Trois univers";
 
-    let isMounted = true;
-    const loadProducts = async () => {
+    let active = true;
+    async function loadOutletProducts() {
       const { data, error } = await supabase
         .from("products")
         .select(`
           id,
           name,
           slug,
-          brand,
           price,
           sale_price,
           is_on_sale,
           stock,
           on_demand,
-          created_at,
-          categories (name),
           product_images (image_url, alt_text, is_primary, display_order)
         `)
         .eq("is_active", true)
@@ -138,224 +108,294 @@ export default function UniverseHome() {
         .order("created_at", { ascending: false })
         .limit(4);
 
-      if (!isMounted) return;
-
+      if (!active) return;
       if (error) {
-        console.error("Impossible de charger les aperçus produits :", error);
-        setProducts([]);
+        console.error("Impossible de charger les produits QEH OUTLET :", error);
+        setOutletProducts([]);
       } else {
-        setProducts((data || []).map((product) => ({
+        setOutletProducts((data || []).map((product) => ({
           ...product,
           image: getPrimaryImage(product.product_images, product.name),
         })));
       }
-      setProductsLoading(false);
-    };
+      setOutletLoading(false);
+    }
 
-    loadProducts();
-    return () => {
-      isMounted = false;
-    };
+    loadOutletProducts();
+    return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadProfessionalProducts() {
+      if (professionalLoading || !isProfessional) {
+        if (!isProfessional) {
+          setProProducts([]);
+          setProLoading(false);
+        }
+        return;
+      }
+
+      setProLoading(true);
+      const { data, error } = await supabase
+        .from("qeh_partner_products")
+        .select("id, name, category, price_excluding_tax, image_url, stock")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(4);
+
+      if (!active) return;
+      if (error) {
+        console.error("Impossible de charger les produits QEH PARTNER :", error);
+        setProProducts([]);
+      } else {
+        setProProducts(data || []);
+      }
+      setProLoading(false);
+    }
+
+    loadProfessionalProducts();
+    return () => { active = false; };
+  }, [isProfessional, professionalLoading]);
+
+  const panelAnimation = (delay) => ({
+    initial: reduceMotion ? false : { opacity: 0, y: 24 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6, delay: reduceMotion ? 0 : delay },
+  });
+
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#020711] text-white">
-      <div className="pointer-events-none absolute inset-0">
-        <motion.div
-          className="absolute left-[-12rem] top-[-12rem] h-[34rem] w-[34rem] rounded-full bg-[#0b5ca8]/25 blur-[110px]"
-          animate={reduceMotion ? undefined : { x: [0, 50, 0], y: [0, 30, 0] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-[-15rem] right-[-12rem] h-[38rem] w-[38rem] rounded-full bg-[#82d246]/15 blur-[120px]"
-          animate={reduceMotion ? undefined : { x: [0, -45, 0], scale: [1, 1.12, 1] }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.035)_1px,transparent_1px)] bg-[size:52px_52px] [mask-image:linear-gradient(to_bottom,black,transparent_92%)]" />
-      </div>
-
-      <section className="relative mx-auto max-w-[1600px] px-3 pb-16 pt-8 sm:px-8 sm:pb-20 sm:pt-14">
-        <motion.header
-          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65 }}
-          className="mx-auto max-w-5xl text-center"
+    <main className="min-h-screen bg-[#020711] text-white">
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-3">
+        {/* QEH OUTLET */}
+        <motion.section
+          {...panelAnimation(0)}
+          className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_20%_0%,rgba(255,90,0,.30),transparent_38%),linear-gradient(160deg,#07111f_0%,#0a2440_52%,#11100d_100%)] lg:min-h-screen lg:border-b-0 lg:border-r"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.05] px-3 py-2 text-[10px] font-black uppercase tracking-[.2em] text-white/70 backdrop-blur-xl sm:px-4 sm:text-[11px] sm:tracking-[.24em]">
-            <Sparkles className="h-4 w-4 text-[#f2cf79]" />
-            Bienvenue dans l'écosystème QEH
-          </div>
-          <h1 className="mt-5 font-display text-[2.65rem] font-black leading-[.94] tracking-[-.05em] sm:mt-6 sm:text-6xl lg:text-7xl">
-            Équipez. Produisez.
-            <span className="block bg-gradient-to-r from-[#55a8ff] via-[#82d246] to-[#f2cf79] bg-clip-text text-transparent">
-              Développez.
-            </span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            Produits techniques à prix outlet, énergie solaire locale et services professionnels : découvrez immédiatement ce que QEH peut faire pour vous.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/produits" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#ff5a00] px-6 text-sm font-black text-white shadow-[0_14px_40px_rgba(255,90,0,.28)] transition hover:-translate-y-0.5 hover:bg-[#ff742b]">
-              Voir les produits <ArrowRight className="h-4 w-4" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[#ff5a00]" />
+          <div className="pointer-events-none absolute -left-28 top-28 h-72 w-72 rounded-full bg-[#ff5a00]/16 blur-[90px]" />
+          <div className="relative flex h-full flex-col p-4 pb-8 pt-7 sm:p-7 lg:p-6 xl:p-8">
+            <Link to="/qeh-outlet" className="flex min-h-[78px] items-center justify-center rounded-[22px] border border-white/15 bg-black/25 p-3 backdrop-blur-xl transition hover:border-[#ff5a00]/70">
+              <img src="/images/qeh-outlet-logo.jpg" alt="QEH OUTLET" className="max-h-[58px] w-full object-contain" />
             </Link>
-            <Link to="/qeh-energies/carte-solaire" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[.06] px-6 text-sm font-black text-white transition hover:border-[#82d246] hover:bg-white/[.1]">
-              Explorer la carte solaire
-            </Link>
-          </div>
-        </motion.header>
 
-        <div className="mt-9 grid grid-cols-2 gap-2.5 sm:mt-12 sm:gap-4 lg:grid-cols-4">
-          {shortcuts.map((shortcut, index) => {
-            const Icon = shortcut.icon;
-            return (
-              <motion.div
-                key={shortcut.label}
-                initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, delay: reduceMotion ? 0 : 0.12 + index * 0.07 }}
-              >
-                <Link to={shortcut.to} className="group flex h-full min-h-[104px] items-center gap-3 rounded-[22px] border border-white/10 bg-white/[.055] p-3 backdrop-blur-xl transition hover:-translate-y-1 hover:border-[var(--shortcut-accent)] hover:bg-white/[.09] sm:min-h-[116px] sm:gap-4 sm:p-5" style={{ "--shortcut-accent": shortcut.accent }}>
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/[.07] text-[var(--shortcut-accent)] sm:h-12 sm:w-12">
-                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block font-display text-sm font-black leading-tight sm:text-base">{shortcut.label}</span>
-                    <span className="mt-1 block text-[10px] leading-snug text-white/50 sm:text-xs">{shortcut.detail}</span>
-                  </span>
+            <div className="mt-6">
+              <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#ff8a4b]">Déstockage · équipement · bonnes affaires</p>
+              <h1 className="mt-2 font-display text-3xl font-black leading-[.95] tracking-[-.04em] xl:text-4xl">Le matériel technique au prix juste.</h1>
+              <p className="mt-3 text-sm leading-relaxed text-white/65">Panneaux solaires, climatisation, chauffage, plomberie et équipements techniques disponibles immédiatement ou sur demande.</p>
+            </div>
+
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              {[
+                [Boxes, "Catalogue", "/produits"],
+                [BadgeEuro, "Prix Outlet", "/qeh-outlet"],
+                [PackageSearch, "Suivi", "/suivi-commande"],
+              ].map(([Icon, label, to]) => (
+                <Link key={label} to={to} className="flex min-h-[78px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[.055] px-2 text-center text-[10px] font-black transition hover:-translate-y-0.5 hover:border-[#ff5a00]/70 hover:bg-white/[.09] sm:text-xs">
+                  <Icon className="h-5 w-5 text-[#ff7a32]" />
+                  {label}
                 </Link>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        <section className="mt-12 sm:mt-16" aria-labelledby="products-preview-title">
-          <div className="mb-5 flex items-end justify-between gap-4 sm:mb-7">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#ff7a32] sm:text-xs">À découvrir maintenant</p>
-              <h2 id="products-preview-title" className="mt-2 font-display text-2xl font-black sm:text-4xl">Une sélection déjà en vitrine</h2>
-            </div>
-            <Link to="/produits" className="hidden items-center gap-2 text-sm font-black text-white/70 transition hover:text-white sm:flex">Tout voir <ArrowRight className="h-4 w-4" /></Link>
-          </div>
-
-          {productsLoading ? (
-            <div className="grid min-h-44 place-items-center rounded-[28px] border border-white/10 bg-white/[.04]">
-              <LoaderCircle className="h-8 w-8 animate-spin text-[#55a8ff]" aria-label="Chargement des produits" />
-            </div>
-          ) : products.length > 0 ? (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-5 lg:grid-cols-4">
-              {products.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={reduceMotion ? false : { opacity: 0, y: 22 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ duration: 0.45, delay: reduceMotion ? 0 : index * 0.07 }}
-                >
-                  <Link to={`/produits/${product.slug}`} className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-white/10 bg-white text-[#07101f] transition hover:-translate-y-1.5 hover:border-[#ff5a00] hover:shadow-[0_24px_70px_rgba(0,0,0,.34)] sm:rounded-[28px]">
-                    <div className="relative aspect-square overflow-hidden bg-white p-2 sm:p-5">
-                      <img src={product.image.url} alt={product.image.alt} loading="lazy" className="h-full w-full object-contain transition duration-500 group-hover:scale-105" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/images/product-placeholder.png"; }} />
-                      {product.is_on_sale && Number(product.sale_price) > 0 ? (
-                        <span className="absolute left-2 top-2 rounded-full bg-[#ff5a00] px-2 py-1 text-[9px] font-black text-white shadow-lg sm:left-4 sm:top-4 sm:px-3 sm:text-xs">PROMO</span>
-                      ) : null}
-                    </div>
-                    <div className="flex flex-1 flex-col border-t border-slate-100 p-3 sm:p-5">
-                      <p className="line-clamp-1 text-[9px] font-black uppercase tracking-[.1em] text-[#0b5ca8] sm:text-xs">{product.categories?.name || product.brand || "QEH OUTLET"}</p>
-                      <h3 className="mt-1 line-clamp-2 font-display text-xs font-black leading-snug sm:mt-2 sm:text-base">{product.name}</h3>
-                      <div className="mt-auto pt-3 sm:pt-5">
-                        <p className="font-display text-sm font-black text-[#ff5a00] sm:text-xl">{displayPrice(product)}</p>
-                        <p className={`mt-1 text-[9px] font-bold sm:text-xs ${Number(product.stock) > 0 ? "text-emerald-600" : product.on_demand ? "text-amber-600" : "text-slate-400"}`}>
-                          {Number(product.stock) > 0 ? "En stock" : product.on_demand ? "Sur demande" : "Voir la fiche"}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
               ))}
             </div>
-          ) : (
-            <Link to="/produits" className="flex min-h-40 items-center justify-center rounded-[28px] border border-dashed border-white/20 bg-white/[.04] text-center font-black text-white/70 transition hover:border-[#ff5a00] hover:text-white">Découvrir le catalogue QEH OUTLET</Link>
-          )}
-          <Link to="/produits" className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 text-sm font-black sm:hidden">Voir tout le catalogue <ArrowRight className="h-4 w-4" /></Link>
-        </section>
 
-        <section className="mt-12 sm:mt-20" aria-labelledby="universes-title">
-          <div className="mb-5 text-center sm:mb-8">
-            <p className="text-[10px] font-black uppercase tracking-[.2em] text-white/45 sm:text-xs">Tout l'écosystème QEH</p>
-            <h2 id="universes-title" className="mt-2 font-display text-2xl font-black sm:text-4xl">Choisissez votre univers</h2>
-          </div>
+            <div className="mt-6 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[.18em] text-white/35">En vitrine</p>
+                <h2 className="mt-1 font-display text-lg font-black">Produits QEH OUTLET</h2>
+              </div>
+              <Link to="/produits" className="text-[11px] font-black text-[#ff8a4b]">Tout voir</Link>
+            </div>
 
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-5 lg:grid-cols-3">
-            {universes.map((universe, index) => (
-              <motion.article
-                key={universe.id}
-                initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.55, delay: reduceMotion ? 0 : index * 0.09 }}
-                whileHover={reduceMotion ? undefined : { y: -7 }}
-                className={`group relative overflow-hidden rounded-[24px] border border-white/10 bg-[#07101f] shadow-[0_30px_90px_rgba(0,0,0,.3)] sm:rounded-[34px] ${index === 0 ? "col-span-2 min-h-[510px] lg:col-span-1 lg:min-h-[600px]" : "min-h-[410px] lg:min-h-[600px]"}`}
-                style={{ "--universe-accent": universe.accent, "--universe-glow": universe.glow }}
-              >
-                <img src={universe.image} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-50 transition duration-700 group-hover:scale-105 group-hover:opacity-65" />
-                <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(2,7,17,.08)_0%,rgba(2,7,17,.7)_45%,#020711_86%)]" />
-                <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[var(--universe-accent)] to-transparent opacity-90" />
-                <div className="absolute -right-20 top-20 h-52 w-52 rounded-full bg-[var(--universe-glow)] blur-[75px] transition duration-700 group-hover:scale-125" />
-
-                <div className="relative flex h-full flex-col p-3 sm:p-6 lg:p-8">
-                  <Link to={universe.to} aria-label={`Entrer dans ${universe.name}`} className="flex min-h-[76px] items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-[#020711]/85 p-2 shadow-2xl backdrop-blur-xl transition hover:border-[var(--universe-accent)] sm:min-h-[108px] sm:rounded-3xl sm:p-4">
-                    <img src={universe.logo} alt={universe.name} className="max-h-[65px] w-full object-contain sm:max-h-[82px]" />
-                  </Link>
-
-                  <div className="mt-auto pt-20 sm:pt-24">
-                    <p className="text-[9px] font-black uppercase leading-relaxed tracking-[.12em] text-[var(--universe-accent)] sm:text-xs sm:tracking-[.18em]">{universe.tagline}</p>
-                    <p className={`mt-3 text-sm leading-relaxed text-slate-300 ${index === 0 ? "block" : "hidden sm:block"}`}>{universe.description}</p>
-
-                    <div className={`mt-5 space-y-2 ${index === 0 ? "grid grid-cols-2 gap-2 space-y-0 sm:block sm:space-y-2" : "hidden lg:block"}`}>
-                      {universe.links.map((item, itemIndex) => {
-                        const Icon = item.icon;
-                        return (
-                          <Link key={item.to} to={item.to} className={`min-h-11 items-center gap-2 rounded-xl border border-white/[.08] bg-white/[.05] px-3 text-[11px] font-extrabold text-white/85 transition hover:border-[var(--universe-accent)] hover:bg-white/[.1] sm:min-h-12 sm:gap-3 sm:rounded-2xl sm:px-4 sm:text-sm ${index === 0 && itemIndex === 2 ? "col-span-2 flex" : "flex"}`}>
-                            <Icon className="h-4 w-4 shrink-0 text-[var(--universe-accent)] sm:h-5 sm:w-5" />
-                            <span className="truncate">{item.label}</span>
-                            <ArrowRight className="ml-auto h-3.5 w-3.5 shrink-0" />
-                          </Link>
-                        );
-                      })}
+            {outletLoading ? (
+              <div className="mt-3 grid min-h-44 place-items-center rounded-[22px] border border-white/10 bg-white/[.04] text-xs font-bold text-white/40">Chargement…</div>
+            ) : outletProducts.length > 0 ? (
+              <div className="mt-3 grid grid-cols-2 gap-2.5">
+                {outletProducts.map((product) => (
+                  <Link key={product.id} to={`/produits/${product.slug}`} className="group overflow-hidden rounded-[20px] border border-white/10 bg-white text-[#07101f] transition hover:-translate-y-1 hover:border-[#ff5a00]">
+                    <div className="relative aspect-square bg-white p-2.5">
+                      <img src={product.image.url} alt={product.image.alt} loading="lazy" className="h-full w-full object-contain transition duration-300 group-hover:scale-105" />
+                      {product.is_on_sale && Number(product.sale_price) > 0 ? <span className="absolute left-2 top-2 rounded-full bg-[#ff5a00] px-2 py-1 text-[8px] font-black text-white">PROMO</span> : null}
                     </div>
+                    <div className="border-t border-slate-100 p-2.5">
+                      <p className="line-clamp-2 min-h-[32px] text-[10px] font-black leading-snug sm:text-xs">{product.name}</p>
+                      <p className="mt-2 text-xs font-black text-[#ff5a00] sm:text-sm">{outletPrice(product)}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <Link to="/produits" className="mt-3 flex min-h-40 items-center justify-center rounded-[22px] border border-dashed border-white/20 bg-white/[.04] text-sm font-black">Découvrir le catalogue</Link>
+            )}
 
-                    <Link to={universe.to} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--universe-accent)] px-2 text-[11px] font-black text-[#020711] shadow-[0_14px_40px_var(--universe-glow)] transition hover:brightness-110 sm:mt-5 sm:min-h-12 sm:gap-2 sm:px-6 sm:text-base">
-                      {index === 0 ? "Entrer dans l'univers" : "Découvrir"}
-                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </Link>
+            <Link to="/qeh-outlet" className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#ff5a00] px-5 text-sm font-black shadow-[0_16px_44px_rgba(255,90,0,.28)] transition hover:bg-[#ff742b]">
+              Entrer dans QEH OUTLET <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </motion.section>
+
+        {/* QEH ENERGIES */}
+        <motion.section
+          {...panelAnimation(0.08)}
+          className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(130,210,70,.30),transparent_40%),linear-gradient(165deg,#08170f_0%,#10291b_48%,#07110c_100%)] lg:min-h-screen lg:border-b-0 lg:border-r"
+        >
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[#82d246]" />
+          <div className="pointer-events-none absolute -right-20 top-40 h-72 w-72 rounded-full bg-[#82d246]/14 blur-[95px]" />
+          <div className="relative flex h-full flex-col p-4 pb-8 pt-7 sm:p-7 lg:p-6 xl:p-8">
+            <Link to="/qeh-energies" className="flex min-h-[78px] items-center justify-center rounded-[22px] border border-white/15 bg-black/25 p-3 backdrop-blur-xl transition hover:border-[#82d246]/70">
+              <img src="/images/qeh-energies-logo.png" alt="QEH ÉNERGIES" className="max-h-[58px] w-full object-contain" />
+            </Link>
+
+            <div className="mt-6">
+              <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#a8eb75]">Production locale · solaire · partage</p>
+              <h2 className="mt-2 font-display text-3xl font-black leading-[.95] tracking-[-.04em] xl:text-4xl">L'énergie produite près de chez vous.</h2>
+              <p className="mt-3 text-sm leading-relaxed text-white/65">QEH ÉNERGIES connecte projets photovoltaïques, producteurs et territoires pour rendre l'énergie locale plus simple et plus visible.</p>
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-black/20">
+              <div className="relative aspect-[16/10] overflow-hidden">
+                <img src="/images/editorial/qeh-energies-territoire.jpg" alt="Territoire et production solaire QEH ÉNERGIES" className="h-full w-full object-cover opacity-75" />
+                <div className="absolute inset-0 bg-gradient-t from-[#07110c] via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-2xl border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-md">
+                  <SunMedium className="h-5 w-5 text-[#a8eb75]" />
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-[.16em] text-[#a8eb75]">Énergie locale</p>
+                    <p className="text-xs font-bold text-white/80">Voir ce qui se produit autour de vous</p>
                   </div>
                 </div>
-              </motion.article>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-12 grid grid-cols-2 gap-2.5 rounded-[28px] border border-white/10 bg-white/[.045] p-3 backdrop-blur-xl sm:mt-16 sm:grid-cols-4 sm:gap-4 sm:p-5">
-          {[
-            [ShieldCheck, "Paiement sécurisé"],
-            [PackageSearch, "Suivi de commande"],
-            [SunMedium, "Projets solaires"],
-            [UserCheck, "Compte professionnel"],
-          ].map(([Icon, label]) => (
-            <div key={label} className="flex min-h-[72px] items-center gap-2.5 rounded-2xl bg-[#020711]/55 p-3 text-xs font-black text-white/80 sm:justify-center sm:text-sm">
-              <Icon className="h-5 w-5 shrink-0 text-[#82d246]" />
-              <span>{label}</span>
+              </div>
             </div>
-          ))}
-        </section>
 
-        <footer className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-7 text-center text-xs text-white/45 sm:flex-row sm:text-left">
-          <p>© {new Date().getFullYear()} QEH — Tous droits réservés.</p>
-          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 sm:justify-end">
-            <Link to="/conditions-generales" className="transition hover:text-white">Conditions d'utilisation</Link>
-            <Link to="/politique-de-confidentialite" className="transition hover:text-white">Politique de confidentialité</Link>
+            <div className="mt-5 space-y-2.5">
+             {[
+                [Map, "Carte solaire", "Explorer les projets et producteurs autour de vous", "/qeh-energies/carte-solaire"],
+                [SunMedium, "Comment ça marche", "Comprendre le fonctionnement de l'écosystème énergétique", "/qeh-energies/comment-ca-marche"],
+                [Users, "Participer", "Proposer un projet ou rejoindre la dynamique locale", "/qeh-energies/participer"],
+             ].map(([Icon, title, detail, to]) => (
+                <Link key={title} to={to} className="group flex min-h-[74px] items-center gap-3 rounded-[20px] border border-white/10 bg-white/[.055] p-3 transition hover:-translate-y-0.5 hover:border-[#82d246]/65 hover:bg-white/[.09]">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#82d246]/12 text-[#a8eb75]"><Icon className="h-5 w-5" /></span>
+                  <span className="min-w-0">
+                    <strong className="block text-xs font-black sm:text-sm">{title}</strong>
+                    <span className="mt-0.5 block text-[10px] leading-snug text-white/45 sm:text-[11px]">{detail}</span>
+                  </span>
+                  <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-white/30 transition group-hover:text-[#a8eb75]" />
+                </Link>
+             ))}
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2.5">
+              <div className="rounded-[18px] border border-white/10 bg-white/[.045] p-3">
+                <ShieldCheck className="h-5 w-5 text-[#a8eb75]" />
+                <p className="mt-2 text-xs font-black">Projets identifiés</p>
+                <p className="mt-1 text-[10px] leading-relaxed text-white/40">Une lecture claire des initiatives du territoire.</p>
+              </div>
+              <div className="rounded-[18px] border border-white/10 bg-white/[.045] p-3">
+                <Users className="h-5 w-5 text-[#a8eb75]" />
+                <p className="mt-2 text-xs font-black">Réseau local</p>
+                <p className="mt-1 text-[10px] leading-relaxed text-white/40">Producteurs, clients et partenaires réunis.</p>
+              </div>
+            </div>
+
+            <Link to="/qeh-energies" className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#82d246] px-5 text-sm font-black text-[#07110c] shadow-[0_16px_44px_rgba(130,210,70,.20)] transition hover:brightness-110">
+              Entrer dans QEH ÉNERGIES <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-        </footer>
-      </section>
+        </motion.section>
+
+        {/* QEH PARTNER */}
+        <motion.section
+          {...panelAnimation(0.16)}
+          className="relative overflow-hidden bg-[radial-gradient(circle_at_80%_0%,rgba(242,207,121,.26),transparent_40%),linear-gradient(160deg,#151108_0%,#20190b_50%,#0c0a06_100%)] lg:min-h-screen"
+        >
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[#f2cf79]" />
+          <div className="pointer-events-none absolute -right-20 top-24 h-72 w-72 rounded-full bg-[#f2cf79]/13 blur-[95px]" />
+          <div className="relative flex h-full flex-col p-4 pb-8 pt-7 sm:p-7 lg:p-6 xl:p-8">
+            <Link to="/qeh-partner" className="flex min-h-[78px] items-center justify-center rounded-[22px] border border-white/15 bg-black/30 p-3 backdrop-blur-xl transition hover:border-[#f2cf79]/70">
+              <img src="/images/qeh-partner-logo-gold.png" alt="QEH PARTNER" className="max-h-[58px] w-full object-contain" />
+            </Link>
+
+            <div className="mt-6">
+              <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#f2cf79]">Professionnels · production · franchise</p>
+              <h2 className="mt-2 font-display text-3xl font-black leading-[.95] tracking-[-.04em] xl:text-4xl">L'univers réservé à ceux qui développent QEH.</h2>
+              <p className="mt-3 text-sm leading-relaxed text-white/65">Accédez au matériel professionnel, devenez producteur ou développez votre propre implantation avec le réseau QEH PARTNER.</p>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between gap-3 rounded-[20px] border border-[#f2cf79]/20 bg-[#f2cf79]/[.07] p-3">
+              <div className="flex items-center gap-3">
+                <span className={`grid h-10 w-10 place-items-center rounded-full ${isProfessional ? "bg-emerald-400/15 text-emerald-300" : "bg-[#f2cf79]/12 text-[#f2cf79]"}`}>
+                  {isProfessional ? <UserCheck className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
+                </span>
+                <div>
+                  <p className="text-xs font-black">{isProfessional ? `Compte Pro ${professionalAccount?.company_name || "validé"}` : "Catalogue professionnel verrouillé"}</p>
+                  <p className="mt-0.5 text-[10px] text-white/45">{isProfessional ? "Vos prix et produits sont accessibles." : "Connectez-vous avec un compte Pro QEH validé."}</p>
+                </div>
+              </div>
+              {!isProfessional && !professionalLoading ? <Lock className="h-4 w-4 shrink-0 text-[#f2cf79]" /> : null}
+            </div>
+
+            <div className="mt-5">
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[.16em] text-[#f2cf79]">Matériel professionnel</p>
+                  <h3 className="mt-1 font-display text-lg font-black">Catalogue QEH Partner</h3>
+                </div>
+                {isProfessional ? <Link to="/qeh-partner/materiel-pro" className="text-[11px] font-black text-[#f2cf79]">Ouvrir</Link> : null}
+              </div>
+
+              {professionalLoading || proLoading ? (
+                <div className="grid min-h-40 place-items-center rounded-[20px] border border-white/10 bg-white/[.04] text-xs font-bold text-white/40">Vérification du compte…</div>
+              ) : isProfessional && proProducts.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2.5">
+                  {proProducts.map((product) => (
+                    <Link key={product.id} to="/qeh-partner/materiel-pro" className="group overflow-hidden rounded-[20px] border border-[#f2cf79]/15 bg-white text-[#151108] transition hover:-translate-y-1 hover:border-[#f2cf79]">
+                      <div className="aspect-square bg-white p-2.5">
+                        {product.image_url ? <img src={product.image_url} alt={product.name} loading="lazy" className="h-full wfull object-contain transition group-hover:scale-105" /> : <div className="grid h-full place-items-center rounded-xl bg-[#f7f2e4]"><Boxes className="h-8 w-8 text-[#8d6b22]" /></div>}
+                      </div>
+                    <div className="border-t border-slate-100 p-2.5">
+                        <p className="line-clamp-2 min-h-[32px] text-[10px] font-black leading-snug sm:text-xs">{product.name}</p>
+                        <p className="mt-2 text-xs font-black text-[#8d6b22]">{euro.format(Number(product.price_excluding_tax || 0))} HT</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <ProLockedPreview />
+              )}
+            </div>
+
+            {!isProfessional ? (
+              <div className="mt-3 grid grid-cols-2 gap-2.5">
+                <Link to="/qeh-partner/connexion-pro" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-[#f2cf79]/35 bg-[#f2cf79]/10 px-3 text-[11px] font-black text-[#f2cf79] transition hover:bg-[#f2cf79]/15">
+                  <Lock className="h-3.5 w-3.5" /> Connexion Pro
+                </Link>
+                <Link to="/qeh-partner/inscription-pro" className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#f2cf79] px-3 text-[11px] font-black text-[#151108] transition hover:brightness-110">
+                  Devenir Pro
+                </Link>
+              </div>
+            ) : null}
+
+            <div className="mt-5 space-y-2.5">
+              {[
+                [Factory, "Devenir producteur", "Produire ou référencer du matériel au sein du réseau QEH.", "/qeh-partner/production"],
+                [Sparkles, "Être franchisé", "Développer QEH sur votre territoire avec un accompagnement dédié.", "/qeh-partner/franchise"],
+              ].map(([Icon, title, detail, to]) => (
+                <Link key={title} to={to} className="group flex min-h-[74px] items-center gap-3 rounded-[20px] border border-white/10 bg-white/[.055] p-3 transition hover:-translate-y-0.5 hover:border-[#f2cf79]/65 hover:bg-white/[.09]">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#f2cf79]/12 text-[#f2cf79]"><Icon className="h-5 w-5" /></span>
+                  <span className="min-w-0">
+                    <strong className="block text-xs font-black sm:text-sm">{title}</strong>
+                    <span className="mt-0.5 block text-[10px] leading-snug text-white/45 sm:text-[11px]">{detail}</span>
+                  </span>
+                  <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-white/30 transition group-hover:text-[#f2cf79]" />
+                </Link>
+              ))}
+            </div>
+
+            <Link to={isProfessional ? "/qeh-partner/materiel-pro" : "/qeh-partner"} className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#f2cf79] px-5 text-sm font-black text-[#151108] shadow-[0_16px_44px_rgba(242,207,121,.18)] transition hover:brightness-110">
+              {isProfessional ? "Accéder au matériel Pro" : "Entrer dans QEH PARTNER"} <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </motion.section>
+      </div>
     </main>
   );
 }
