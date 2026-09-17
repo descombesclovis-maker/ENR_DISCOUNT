@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useCustomerAuth } from "../context/CustomerAuthContext";
 
 export default function CustomerLogin() {
-  const navigate = useNavigate();
-
   const {
     signIn,
     signInWithGoogle,
@@ -20,9 +18,9 @@ export default function CustomerLogin() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate("/mon-compte", { replace: true });
+      window.location.replace("/mon-compte");
     }
-  }, [authLoading, isAuthenticated, navigate]);
+  }, [authLoading, isAuthenticated]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -32,10 +30,9 @@ export default function CustomerLogin() {
       setLoading(true);
       await signIn(email, password);
       toast.success("Connexion réussie.");
-      navigate("/mon-compte", { replace: true });
+      window.location.replace("/mon-compte");
     } catch (error) {
       toast.error(error.message);
-    } finally {
       setLoading(false);
     }
   };
