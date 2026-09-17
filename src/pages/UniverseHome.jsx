@@ -52,15 +52,15 @@ function ProLockedPreview() {
       {[0, 1].map((item) => (
         <div
           key={item}
-          className="relative overflow-hidden rounded-[20px] border border-white/15 bg-white/[.07] p-2.5"
+          className="relative overflow-hidden rounded-[20px] border border-[#17649e]/45 bg-[#0a2744] p-2.5 shadow-[0_12px_34px_rgba(2,7,20,.18)]"
         >
-          <div className="relative aspect-square overflow-hidden rounded-[15px] bg-black/25">
+          <div className="relative aspect-square overflow-hidden rounded-[15px] bg-[#071b31]">
             <img
               src="/images/editorial/qeh-partner-logistique.jpg"
               alt="Catalogue professionnel QEH Partner verrouillé"
               className="h-full w-full scale-110 object-cover opacity-35 blur-[5px]"
             />
-            <div className="absolute inset-0 grid place-items-center bg-[#0b0a07]/35">
+            <div className="absolute inset-0 grid place-items-center bg-[#071b31]/55">
               <span className="grid h-10 w-10 place-items-center rounded-full border border-[#f2cf79]/45 bg-[#080704]/80 text-[#f2cf79] shadow-xl">
                 <Lock className="h-4 w-4" />
               </span>
@@ -212,14 +212,14 @@ export default function UniverseHome() {
             ) : outletProducts.length > 0 ? (
               <div className="mt-3 grid grid-cols-2 gap-2.5">
                 {outletProducts.map((product) => (
-                  <Link key={product.id} to={`/produits/${product.slug}`} className="group overflow-hidden rounded-[20px] border border-white/10 bg-white text-[#07101f] transition hover:-translate-y-1 hover:border-[#ff5a00]">
-                    <div className="relative aspect-square bg-white p-2.5">
+                  <Link key={product.id} to={`/produits/${product.slug}`} className="group overflow-hidden rounded-[20px] border border-[#17649e]/45 bg-[#0a2744] text-white shadow-[0_12px_34px_rgba(2,7,20,.18)] transition hover:-translate-y-1 hover:border-[#ff5a00]">
+                    <div className="relative aspect-square bg-[#0a2744] p-2.5">
                       <img src={product.image.url} alt={product.image.alt} loading="lazy" className="h-full w-full object-contain transition duration-300 group-hover:scale-105" />
                       {product.is_on_sale && Number(product.sale_price) > 0 ? <span className="absolute left-2 top-2 rounded-full bg-[#ff5a00] px-2 py-1 text-[8px] font-black text-white">PROMO</span> : null}
                     </div>
-                    <div className="border-t border-slate-100 p-2.5">
+                    <div className="border-t border-white/10 p-2.5">
                       <p className="line-clamp-2 min-h-[32px] text-[10px] font-black leading-snug sm:text-xs">{product.name}</p>
-                      <p className="mt-2 text-xs font-black text-[#ff5a00] sm:text-sm">{outletPrice(product)}</p>
+                      <p className="mt-2 text-xs font-black text-[#ff7a32] sm:text-sm">{outletPrice(product)}</p>
                     </div>
                   </Link>
                 ))}
@@ -347,13 +347,13 @@ export default function UniverseHome() {
               ) : isProfessional && proProducts.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2.5">
                   {proProducts.map((product) => (
-                    <Link key={product.id} to="/qeh-partner/materiel-pro" className="group overflow-hidden rounded-[20px] border border-[#f2cf79]/15 bg-white text-[#151108] transition hover:-translate-y-1 hover:border-[#f2cf79]">
-                      <div className="aspect-square bg-white p-2.5">
-                        {product.image_url ? <img src={product.image_url} alt={product.name} loading="lazy" className="h-full wfull object-contain transition group-hover:scale-105" /> : <div className="grid h-full place-items-center rounded-xl bg-[#f7f2e4]"><Boxes className="h-8 w-8 text-[#8d6b22]" /></div>}
+                    <Link key={product.id} to="/qeh-partner/materiel-pro" className="group overflow-hidden rounded-[20px] border border-[#17649e]/45 bg-[#0a2744] text-white shadow-[0_12px_34px_rgba(2,7,20,.18)] transition hover:-translate-y-1 hover:border-[#f2cf79]">
+                      <div className="aspect-square bg-[#0a2744] p-2.5">
+                        {product.image_url ? <img src={product.image_url} alt={product.name} loading="lazy" className="h-full w-full object-contain transition group-hover:scale-105" /> : <div className="grid h-full place-items-center rounded-xl bg-[#071b31]"><Boxes className="h-8 w-8 text-[#f2cf79]" /></div>}
                       </div>
-                    <div className="border-t border-slate-100 p-2.5">
+                    <div className="border-t border-white/10 p-2.5">
                         <p className="line-clamp-2 min-h-[32px] text-[10px] font-black leading-snug sm:text-xs">{product.name}</p>
-                        <p className="mt-2 text-xs font-black text-[#8d6b22]">{euro.format(Number(product.price_excluding_tax || 0))} HT</p>
+                        <p className="mt-2 text-xs font-black text-[#f2cf79]">{euro.format(Number(product.price_excluding_tax || 0))} HT</p>
                       </div>
                     </Link>
                   ))}
