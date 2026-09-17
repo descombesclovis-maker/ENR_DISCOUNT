@@ -1,2 +1,20 @@
 User-agent: *
 Allow: /
+
+Disallow: /admin/
+Disallow: /panier
+Disallow: /commande/
+Disallow: /connexion
+Disallow: /inscription
+Disallow: /mon-compte
+Disallow: /mes-commandes
+Disallow: /compte/
+Disallow: /mot-de-passe-oublie
+Disallow: /reinitialiser-mot-de-passe
+Disallow: /qeh-partner/connexion-pro
+Disallow: /qeh-partner/inscription-pro
+Disallow: /qeh-partner/mot-de-passe-oublie
+Disallow: /qeh-partner/reinitialiser-mot-de-passe
+Disallow: /qeh-partner/panier-pro
+
+Sitemap: https://www.qeh-outlet.fr/sitemap.xml
