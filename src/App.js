@@ -29,7 +29,9 @@ import QEHEnergiesLayout from "./components/QEHEnergiesLayout";
 import SiteAnalyticsTracker from "./components/SiteAnalyticsTracker";
 import MaintenanceGate from "./components/MaintenanceGate";
 import ProfessionalRoute from "./components/ProfessionalRoute";
+import CookieConsent from "./components/CookieConsent";
 
+import UniverseHome from "./pages/UniverseHome";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -113,6 +115,7 @@ function App() {
                 <WishlistProvider>
                   <BrowserRouter>
                     <SiteAnalyticsTracker />
+                    <CookieConsent />
 
                     <Toaster
                       position="top-center"
@@ -120,13 +123,18 @@ function App() {
                     />
 
                     <Routes>
+                      <Route
+                        path="/"
+                        element={<UniverseHome />}
+                      />
+
                       {/* ================================================= */}
                       {/* BOUTIQUE QEH OUTLET                               */}
                       {/* ================================================= */}
 
                       <Route element={<StoreLayout />}>
                         <Route
-                          path="/"
+                          path="/qeh-outlet"
                           element={<Home />}
                         />
 

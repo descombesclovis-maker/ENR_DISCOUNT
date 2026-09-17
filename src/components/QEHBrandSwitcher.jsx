@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const brands = [
   {
     id: "outlet",
-    to: "/",
+    to: "/qeh-outlet",
     src: "/images/qeh-outlet-logo.jpg",
     alt: "QEH OUTLET",
     activeBorder: "border-[#ff5a00]",

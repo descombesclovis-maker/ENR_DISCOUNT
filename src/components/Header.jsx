@@ -32,7 +32,7 @@ export const Header = () => {
     try {
       await signOut();
       setAccountMenuOpen(false);
-      navigate("/");
+      navigate("/qeh-outlet");
     } catch (error) {
       console.error("Erreur lors de la déconnexion client :", error);
     }
