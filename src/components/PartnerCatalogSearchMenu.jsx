@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   AlertCircle,
   LoaderCircle,
@@ -29,6 +29,7 @@ function money(value) {
 
 export default function PartnerCatalogSearchMenu() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isProfessional } = useProfessionalAuth();
   const menuRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -39,6 +40,15 @@ export default function PartnerCatalogSearchMenu() {
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const professionalDestination = "/qeh-partner/materiel-pro";
+
+  const redirectToProfessionalLogin = () => {
+    setOpen(false);
+    navigate("/qeh-partner/connexion-pro", {
+      state: { from: professionalDestination },
+    });
+  };
 
   useEffect(() => {
     setOpen(false);
@@ -163,11 +173,22 @@ export default function PartnerCatalogSearchMenu() {
                 ref={searchInputRef}
                 type="search"
                 value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
-                disabled={!isProfessional}
+                onChange={(event) => {
+                  if (isProfessional) setSearchText(event.target.value);
+                }}
+                onClick={() => {
+                  if (!isProfessional) redirectToProfessionalLogin();
+                }}
+                onFocus={() => {
+                  if (!isProfessional) redirectToProfessionalLogin();
+                }}
+                readOnly={!isProfessional}
                 placeholder={isProfessional ? "Rechercher un produit ou une référence…" : "Connectez-vous pour rechercher…"}
                 autoComplete="off"
-                className="h-12 w-full rounded-2xl border border-white/15 bg-white/10 pl-12 pr-12 text-white outline-none placeholder:text-white/40 focus:border-[#f2cf79] focus:ring-2 focus:ring-[#f2cf79]/25 disabled:cursor-not-allowed disabled:opacity-60"
+                aria-label={isProfessional ? "Rechercher dans le catalogue professionnel" : "Se connecter pour rechercher dans le catalogue professionnel"}
+                className={`h-12 w-full rounded-2xl border border-white/15 bg-white/10 pl-12 pr-12 text-white outline-none placeholder:text-white/40 focus:border-[#f2cf79] focus:ring-2 focus:ring-[#f2cf79]/25 ${
+                  !isProfessional ? "cursor-pointer" : ""
+                }`}
               />
               {searchText && isProfessional ? (
                 <button
@@ -187,11 +208,18 @@ export default function PartnerCatalogSearchMenu() {
               <div>
                 <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
                   {[0, 1, 2, 3].map((item) => (
-                    <div key={item} className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+                    <Link
+                      key={item}
+                      to="/qeh-partner/connexion-pro"
+                      state={{ from: professionalDestination }}
+                      onClick={() => setOpen(false)}
+                      aria-label="Se connecter pour voir ce produit professionnel"
+                      className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm transition hover:-translate-y-1 hover:border-[#d2ad4e] hover:shadow-lg"
+                    >
                       <div className="relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-slate-200">
                         <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,rgba(242,207,121,.18)_48%,transparent_100%)] blur-sm" />
                         <div className="absolute inset-0 grid place-items-center backdrop-blur-md">
-                          <span className="grid h-11 w-11 place-items-center rounded-full border border-[#c99532]/25 bg-white/80 text-[#9a6d1b] shadow-lg">
+                          <span className="grid h-11 w-11 place-items-center rounded-full border border-[#c99532]/25 bg-white/80 text-[#9a6d1b] shadow-lg transition group-hover:scale-105 group-hover:bg-[#fff7dd]">
                             <Lock className="h-5 w-5" />
                           </span>
                         </div>
@@ -201,7 +229,7 @@ export default function PartnerCatalogSearchMenu() {
                         <div className="h-3 w-full rounded-full bg-slate-300" />
                         <div className="h-3 w-3/4 rounded-full bg-slate-200" />
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
 
@@ -213,6 +241,8 @@ export default function PartnerCatalogSearchMenu() {
                   </p>
                   <Link
                     to="/qeh-partner/connexion-pro"
+                    state={{ from: professionalDestination }}
+                    onClick={() => setOpen(false)}
                     className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[#f2cf79] px-5 text-sm font-black text-[#07101c] transition hover:-translate-y-0.5 hover:brightness-105"
                   >
                     <Lock className="h-4 w-4" /> Connexion Pro
