@@ -449,15 +449,15 @@ export default function UniverseHome() {
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Link
                   to="/produits"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#ff5a00] px-4 text-xs font-black text-white"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#ff5a00] px-4 text-center text-xs font-black text-white"
                 >
-                  Catalogue <ArrowRight className="h-4 w-4" />
+                  Nos produits en vedette <ArrowRight className="h-4 w-4 shrink-0" />
                 </Link>
                 <Link
-                  to="/suivi-commande"
+                  to="/produits"
                   className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/12 bg-white/[.055] px-4 text-xs font-black"
                 >
-                  Suivi
+                  Catalogue
                 </Link>
               </div>
             </UniverseCard>
@@ -479,13 +479,13 @@ export default function UniverseHome() {
                     to="/qeh-energies/comment-ca-marche"
                     className="flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[.055] px-3 text-center text-[11px] font-black"
                   >
-                    Comprendre
+                    En savoir plus
                   </Link>
                   <Link
                     to="/qeh-energies/participer"
                     className="flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[.055] px-3 text-center text-[11px] font-black"
                   >
-                    Participer
+                    En bénéficier
                   </Link>
                 </div>
               </div>
@@ -495,7 +495,12 @@ export default function UniverseHome() {
               {isProfessional ? (
                 <ProfessionalProducts products={proProducts} loading={proLoading || professionalLoading} />
               ) : (
-                <LockedPartnerPreview />
+                <>
+                  <LockedPartnerPreview />
+                  <p className="mt-2 px-1 text-[10px] leading-relaxed text-white/40">
+                    Vous devez d'abord créer un compte pour accéder au matériel Pro.
+                  </p>
+                </>
               )}
               <div className="mt-3 grid gap-2">
                 <Link
