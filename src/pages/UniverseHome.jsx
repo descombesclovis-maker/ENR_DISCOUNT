@@ -66,7 +66,7 @@ const UNIVERSES = [
 
 function UniverseSelector({ activeId, onSelect }) {
   return (
-    <div className="mx-auto flex w-full max-w-[720px] items-center justify-center gap-1 rounded-full border border-white/10 bg-white/[.045] p-1.5 shadow-[0_18px_60px_rgba(0,0,0,.22)] backdrop-blur-xl">
+    <div className="mx-auto flex w-full max-w-[720px] lg:max-w-[980px] items-center justify-center gap-1 rounded-full border border-white/10 bg-white/[.045] p-1.5 lg:p-2 shadow-[0_18px_60px_rgba(0,0,0,.22)] backdrop-blur-xl">
       {UNIVERSES.map((universe) => {
         const active = activeId === universe.id;
 
@@ -75,7 +75,7 @@ function UniverseSelector({ activeId, onSelect }) {
             key={universe.id}
             type="button"
             onClick={() => onSelect(universe.id)}
-            className="relative flex min-h-11 flex-1 items-center justify-center rounded-full px-3 text-[10px] font-black uppercase tracking-[.14em] text-white/55 transition hover:text-white sm:text-xs"
+            className="relative flex min-h-11 lg:min-h-14 flex-1 items-center justify-center rounded-full px-3 lg:px-5 text-[10px] sm:text-xs lg:text-sm font-black uppercase tracking-[.14em] text-white/55 transition hover:text-white"
             aria-pressed={active}
           >
             {active ? (
@@ -86,9 +86,9 @@ function UniverseSelector({ activeId, onSelect }) {
               />
             ) : null}
 
-            <span className="relative flex items-center gap-2">
+            <span className="relative flex items-center gap-2 lg:gap-3">
               <span
-                className="h-2 w-2 rounded-full transition"
+                className="h-2 w-2 lg:h-2.5 lg:w-2.5 rounded-full transition"
                 style={{
                   background: universe.accent,
                   boxShadow: active ? `0 0 16px ${universe.accent}` : "none",
@@ -109,44 +109,44 @@ function ActionButton({ action, accent, primary }) {
   return (
     <Link
       to={action.to}
-      className={`group flex min-h-[74px] items-center justify-between gap-4 rounded-[22px] border px-5 py-4 transition duration-300 hover:-translate-y-1 ${
+      className={`group flex min-h-[74px] lg:min-h-[88px] items-center justify-between gap-4 rounded-[22px] lg:rounded-[26px] border px-5 lg:px-7 py-4 lg:py-5 transition duration-300 hover:-translate-y-1 ${
         primary
           ? "border-transparent text-white shadow-[0_18px_50px_rgba(0,0,0,.28)]"
           : "border-white/10 bg-white/[.055] text-white hover:bg-white/[.085]"
       }`}
       style={primary ? { background: accent } : undefined}
     >
-      <span className="flex items-center gap-3">
+      <span className="flex items-center gap-3 lg:gap-4">
         <span
-          className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${
+          className={`grid h-10 w-10 lg:h-12 lg:w-12 shrink-0 place-items-center rounded-full ${
             primary ? "bg-black/15" : "bg-white/[.07]"
           }`}
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="h-5 w-5 lg:h-6 lg:w-6" />
         </span>
-        <span className="text-sm font-black leading-tight">{action.label}</span>
+        <span className="text-sm lg:text-base font-black leading-tight">{action.label}</span>
       </span>
-      <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
+      <ArrowRight className="h-4 w-4 lg:h-5 lg:w-5 shrink-0 transition-transform group-hover:translate-x-1" />
     </Link>
   );
 }
 
 function UnifiedHome({ activeId, onSelect, universe, actions, reduceMotion }) {
   return (
-    <div className="relative min-h-screen overflow-hidden px-4 pb-10 pt-8">
-      <div className="mx-auto max-w-xl text-center">
-        <p className="text-[10px] font-black uppercase tracking-[.28em] text-white/35">QEH</p>
-        <h1 className="mt-2 font-display text-3xl font-black tracking-[-.045em]">
+    <div className="relative min-h-screen overflow-hidden px-4 sm:px-6 lg:px-10 pb-10 lg:pb-16 pt-8 lg:pt-12">
+      <div className="mx-auto max-w-xl lg:max-w-4xl text-center">
+        <p className="text-[10px] lg:text-xs font-black uppercase tracking-[.28em] text-white/35">QEH</p>
+        <h1 className="mt-2 lg:mt-3 font-display text-3xl sm:text-4xl lg:text-6xl font-black tracking-[-.045em]">
           Un groupe. Trois univers.
         </h1>
-        <p className="mt-2 text-sm text-white/48">Choisissez votre univers.</p>
+        <p className="mt-2 lg:mt-3 text-sm lg:text-base text-white/48">Choisissez votre univers.</p>
       </div>
 
-      <div className="mx-auto mt-6 max-w-xl">
+      <div className="mx-auto mt-6 lg:mt-8 max-w-xl lg:max-w-[980px]">
         <UniverseSelector activeId={activeId} onSelect={onSelect} />
       </div>
 
-      <div className="relative mx-auto mt-4 h-[250px] max-w-xl">
+      <div className="relative mx-auto mt-4 lg:mt-7 h-[250px] sm:h-[280px] lg:h-[380px] max-w-xl lg:max-w-[1050px]">
         {UNIVERSES.map((item, index) => {
           const isActive = item.id === activeId;
           const positions = [
@@ -161,15 +161,15 @@ function UnifiedHome({ activeId, onSelect, universe, actions, reduceMotion }) {
               key={item.id}
               type="button"
               onClick={() => onSelect(item.id)}
-              className="absolute h-[118px] w-[118px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border bg-[#06101d] p-3 shadow-2xl"
+              className="absolute h-[118px] w-[118px] sm:h-[136px] sm:w-[136px] lg:h-[190px] lg:w-[190px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border bg-[#06101d] p-3 lg:p-5 shadow-2xl"
               style={{
                 left: position.left,
                 top: position.top,
                 zIndex: isActive ? 4 : 2 - index,
                 borderColor: isActive ? item.accent : "rgba(255,255,255,.12)",
                 boxShadow: isActive
-                  ? `0 18px 55px ${item.glow}`
-                  : "0 18px 45px rgba(0,0,0,.40)",
+                  ? `0 24px 80px ${item.glow}`
+                  : "0 24px 70px rgba(0,0,0,.45)",
               }}
               animate={
                 reduceMotion
@@ -209,31 +209,31 @@ function UnifiedHome({ activeId, onSelect, universe, actions, reduceMotion }) {
             initial={reduceMotion ? false : { opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reduceMotion ? undefined : { opacity: 0, y: 12 }}
-            className="mx-auto max-w-xl"
+            className="mx-auto max-w-xl lg:max-w-[920px]"
           >
-            <div className="relative overflow-hidden rounded-[30px] border border-white/10 bg-black/25 shadow-2xl">
-              <div className="relative aspect-[4/3]">
+            <div className="relative overflow-hidden rounded-[30px] lg:rounded-[36px] border border-white/10 bg-black/25 shadow-2xl">
+              <div className="relative aspect-[4/3] lg:aspect-[16/9]">
                 <img
                   src={universe.image}
                   alt={universe.imageAlt}
                   className="h-full w-full object-cover opacity-80"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#030811] via-[#030811]/30 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-5">
+                <div className="absolute bottom-0 left-0 right-0 p-5 lg:p-8">
                   <p
-                    className="text-[9px] font-black uppercase tracking-[.18em]"
+                    className="text-[9px] lg:text-xs font-black uppercase tracking-[.18em]"
                     style={{ color: universe.accentSoft }}
                   >
                     {universe.eyebrow}
                   </p>
-                  <h2 className="mt-2 font-display text-2xl font-black leading-none tracking-[-.04em]">
+                  <h2 className="mt-2 lg:mt-3 font-display text-2xl lg:text-4xl font-black leading-none tracking-[-.04em]">
                     {universe.headline}
                   </h2>
                 </div>
               </div>
             </div>
 
-            <div className="mt-3 space-y-2.5">
+            <div className="mt-3 lg:mt-5 space-y-2.5 lg:space-y-3">
               {actions.map((action, index) => (
                 <ActionButton
                   key={`${universe.id}-${action.label}`}
@@ -248,7 +248,7 @@ function UnifiedHome({ activeId, onSelect, universe, actions, reduceMotion }) {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mx-auto max-w-xl text-center text-sm font-bold text-white/42"
+            className="mx-auto max-w-xl lg:max-w-3xl text-center text-sm lg:text-base font-bold text-white/42"
           >
             Touchez un logo ou utilisez le sélecteur pour ouvrir un univers.
           </motion.p>
