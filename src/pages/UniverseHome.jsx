@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
@@ -16,6 +16,8 @@ import {
 import { Link } from "react-router-dom";
 import { useProfessionalAuth } from "../context/ProfessionalAuthContext";
 
+const MOBILE_CANVAS_WIDTH = 390;
+
 const UNIVERSES = [
   {
     id: "outlet",
@@ -23,6 +25,8 @@ const UNIVERSES = [
     title: "QEH OUTLET",
     eyebrow: "Équipement · Déstockage · Bonnes affaires",
     headline: "Le matériel technique au prix juste.",
+    description:
+      "Panneaux solaires, chauffage, climatisation, plomberie et équipements techniques disponibles immédiatement ou sur demande.",
     accent: "#ff5a00",
     accentSoft: "#ff9b62",
     logo: "/images/qeh-outlet-logo.jpg",
@@ -36,6 +40,8 @@ const UNIVERSES = [
     title: "QEH ÉNERGIES",
     eyebrow: "Production locale · Solaire · Territoire",
     headline: "L'énergie produite près de chez vous.",
+    description:
+      "Explorez les projets et producteurs autour de vous, comprenez l'écosystème et participez à une énergie plus locale.",
     accent: "#82d246",
     accentSoft: "#b7ef8c",
     logo: "/images/qeh-energies-logo.png",
@@ -49,6 +55,8 @@ const UNIVERSES = [
     title: "QEH PARTNER",
     eyebrow: "Professionnels · Production · Développement",
     headline: "L'univers professionnel du groupe QEH.",
+    description:
+      "Accédez au matériel professionnel, développez la production QEH ou rejoignez le réseau en devenant franchisé.",
     accent: "#e5bd58",
     accentSoft: "#f6df98",
     logo: "/images/qeh-partner-logo-gold.png",
@@ -60,7 +68,7 @@ const UNIVERSES = [
 
 function UniverseSelector({ activeId, onSelect }) {
   return (
-    <div className="mx-auto flex w-[min(92vw,980px)] items-center justify-center gap-1 rounded-full border border-white/10 bg-white/[.045] p-1.5 shadow-[0_18px_60px_rgba(0,0,0,.22)] backdrop-blur-xl">
+    <div className="mx-auto flex w-full max-w-[720px] items-center justify-center gap-1 rounded-full border border-white/10 bg-white/[.045] p-1.5 shadow-[0_18px_60px_rgba(0,0,0,.22)] backdrop-blur-xl">
       {UNIVERSES.map((universe) => {
         const active = activeId === universe.id;
 
@@ -69,7 +77,7 @@ function UniverseSelector({ activeId, onSelect }) {
             key={universe.id}
             type="button"
             onClick={() => onSelect(universe.id)}
-            className="relative flex min-h-[clamp(44px,5vw,56px)] flex-1 items-center justify-center rounded-full px-2 text-[clamp(9px,1.1vw,14px)] font-black uppercase tracking-[.12em] text-white/55 transition hover:text-white"
+            className="relative flex min-h-11 flex-1 items-center justify-center rounded-full px-3 text-[10px] font-black uppercase tracking-[.14em] text-white/55 transition hover:text-white"
             aria-pressed={active}
           >
             {active ? (
@@ -80,9 +88,9 @@ function UniverseSelector({ activeId, onSelect }) {
               />
             ) : null}
 
-            <span className="relative flex items-center gap-[clamp(6px,1vw,12px)]">
+            <span className="relative flex items-center gap-2">
               <span
-                className="h-[clamp(7px,.8vw,10px)] w-[clamp(7px,.8vw,10px)] rounded-full"
+                className="h-2 w-2 rounded-full transition"
                 style={{
                   background: universe.accent,
                   boxShadow: active ? `0 0 16px ${universe.accent}` : "none",
@@ -103,180 +111,226 @@ function ActionButton({ action, accent, primary }) {
   return (
     <Link
       to={action.to}
-      className={`group flex min-h-[clamp(68px,7vw,88px)] items-center justify-between gap-4 rounded-[clamp(18px,2vw,26px)] border px-[clamp(16px,2.2vw,28px)] py-[clamp(14px,1.8vw,20px)] transition duration-300 hover:-translate-y-1 ${
+      className={`group flex min-h-[74px] items-center justify-between gap-4 rounded-[22px] border px-5 py-4 transition duration-300 hover:-translate-y-1 ${
         primary
           ? "border-transparent text-white shadow-[0_18px_50px_rgba(0,0,0,.28)]"
           : "border-white/10 bg-white/[.055] text-white hover:bg-white/[.085]"
       }`}
       style={primary ? { background: accent } : undefined}
     >
-      <span className="flex items-center gap-[clamp(10px,1.4vw,16px)]">
+      <span className="flex items-center gap-3">
         <span
-          className={`grid h-[clamp(38px,4vw,48px)] w-[clamp(38px,4vw,48px)] shrink-0 place-items-center rounded-full ${
+          className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${
             primary ? "bg-black/15" : "bg-white/[.07]"
           }`}
         >
-          <Icon className="h-[clamp(18px,2vw,24px)] w-[clamp(18px,2vw,24px)]" />
+          <Icon className="h-5 w-5" />
         </span>
-        <span className="text-[clamp(13px,1.35vw,16px)] font-black leading-tight">{action.label}</span>
+        <span className="text-sm font-black leading-tight">{action.label}</span>
       </span>
-      <ArrowRight className="h-[clamp(16px,1.8vw,20px)] w-[clamp(16px,1.8vw,20px)] shrink-0 transition-transform group-hover:translate-x-1" />
+      <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
     </Link>
   );
 }
 
-function LogoCluster({ activeId, onSelect, reduceMotion, compact }) {
-  const positions = [
-    { left: "36%", top: "56%", rotate: -8 },
-    { left: "50%", top: "40%", rotate: 4 },
-    { left: "64%", top: "58%", rotate: 8 },
-  ];
-
+function MobileLayout({ activeId, onSelect, universe, actions, reduceMotion }) {
   return (
-    <div className={`relative mx-auto w-full ${compact ? "h-[clamp(120px,15vw,185px)]" : "h-[clamp(240px,31vw,390px)]"}`}>
-      {UNIVERSES.map((item, index) => {
-        const isActive = item.id === activeId;
-        const position = positions[index];
-        const sizeClass = compact
-          ? "h-[clamp(88px,10vw,150px)] w-[clamp(88px,10vw,150px)]"
-          : "h-[clamp(108px,12vw,190px)] w-[clamp(108px,12vw,190px)]";
+    <div className="relative w-[390px] overflow-hidden px-4 pb-10 pt-8">
+      <div className="mx-auto max-w-xl text-center">
+        <p className="text-[10px] font-black uppercase tracking-[.28em] text-white/35">QEH</p>
+        <h1 className="mt-2 font-display text-3xl font-black tracking-[-.045em]">
+          Un groupe. Trois univers.
+        </h1>
+        <p className="mt-2 text-sm text-white/48">Choisissez votre univers.</p>
+      </div>
 
-        return (
-          <motion.button
-            key={item.id}
-            type="button"
-            onClick={() => onSelect(item.id)}
-            className={`absolute ${sizeClass} -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border bg-[#06101d] p-[clamp(9px,1.3vw,20px)] shadow-2xl outline-none focus-visible:ring-2 focus-visible:ring-white/80`}
-            style={{
-              left: position.left,
-              top: position.top,
-              zIndex: isActive ? 4 : 2 - index,
-              borderColor: isActive ? item.accent : "rgba(255,255,255,.12)",
-              boxShadow: isActive
-                ? `0 24px 80px ${item.glow}`
-                : "0 24px 70px rgba(0,0,0,.45)",
-            }}
-            animate={
-              reduceMotion
-                ? { scale: isActive ? 1.12 : 0.9, opacity: isActive ? 1 : 0.58 }
-                : {
-                    scale: isActive ? 1.12 : 0.9,
-                    opacity: isActive ? 1 : 0.58,
-                    y: [0, -6 - index * 2, 0],
-                    rotate: [position.rotate, position.rotate + 2, position.rotate],
-                  }
-            }
-            transition={
-              reduceMotion
-                ? { duration: 0.2 }
-                : {
-                    duration: 4.5 + index * 0.6,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }
-            }
-            aria-label={`Choisir ${item.title}`}
+      <div className="mx-auto mt-6 max-w-xl">
+        <UniverseSelector activeId={activeId} onSelect={onSelect} />
+      </div>
+
+      <div className="relative mx-auto mt-4 h-[250px] max-w-xl">
+        {UNIVERSES.map((item, index) => {
+          const isActive = item.id === activeId;
+          const positions = [
+            { left: "30%", top: "54%", rotate: -8 },
+            { left: "50%", top: "43%", rotate: 4 },
+            { left: "68%", top: "56%", rotate: 8 },
+          ];
+          const position = positions[index];
+
+          return (
+            <motion.button
+              key={item.id}
+              type="button"
+              onClick={() => onSelect(item.id)}
+              className="absolute h-[118px] w-[118px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border bg-[#06101d] p-3 shadow-2xl"
+              style={{
+                left: position.left,
+                top: position.top,
+                zIndex: isActive ? 4 : 2 - index,
+                borderColor: isActive ? item.accent : "rgba(255,255,255,.12)",
+                boxShadow: isActive
+                  ? `0 18px 55px ${item.glow}`
+                  : "0 18px 45px rgba(0,0,0,.40)",
+              }}
+              animate={
+                reduceMotion
+                  ? { scale: isActive ? 1.12 : 0.9, opacity: isActive ? 1 : 0.58 }
+                  : {
+                      scale: isActive ? 1.12 : 0.9,
+                      opacity: isActive ? 1 : 0.58,
+                      y: [0, -6 - index * 2, 0],
+                      rotate: [position.rotate, position.rotate + 2, position.rotate],
+                    }
+              }
+              transition={
+                reduceMotion
+                  ? { duration: 0.2 }
+                  : {
+                      duration: 4.5 + index * 0.6,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }
+              }
+              aria-label={`Choisir ${item.title}`}
+            >
+              <img
+                src={item.logo}
+                alt={item.title}
+                className="h-full w-full rounded-full object-contain"
+                draggable="false"
+              />
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <AnimatePresence mode="wait">
+        {universe ? (
+          <motion.div
+            key={universe.id}
+            initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: 12 }}
+            className="mx-auto max-w-xl"
           >
-            <img
-              src={item.logo}
-              alt={item.title}
-              className="h-full w-full rounded-full object-contain"
-              draggable="false"
-            />
-          </motion.button>
-        );
-      })}
+            <div className="relative overflow-hidden rounded-[30px] border border-white/10 bg-black/25 shadow-2xl">
+              <div className="relative aspect-[4/3]">
+                <img
+                  src={universe.image}
+                  alt={universe.imageAlt}
+                  className="h-full w-full object-cover opacity-80"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#030811] via-[#030811]/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <p
+                    className="text-[9px] font-black uppercase tracking-[.18em]"
+                    style={{ color: universe.accentSoft }}
+                  >
+                    {universe.eyebrow}
+                  </p>
+                  <h2 className="mt-2 font-display text-2xl font-black leading-none tracking-[-.04em]">
+                    {universe.headline}
+                  </h2>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 space-y-2.5">
+              {actions.map((action, index) => (
+                <ActionButton
+                  key={`${universe.id}-${action.label}`}
+                  action={action}
+                  accent={universe.accent}
+                  primary={index === 0}
+                />
+              ))}
+            </div>
+          </motion.div>
+        ) : (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mx-auto max-w-xl text-center text-sm font-bold text-white/42"
+          >
+            Touchez un logo ou utilisez le sélecteur pour ouvrir un univers.
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function UnifiedHome({ activeId, onSelect, universe, actions, reduceMotion }) {
+function MobileReplica({ activeId, onSelect, universe, actions, reduceMotion }) {
+  const canvasRef = useRef(null);
+  const [layout, setLayout] = useState({ scale: 1, baseHeight: 760 });
+
+  useEffect(() => {
+    let frame = null;
+
+    const updateLayout = () => {
+      if (!canvasRef.current) return;
+
+      const viewportWidth = window.innerWidth;
+      const targetWidth =
+        viewportWidth < 768
+          ? viewportWidth
+          : Math.min(840, Math.max(620, viewportWidth - 120));
+      const scale = targetWidth / MOBILE_CANVAS_WIDTH;
+      const baseHeight = canvasRef.current.scrollHeight;
+
+      setLayout((current) => {
+        if (
+          Math.abs(current.scale - scale) < 0.001 &&
+          Math.abs(current.baseHeight - baseHeight) < 1
+        ) {
+          return current;
+        }
+        return { scale, baseHeight };
+      });
+    };
+
+    const requestUpdate = () => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updateLayout);
+    };
+
+    requestUpdate();
+    window.addEventListener("resize", requestUpdate);
+
+    const observer = new ResizeObserver(requestUpdate);
+    observer.observe(canvasRef.current);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", requestUpdate);
+    };
+  }, [activeId]);
+
   return (
-    <div className="relative min-h-screen overflow-hidden px-[clamp(14px,3vw,40px)] pb-[clamp(32px,5vw,64px)] pt-[clamp(24px,4vw,48px)]">
-      <div className="mx-auto max-w-[1100px] text-center">
-        <p className="text-[clamp(9px,.8vw,12px)] font-black uppercase tracking-[.28em] text-white/35">QEH</p>
-        <h1 className="mt-2 font-display text-[clamp(2rem,4.2vw,4rem)] font-black leading-none tracking-[-.05em]">
-          Un groupe. Trois univers.
-        </h1>
-        <p className="mt-3 text-[clamp(12px,1.2vw,16px)] text-white/48">Choisissez votre univers.</p>
-      </div>
-
-      <div className="mt-[clamp(20px,2.5vw,32px)]">
-        <UniverseSelector activeId={activeId} onSelect={onSelect} />
-      </div>
-
-      <div className="mx-auto mt-[clamp(12px,2vw,24px)] w-[min(94vw,920px)]">
-        <AnimatePresence mode="wait">
-          {universe ? (
-            <motion.div
-              key={universe.id}
-              initial={reduceMotion ? false : { opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: 12 }}
-              transition={{ duration: reduceMotion ? 0.15 : 0.4 }}
-            >
-              <div className="relative pt-[clamp(72px,8vw,110px)]">
-                <div className="absolute left-1/2 top-0 z-20 w-full -translate-x-1/2">
-                  <LogoCluster
-                    activeId={activeId}
-                    onSelect={onSelect}
-                    reduceMotion={reduceMotion}
-                    compact
-                  />
-                </div>
-
-                <div className="relative overflow-hidden rounded-[clamp(24px,3vw,36px)] border border-white/10 bg-black/25 shadow-2xl">
-                  <div className="relative aspect-[16/9]">
-                    <img
-                      src={universe.image}
-                      alt={universe.imageAlt}
-                      className="h-full w-full object-cover opacity-80"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#030811] via-[#030811]/30 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-[clamp(16px,3vw,32px)]">
-                      <p
-                        className="text-[clamp(8px,.9vw,12px)] font-black uppercase tracking-[.18em]"
-                        style={{ color: universe.accentSoft }}
-                      >
-                        {universe.eyebrow}
-                      </p>
-                      <h2 className="mt-2 font-display text-[clamp(1.35rem,3vw,2.5rem)] font-black leading-none tracking-[-.04em]">
-                        {universe.headline}
-                      </h2>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-[clamp(10px,1.6vw,20px)] space-y-[clamp(8px,1vw,12px)]">
-                {actions.map((action, index) => (
-                  <ActionButton
-                    key={`${universe.id}-${action.label}`}
-                    action={action}
-                    accent={universe.accent}
-                    primary={index === 0}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="idle"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="pt-[clamp(8px,1vw,16px)]"
-            >
-              <LogoCluster
-                activeId={activeId}
-                onSelect={onSelect}
-                reduceMotion={reduceMotion}
-              />
-              <p className="-mt-[clamp(18px,2vw,30px)] text-center text-[clamp(12px,1.2vw,16px)] font-bold text-white/42">
-                Touchez un logo ou utilisez le sélecteur pour ouvrir un univers.
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <div
+      className="relative mx-auto"
+      style={{
+        width: `${MOBILE_CANVAS_WIDTH * layout.scale}px`,
+        height: `${layout.baseHeight * layout.scale}px`,
+      }}
+    >
+      <div
+        ref={canvasRef}
+        style={{
+          width: `${MOBILE_CANVAS_WIDTH}px`,
+          transform: `scale(${layout.scale})`,
+          transformOrigin: "top left",
+        }}
+      >
+        <MobileLayout
+          activeId={activeId}
+          onSelect={onSelect}
+          universe={universe}
+          actions={actions}
+          reduceMotion={reduceMotion}
+        />
       </div>
     </div>
   );
@@ -309,8 +363,16 @@ export default function UniverseHome() {
 
     if (activeUniverse.id === "energies") {
       return [
-        { label: "Explorer la carte solaire", to: "/qeh-energies/carte-solaire", icon: Map },
-        { label: "Comment ça marche", to: "/qeh-energies/comment-ca-marche", icon: SunMedium },
+        {
+          label: "Explorer la carte solaire",
+          to: "/qeh-energies/carte-solaire",
+          icon: Map,
+        },
+        {
+          label: "Comment ça marche",
+          to: "/qeh-energies/comment-ca-marche",
+          icon: SunMedium,
+        },
         { label: "Participer", to: "/qeh-energies/participer", icon: Users },
       ];
     }
@@ -342,13 +404,15 @@ export default function UniverseHome() {
       <div className="pointer-events-none absolute inset-0 opacity-[.16] [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:linear-gradient(to_bottom,black,transparent_88%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/35 to-transparent" />
 
-      <UnifiedHome
-        activeId={activeId}
-        onSelect={setActiveId}
-        universe={activeUniverse}
-        actions={actions}
-        reduceMotion={reduceMotion}
-      />
+      <div className="relative z-10 py-2">
+        <MobileReplica
+          activeId={activeId}
+          onSelect={setActiveId}
+          universe={activeUniverse}
+          actions={actions}
+          reduceMotion={reduceMotion}
+        />
+      </div>
     </main>
   );
 }
