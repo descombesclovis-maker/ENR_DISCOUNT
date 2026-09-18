@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-const INTRO_SESSION_KEY = "qeh_intro_seen_v1";
 const INTRO_FALLBACK_MS = 5000;
 const FADE_MS = 320;
 
@@ -14,12 +13,6 @@ export default function QEHIntro() {
     if (finishedRef.current) return;
     finishedRef.current = true;
 
-    try {
-      sessionStorage.setItem(INTRO_SESSION_KEY, "1");
-    } catch {
-      // sessionStorage may be unavailable in strict privacy modes.
-    }
-
     setClosing(true);
     closeTimerRef.current = window.setTimeout(() => {
       setVisible(false);
@@ -27,20 +20,6 @@ export default function QEHIntro() {
   }, []);
 
   useEffect(() => {
-    let alreadySeen = false;
-
-    try {
-      alreadySeen = sessionStorage.getItem(INTRO_SESSION_KEY) === "1";
-    } catch {
-      alreadySeen = false;
-    }
-
-    if (alreadySeen) {
-      finishedRef.current = true;
-      setVisible(false);
-      return undefined;
-    }
-
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     if (reducedMotion) {
       finish();
